@@ -1,0 +1,77 @@
+name: CI
+
+# 트리거: main 으로의 PR + main 으로의 push
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+# 같은 ref 의 이전 실행은 취소 (중복 실행 방지)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# 최소 권한: 저장소 읽기만 허용
+permissions:
+  contents: read
+
+jobs:
+  # 린트 + 포맷 검사 + 빌드 (push, PR 모두 실행)
+  ci:
+    name: Lint, format check, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # pnpm 을 먼저 설치해야 setup-node 의 pnpm 캐시가 동작함
+      # 버전은 package.json "packageManager": pnpm@10.27.0 에서 자동으로 읽음 (고정 X)
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm' # pnpm-lock.yaml 기준 store 캐시
+
+      # 락파일이 커밋돼 있으므로 frozen-lockfile 로 정확히 재현 설치
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (oxlint)
+        run: pnpm lint
+
+      - name: Format check (prettier)
+        run: pnpm format:check
+
+      - name: Build (tsc + vite)
+        run: pnpm build
+
+  # 커밋 메시지 컨벤션 검사 (PR 에서만 실행)
+  commitlint:
+    name: Lint PR commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    steps:
+      # PR 의 base..head 커밋 범위를 검사하려면 전체 히스토리가 필요
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      # 저장소의 commitlint.config.js(ESM)를 cosmiconfig 가 자동 인식
+      # PR 의 base sha ~ head sha 범위 커밋 헤더를 검사
+      # SHA 는 env 로 받아 셸에서 따옴표 처리 (인젝션 방지 권장 패턴)
+      - name: Lint commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose

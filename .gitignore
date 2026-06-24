@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Env files — 실제 환경변수는 커밋 금지, .env.example 템플릿만 공유
+.env
+.env.*
+!.env.example
+
+# Test coverage
+coverage
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Claude Code 개인 로컬 설정 (공유 설정 .claude/settings.json 은 커밋 가능)
+.claude/settings.local.json
