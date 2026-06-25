@@ -1,4 +1,7 @@
-function App() {
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import MapPage from './pages/MapPage'
+
+function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 text-gray-900">
       <h1 className="text-4xl font-bold tracking-tight">butilkka-fe</h1>
@@ -10,4 +13,13 @@ function App() {
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/map" element={<MapPage />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
