@@ -12,6 +12,7 @@ Vite + React + TypeScript + Tailwind CSS v4 기반 프론트엔드 프로젝트.
 | 스타일링      | [Tailwind CSS](https://tailwindcss.com) v4 (`@tailwindcss/vite`)                                      |
 | 린터          | [oxlint](https://oxc.rs)                                                                              |
 | 포매터        | [Prettier](https://prettier.io)                                                                       |
+| 테스트        | [Vitest](https://vitest.dev) + [Testing Library](https://testing-library.com)                         |
 | Git 훅        | [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) |
 | 패키지 매니저 | [pnpm](https://pnpm.io)                                                                               |
 
@@ -41,6 +42,9 @@ pnpm dev
 | `pnpm lint:fix`     | oxlint 자동 수정                     |
 | `pnpm format`       | Prettier로 전체 포맷 적용            |
 | `pnpm format:check` | 포맷 검사만 (CI용)                   |
+| `pnpm test`         | Vitest (watch 모드)                  |
+| `pnpm test:run`     | Vitest 1회 실행 (CI용)               |
+| `pnpm coverage`     | 커버리지 리포트                      |
 
 ## 컨벤션
 
@@ -48,6 +52,7 @@ pnpm dev
 - **커밋 전 자동 검사**: Husky `pre-commit` 훅이 스테이징된 파일에 `oxlint --fix` → `prettier --write`를 실행합니다 (lint-staged).
 - **포맷 규칙**: 세미콜론 없음, 작은따옴표, 행 너비 100 (`.prettierrc.json`, `.editorconfig`).
 - **Tailwind 클래스 정렬**: `prettier-plugin-tailwindcss`가 `className` 순서를 자동 정렬합니다. 저장/커밋 시 재정렬되니 순서는 신경 쓰지 마세요.
+- **클래스 합치기**: 변형(variant)이 많은 재사용 컴포넌트는 [tailwind-variants](https://tailwind-variants.org)의 `tv()`, 즉석 조건부 병합은 `@/lib/cn`을 씁니다. (Tailwind v4에선 `tv`의 내장 responsive variant 대신 `sm:` 프리픽스를 직접 사용)
 
 ### 커밋 메시지
 

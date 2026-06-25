@@ -1,0 +1,8 @@
+<!-- TODO(디자인): 임시 placeholder 앱 아이콘. 브랜드 아이콘 확정 시 PNG(192/512, maskable)로 교체.
+     maskable 안전영역(중앙 80%) 안에 콘텐츠를 배치해 둠. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="버틸까 앱 아이콘 (placeholder)">
+  <rect width="512" height="512" fill="#4f46e5" />
+  <rect x="188" y="120" width="136" height="272" rx="28" fill="#ffffff" />
+  <rect x="212" y="156" width="88" height="14" rx="7" fill="#4f46e5" />
+  <circle cx="256" cy="356" r="14" fill="#4f46e5" />
+</svg>

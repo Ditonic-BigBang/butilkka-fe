@@ -43,6 +43,12 @@ jobs:
       - name: Format check (prettier)
         run: pnpm format:check
 
+      - name: Typecheck (tsc)
+        run: pnpm typecheck
+
+      - name: Test (vitest)
+        run: pnpm test:run
+
       - name: Build (tsc + vite)
         run: pnpm build
 

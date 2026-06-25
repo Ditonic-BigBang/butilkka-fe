@@ -1,0 +1,136 @@
+name: Discord Notify
+
+# PR(열림/머지) + CI 실패를 Discord 로 알림. 메시지는 jq 로 안전하게 조립한다.
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, closed]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  # ── PR 열림 / 머지 알림 (머지 아닌 단순 close 는 제외) ──
+  pull-request:
+    if: >-
+      github.event_name == 'pull_request' &&
+      (github.event.action != 'closed' || github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify Discord (PR)
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          AVATAR: ${{ github.event.pull_request.user.avatar_url }}
+          HEAD: ${{ github.event.pull_request.head.ref }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          ADDITIONS: ${{ github.event.pull_request.additions }}
+          DELETIONS: ${{ github.event.pull_request.deletions }}
+          FILES: ${{ github.event.pull_request.changed_files }}
+          COMMITS: ${{ github.event.pull_request.commits }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK:-}" ]; then echo "DISCORD_WEBHOOK secret 없음 — 건너뜀"; exit 0; fi
+          if [ "$MERGED" = "true" ]; then
+            HEADER="🟣 Pull Request Merged"; STATUS="✅ Merged"; COLOR=$((16#8250df))
+          else
+            HEADER="🟢 Pull Request Opened"; STATUS="🟢 Open"; COLOR=$((16#2da44e))
+          fi
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          payload=$(jq -n \
+            --arg header "$HEADER · #$NUMBER" \
+            --arg url "$PR_URL" \
+            --arg title "$PR_TITLE" \
+            --arg author "$AUTHOR · $REPO" \
+            --arg authorurl "https://github.com/$AUTHOR" \
+            --arg avatar "$AVATAR" \
+            --arg fauthor "$AUTHOR" \
+            --arg status "$STATUS" \
+            --arg head "$HEAD" \
+            --arg base "$BASE" \
+            --arg change "+$ADDITIONS −$DELETIONS" \
+            --arg files "$FILES" \
+            --arg repo "$REPO" \
+            --arg ts "$TS" \
+            --arg cta "[🔗 PR 열기]($PR_URL) · [📜 커밋 ${COMMITS}개](${PR_URL}/commits)" \
+            --argjson color "$COLOR" \
+            '{
+              username: "재준 봇",
+              embeds: [{
+                author: { name: $author, url: $authorurl, icon_url: $avatar },
+                title: $header, url: $url,
+                description: ($title + "\n\n" + $cta),
+                color: $color,
+                fields: [
+                  { name: "작성자", value: $fauthor, inline: true },
+                  { name: "상태",   value: $status,  inline: true },
+                  { name: "브랜치", value: ("`" + $head + "`"), inline: true },
+                  { name: "대상",   value: ("`" + $base + "`"), inline: true },
+                  { name: "변경",   value: $change,  inline: true },
+                  { name: "파일",   value: $files,   inline: true }
+                ],
+                footer: { text: $repo }, timestamp: $ts
+              }]
+            }')
+          curl -fsS -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
+
+  # ── CI 실패 알림 (CI 워크플로우가 failure 로 끝났을 때만) ──
+  ci-failure:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify Discord (CI 실패)
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          WF_NAME: ${{ github.event.workflow_run.name }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          MSG: ${{ github.event.workflow_run.head_commit.message }}
+          ACTOR: ${{ github.event.workflow_run.actor.login }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK:-}" ]; then echo "DISCORD_WEBHOOK secret 없음 — 건너뜀"; exit 0; fi
+          SHORT=${SHA:0:7}
+          MSG1=$(printf '%s' "$MSG" | head -n1)
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          payload=$(jq -n \
+            --arg header "🔴 CI 실패 · $BRANCH" \
+            --arg url "$RUN_URL" \
+            --arg desc "[$SHORT]($RUN_URL) $MSG1" \
+            --arg wf "$WF_NAME" \
+            --arg branch "$BRANCH" \
+            --arg short "$SHORT" \
+            --arg actor "$ACTOR" \
+            --arg repo "$REPO" \
+            --arg ts "$TS" \
+            --arg cta "[🔗 실행 로그 보기]($RUN_URL)" \
+            --argjson color "$((16#cf222e))" \
+            '{
+              username: "재준 봇",
+              embeds: [{
+                title: $header, url: $url,
+                description: ($desc + "\n\n" + $cta),
+                color: $color,
+                fields: [
+                  { name: "워크플로우", value: $wf,     inline: true },
+                  { name: "브랜치",     value: ("`" + $branch + "`"), inline: true },
+                  { name: "커밋",       value: ("`" + $short + "`"),  inline: true },
+                  { name: "작성자",     value: $actor,  inline: true }
+                ],
+                footer: { text: $repo }, timestamp: $ts
+              }]
+            }')
+          curl -fsS -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
