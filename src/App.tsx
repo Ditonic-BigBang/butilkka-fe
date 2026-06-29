@@ -1,6 +1,18 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { MobileLayout } from '@/components/layout'
 import MapPage from './pages/MapPage'
+
+// 차트 페이지는 Recharts(무거움)를 끌어오므로 코드 스플리팅 — 진입 시에만 로드
+const ChartSamplePage = lazy(() => import('./pages/ChartSamplePage'))
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center text-sm text-gray-400">
+      불러오는 중…
+    </div>
+  )
+}
 
 // 셸(바텀탭)을 쓰는 일반 화면. 지도(/map)는 풀스크린이라 셸 밖에서 렌더.
 function Home() {
@@ -15,6 +27,12 @@ function Home() {
         >
           지도 보기
         </Link>
+        <Link
+          to="/charts"
+          className="rounded-lg border border-indigo-200 px-4 py-2 font-medium text-indigo-600 transition hover:bg-indigo-50"
+        >
+          차트 샘플
+        </Link>
       </div>
     </MobileLayout>
   )
@@ -26,6 +44,14 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/map" element={<MapPage />} />
+        <Route
+          path="/charts"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <ChartSamplePage />
+            </Suspense>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )
