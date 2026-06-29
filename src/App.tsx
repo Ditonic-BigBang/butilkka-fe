@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { MobileLayout } from '@/components/layout'
 import MapPage from './pages/MapPage'
+import LoginPage from './pages/LoginPage'
 
 // 차트 페이지는 Recharts(무거움)를 끌어오므로 코드 스플리팅 — 진입 시에만 로드
 const ChartSamplePage = lazy(() => import('./pages/ChartSamplePage'))
@@ -33,6 +34,12 @@ function Home() {
         >
           차트 샘플
         </Link>
+        <Link
+          to="/login"
+          className="rounded-lg border border-indigo-200 px-4 py-2 font-medium text-indigo-600 transition hover:bg-indigo-50"
+        >
+          로그인
+        </Link>
       </div>
     </MobileLayout>
   )
@@ -43,6 +50,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route
           path="/charts"
