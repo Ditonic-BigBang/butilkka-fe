@@ -34,7 +34,7 @@ export default function LoginPage() {
 
           {!configured && (
             <p className="text-center text-xs text-red-500">
-              .env 에 VITE_KAKAO_REST_KEY 와 VITE_KAKAO_REDIRECT_URI 를 설정해주세요.
+              .env 에 VITE_API_BASE_URL 을 설정해주세요.
             </p>
           )}
         </div>

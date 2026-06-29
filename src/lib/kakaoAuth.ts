@@ -1,30 +1,26 @@
-// 카카오 OAuth(REST) 인가코드 플로우.
-// 프론트는 "인가 요청"만 담당 — 사용자를 카카오 인가 페이지로 보낸다.
-// 콜백(인가코드 → 토큰 교환)은 백엔드(:8080 /auth/kakao/callback)가 처리한다.
+// 카카오 로그인 — 백엔드 주도(Authorization Code) 방식.
+// 프론트는 백엔드의 "로그인 시작" 엔드포인트로 이동만 한다.
+// 이후 백엔드가 state 생성 → 카카오 인가 페이지로 리다이렉트 → 콜백에서
+// state 검증 + 토큰 교환까지 처리한다.
 //
-// CSRF 방지를 위한 state 검증은 백엔드 책임(콜백을 백엔드가 받으므로).
+// 따라서 REST 키·redirect_uri·state 는 모두 백엔드 소유이며 프론트에 노출되지 않는다.
 
-const KAKAO_AUTHORIZE_URL = 'https://kauth.kakao.com/oauth/authorize'
+const API_BASE = import.meta.env.VITE_API_BASE_URL
 
-const REST_KEY = import.meta.env.VITE_KAKAO_REST_KEY
-const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI
+// 백엔드 카카오 로그인 시작 경로 (백엔드 라우트와 일치해야 함).
+const KAKAO_LOGIN_PATH = '/api/v1/auth/kakao/login'
 
-/** 로그인에 필요한 환경변수가 모두 설정돼 있는지 */
+/** 로그인에 필요한 설정(백엔드 베이스 URL)이 있는지 */
 export function isKakaoAuthConfigured(): boolean {
-  return Boolean(REST_KEY && REDIRECT_URI)
+  return Boolean(API_BASE)
 }
 
-/** 카카오 인가 URL 생성 (response_type=code) */
-export function buildKakaoAuthorizeUrl(): string {
-  const params = new URLSearchParams({
-    client_id: REST_KEY ?? '',
-    redirect_uri: REDIRECT_URI ?? '',
-    response_type: 'code',
-  })
-  return `${KAKAO_AUTHORIZE_URL}?${params.toString()}`
+/** 백엔드 카카오 로그인 시작 엔드포인트 URL */
+export function getKakaoLoginUrl(): string {
+  return `${API_BASE ?? ''}${KAKAO_LOGIN_PATH}`
 }
 
-/** 현재 탭을 카카오 로그인(인가) 페이지로 이동 */
+/** 카카오 로그인 시작 — 백엔드 엔드포인트로 이동(백엔드가 카카오로 리다이렉트) */
 export function redirectToKakaoLogin(): void {
-  window.location.href = buildKakaoAuthorizeUrl()
+  window.location.href = getKakaoLoginUrl()
 }
