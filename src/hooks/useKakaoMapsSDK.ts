@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const KAKAO_SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_MAP_API_KEY}&autoload=false`
+const KAKAO_SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_JS_KEY}&autoload=false`
 
 export function useKakaoMapsSDK() {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -23,8 +23,8 @@ export function useKakaoMapsSDK() {
       return
     }
 
-    if (!import.meta.env.VITE_KAKAO_MAP_API_KEY) {
-      setError('.env 파일에 VITE_KAKAO_MAP_API_KEY를 설정해주세요.')
+    if (!import.meta.env.VITE_KAKAO_JS_KEY) {
+      setError('.env 파일에 VITE_KAKAO_JS_KEY를 설정해주세요.')
       return
     }
 
