@@ -1,5 +1,7 @@
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { MobileLayout } from '@/components/layout'
 import { isKakaoAuthConfigured, redirectToKakaoLogin } from '@/lib/kakaoAuth'
+import { useIsAuthenticated } from '@/stores/authStore'
 
 // 카카오 심볼(말풍선). 노란 버튼 위 검정 심볼.
 function KakaoSymbol() {
@@ -11,7 +13,12 @@ function KakaoSymbol() {
 }
 
 export default function LoginPage() {
+  const isAuthenticated = useIsAuthenticated()
   const configured = isKakaoAuthConfigured()
+  const [params] = useSearchParams()
+  const error = params.get('error')
+
+  if (isAuthenticated) return <Navigate to="/" replace />
 
   return (
     <MobileLayout showBottomTab={false}>
@@ -35,6 +42,11 @@ export default function LoginPage() {
           {!configured && (
             <p className="text-center text-xs text-red-500">
               .env 에 VITE_API_BASE_URL 을 설정해주세요.
+            </p>
+          )}
+          {configured && error && (
+            <p className="text-center text-xs text-red-500">
+              로그인에 실패했습니다. 다시 시도해주세요.
             </p>
           )}
         </div>
