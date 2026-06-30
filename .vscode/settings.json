@@ -5,5 +5,5 @@
     "source.fixAll.oxc": "explicit"
   },
   "files.eol": "\n",
-  "tailwindCSS.classFunctions": ["cn", "clsx"]
+  "tailwindCSS.classFunctions": ["tv", "cn", "clsx"]
 }

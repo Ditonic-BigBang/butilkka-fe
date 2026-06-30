@@ -1,10 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>butilkka-fe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="버틸까 — 모바일 웹앱" />
+
+    <!-- 모바일 웹앱 / 홈 화면 추가 (라이트 PWA: 서비스워커 없음) -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="버틸까" />
+    <link rel="manifest" href="/manifest.json" />
+    <!-- TODO(디자인): apple-touch-icon.png(180²) + manifest PNG 아이콘(192/512, maskable) 로 교체, theme-color 도 브랜드색으로 -->
+
+    <title>버틸까</title>
   </head>
   <body>
     <div id="root"></div>
