@@ -1,15 +1,153 @@
 @import 'tailwindcss';
 
 @theme {
+  /* ===================== Brand (Orange) ===================== */
+  --color-key: #ff621b; /* Key color */
+  --color-orange-10: #fff5eb;
+  --color-orange-50: #ffebd7;
+  --color-orange-100: #ffc7a8;
+  --color-orange-200: #ffb68f;
+  --color-orange-300: #fea372;
+  --color-orange-400: #fd9258;
+  --color-orange-500: #ff6b1b;
+  --color-orange-600: #eb5200;
+  --color-orange-700: #c74600;
+
+  /* ===================== Neutral (Gray 70~900) ===================== */
+  --color-gray-70: #f7f7f7;
+  --color-gray-90: #f0f0f0;
+  --color-gray-100: #e4e4e4;
+  --color-gray-200: #d2d2d2;
+  --color-gray-300: #adadad;
+  --color-gray-400: #929292;
+  --color-gray-500: #777777;
+  --color-gray-600: #5f5f5f;
+  --color-gray-700: #474747;
+  --color-gray-800: #303030;
+  --color-gray-900: #181818;
+
+  /* ===================== Semantic ===================== */
+  --color-status-red: #ff5c5c;
+  --color-status-red-soft: #fff6f6;
+  --color-info-blue: #4193ff;
+  --color-info-blue-soft: #f3fafe;
+
+  /* ===================== Typography ===================== */
+  /* Pretendard Variable, 자간 일괄 -2% (= -0.02em), 행간 140% */
+  --font-sans: 'Pretendard Variable', system-ui, sans-serif;
+
+  --text-headline-medium: 40px;
+  --text-headline-medium--line-height: 1.4;
+  --text-headline-medium--letter-spacing: -0.02em;
+  --text-headline-medium--font-weight: 500;
+
+  --text-title-l-medium: 28px;
+  --text-title-l-medium--line-height: 1.4;
+  --text-title-l-medium--letter-spacing: -0.02em;
+  --text-title-l-medium--font-weight: 500;
+
+  --text-title-m-bold: 24px;
+  --text-title-m-bold--line-height: 1.4;
+  --text-title-m-bold--letter-spacing: -0.02em;
+  --text-title-m-bold--font-weight: 700;
+
+  --text-title-m-semibold: 24px;
+  --text-title-m-semibold--line-height: 1.4;
+  --text-title-m-semibold--letter-spacing: -0.02em;
+  --text-title-m-semibold--font-weight: 600;
+
+  --text-title-s-semibold: 20px;
+  --text-title-s-semibold--line-height: 1.4;
+  --text-title-s-semibold--letter-spacing: -0.02em;
+  --text-title-s-semibold--font-weight: 600;
+
+  --text-body-l-semibold: 16px;
+  --text-body-l-semibold--line-height: 1.4;
+  --text-body-l-semibold--letter-spacing: -0.02em;
+  --text-body-l-semibold--font-weight: 600;
+
+  --text-body-l-medium: 16px;
+  --text-body-l-medium--line-height: 1.4;
+  --text-body-l-medium--letter-spacing: -0.02em;
+  --text-body-l-medium--font-weight: 500;
+
+  --text-body-l-regular: 16px;
+  --text-body-l-regular--line-height: 1.4;
+  --text-body-l-regular--letter-spacing: -0.02em;
+  --text-body-l-regular--font-weight: 400;
+
+  --text-body-m-semibold: 14px;
+  --text-body-m-semibold--line-height: 1.4;
+  --text-body-m-semibold--letter-spacing: -0.02em;
+  --text-body-m-semibold--font-weight: 600;
+
+  --text-body-m-medium: 14px;
+  --text-body-m-medium--line-height: 1.4;
+  --text-body-m-medium--letter-spacing: -0.02em;
+  --text-body-m-medium--font-weight: 500;
+
+  --text-body-m-regular: 14px;
+  --text-body-m-regular--line-height: 1.4;
+  --text-body-m-regular--letter-spacing: -0.02em;
+  --text-body-m-regular--font-weight: 400;
+
+  --text-caption-l-semibold: 12px;
+  --text-caption-l-semibold--line-height: 1.4;
+  --text-caption-l-semibold--letter-spacing: -0.02em;
+  --text-caption-l-semibold--font-weight: 600;
+
+  --text-caption-l-medium: 12px;
+  --text-caption-l-medium--line-height: 1.4;
+  --text-caption-l-medium--letter-spacing: -0.02em;
+  --text-caption-l-medium--font-weight: 500;
+
+  --text-caption-l-regular: 12px;
+  --text-caption-l-regular--line-height: 1.4;
+  --text-caption-l-regular--letter-spacing: -0.02em;
+  --text-caption-l-regular--font-weight: 400;
+
+  --text-caption-m-regular: 10px;
+  --text-caption-m-regular--line-height: 1.4;
+  --text-caption-m-regular--letter-spacing: -0.02em;
+  --text-caption-m-regular--font-weight: 400;
+
+  /* ===================== Radius ===================== */
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-12: 12px;
+  --radius-14: 14px;
+  --radius-16: 16px;
+  --radius-max: 9999px;
+
+  /* ===================== Shadow ===================== */
+  --shadow-card: 0 2px 20px 0 rgb(0 0 0 / 0.1); /* Elevation 1 */
+  --shadow-upper: 0 -4px 12px 0 rgb(0 0 0 / 0.06); /* Upper: 위로 뜨는 그림자 (바텀시트·하단탭) */
+
+  /* ===================== Gradient ===================== */
+  /* Figma 변수 타입이 그라데이션을 지원 안 해서 CSS 변수로 보관 → bg-gradation-* 유틸로 사용 */
+  /* 보간을 oklch로 → 중간색이 칙칙해지는 sRGB 데드존 회피 (색 stop은 hex 유지) */
+  --gradient-1: linear-gradient(in oklch to right, #ffe9df 0%, #f8f8f8 100%);
+  --gradient-2: linear-gradient(in oklch to right, #ffc78a 0%, #ff9058 100%);
+
+  /* ===================== Safe-area (기존 유지) ===================== */
   /* iOS safe-area 인셋 → pt-safe-top / pb-safe-bottom / px-safe-* 등으로 사용
      (index.html 의 viewport-fit=cover 가 있어야 노치 기기에서 0 이 아닌 값이 들어옴) */
   --spacing-safe-top: env(safe-area-inset-top);
   --spacing-safe-bottom: env(safe-area-inset-bottom);
   --spacing-safe-left: env(safe-area-inset-left);
   --spacing-safe-right: env(safe-area-inset-right);
-
   /* 항상 보이는 UI(하단 탭 등)용: 노치 없으면 최소 12px, 있으면 인셋만큼 확장 */
   --spacing-safe-bottom-or-3: max(env(safe-area-inset-bottom), calc(var(--spacing) * 3));
+}
+
+/* 그라데이션 유틸: --gradient-* 는 Tailwind 네임스페이스가 아니라 유틸을 직접 정의 */
+@utility bg-gradation-1 {
+  background-image: var(--gradient-1);
+}
+@utility bg-gradation-2 {
+  background-image: var(--gradient-2);
 }
 
 /* ── 지도 페이지 레이아웃 ── */
