@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
-@theme {
+/* static: 안 쓰는 토큰도 :root 에 항상 emit (디자인 시스템 전 토큰 사용/조회 가능) */
+@theme static {
   /* ===================== Brand (Orange) ===================== */
   --color-key: #ff621b; /* Key color */
   --color-orange-10: #fff5eb;
