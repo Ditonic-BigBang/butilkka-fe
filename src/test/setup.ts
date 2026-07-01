@@ -6,7 +6,7 @@ import '@testing-library/jest-dom/vitest'
 // 명시성·타입 안정성을 위해 'vitest' 에서 직접 import 한다.
 import { beforeAll, afterEach, afterAll } from 'vitest'
 import { isCommonAssetRequest } from 'msw'
-import { server } from '@/mocks/server'
+import { server } from '@/shared/api/mocks/server'
 
 // 전체 테스트 시작 전 1회: 요청 인터셉트 시작.
 // 핸들러 없는 요청은 에러로 처리(누락된 mock 을 즉시 발견).
