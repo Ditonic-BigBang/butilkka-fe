@@ -37,3 +37,10 @@ coverage
 
 # Claude Code 개인 로컬 설정 (공유 설정 .claude/settings.json 은 커밋 가능)
 .claude/settings.local.json
+
+# Storybook
+*storybook.log
+storybook-static
+
+# Playwright MCP 산출물 (스냅샷·콘솔 로그·스크린샷)
+.playwright-mcp/

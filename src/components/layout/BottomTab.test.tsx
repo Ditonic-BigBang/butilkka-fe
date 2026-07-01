@@ -15,18 +15,18 @@ describe('BottomTab', () => {
     render(<BottomTab />)
     expect(screen.getByRole('button', { name: '홈' })).toHaveAttribute('aria-current', 'page')
 
-    await user.click(screen.getByRole('button', { name: '탐색' }))
-    expect(screen.getByRole('button', { name: '탐색' })).toHaveAttribute('aria-current', 'page')
+    await user.click(screen.getByRole('button', { name: '상권지도' }))
+    expect(screen.getByRole('button', { name: '상권지도' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('button', { name: '홈' })).not.toHaveAttribute('aria-current')
   })
 
   it('제어 모드: activeTab 을 반영하고 클릭 시 onTabChange 를 호출한다', async () => {
     const user = userEvent.setup()
     const onTabChange = vi.fn()
-    render(<BottomTab activeTab="alerts" onTabChange={onTabChange} />)
+    render(<BottomTab activeTab="report" onTabChange={onTabChange} />)
 
-    expect(screen.getByRole('button', { name: '알림' })).toHaveAttribute('aria-current', 'page')
-    await user.click(screen.getByRole('button', { name: '탐색' }))
-    expect(onTabChange).toHaveBeenCalledWith('explore')
+    expect(screen.getByRole('button', { name: '리포트' })).toHaveAttribute('aria-current', 'page')
+    await user.click(screen.getByRole('button', { name: '상권지도' }))
+    expect(onTabChange).toHaveBeenCalledWith('map')
   })
 })

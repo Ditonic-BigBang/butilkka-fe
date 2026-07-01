@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="unplugin-icons/types/react" />
 
 interface ImportMetaEnv {
   /** 백엔드 API 베이스 URL (.env.local 에 설정) */
