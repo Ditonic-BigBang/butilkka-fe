@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import type { Preview } from '@storybook/react-vite'
-import '../src/index.css' // 디자인 토큰(@theme) + Tailwind 를 스토리에 주입
+import '../src/app/index.css' // 디자인 토큰(@theme) + Tailwind 를 스토리에 주입
 
 // 모바일 앱이라 스토리를 폰 크기로 렌더 (Figma: iPhone 16 = 393×852 / MobileLayout: max-w-430)
 const MOBILE_VIEWPORTS = {
