@@ -46,6 +46,10 @@ jobs:
       - name: Typecheck (tsc)
         run: pnpm typecheck
 
+      # Storybook 스토리를 실제 브라우저에서 테스트(@storybook/addon-vitest)하므로 chromium 필요
+      - name: Install Playwright chromium
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Test (vitest)
         run: pnpm test:run
 
