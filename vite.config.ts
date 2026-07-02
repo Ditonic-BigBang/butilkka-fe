@@ -33,7 +33,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#ffffff',
+        // 런칭(스플래시) 배경은 브랜드 오렌지, 앱 사용 중 상태바는 흰 GNB 와 맞춰 흰색.
+        background_color: '#FF621B',
         theme_color: '#ffffff',
       },
       workbox: {
