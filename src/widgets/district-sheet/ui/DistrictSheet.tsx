@@ -34,7 +34,8 @@ type MetricContent = {
   trend: TrendPoint[]
   trendTicks?: string[]
   trendUnit?: string
-  highlightLabel?: string
+  /** 그래프 포인트 탭 시 pill 텍스트 (지정 시 탭으로 선택 가능) */
+  trendTooltip?: (point: TrendPoint) => string
   yFormatter?: (value: number) => string
   averagePeriod?: AveragePeriod
 }
@@ -149,7 +150,7 @@ function MetricBody({
   trend,
   trendTicks,
   trendUnit,
-  highlightLabel,
+  trendTooltip,
   yFormatter,
   averagePeriod,
 }: MetricContent) {
@@ -189,7 +190,7 @@ function MetricBody({
           data={trend}
           xTicks={trendTicks}
           unit={trendUnit}
-          highlightLabel={highlightLabel}
+          tooltipFormatter={trendTooltip}
           yFormatter={yFormatter}
         />
       </div>

@@ -144,7 +144,7 @@ export const Metric: Story = {
         trend: VALUE_TREND,
         trendTicks: YEAR_TICKS,
         trendUnit: '(명)',
-        highlightLabel: '134,302명',
+        trendTooltip: (p) => `${p.value.toLocaleString()}명`,
         yFormatter: (v) => `${Math.round(v / 10000)}만`,
       }}
     />
@@ -167,7 +167,7 @@ export const MetricWithPeriod: Story = {
         trend: VALUE_TREND,
         trendTicks: YEAR_TICKS,
         trendUnit: '(명)',
-        highlightLabel: '134,302명',
+        trendTooltip: (p) => `${p.value.toLocaleString()}명`,
         yFormatter: (v) => `${Math.round(v / 10000)}만`,
         averagePeriod: { label: '서울 서대문구', years: '4.2' },
       }}

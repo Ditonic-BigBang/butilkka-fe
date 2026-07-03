@@ -53,7 +53,8 @@ const meta = {
           '',
           '- 오렌지 라인 + 그라데이션 fill + 점선 그리드 + 우측 y축',
           '- **value**: 숫자 y축 · **grade**: A~E y축',
-          '- `highlightLabel` 지정 시 마지막 점에 마커·세로선·다크 pill',
+          '- `tooltipFormatter` 지정 시 차트 탭으로 포인트 선택 — 탭 전엔 표시 없음,',
+          '  탭하면 해당 포인트에 세로 점선·흰 점·pill(점 위). 다른 곳 탭하면 이동',
         ].join('\n'),
       },
     },
@@ -75,27 +76,60 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** 값 + 툴팁 (매출 대비 임대료). */
+/** 값 — 선택 전 (탭하면 포인트 선택). */
 export const Value: Story = {
-  name: '값 (툴팁)',
+  name: '값 (선택 전)',
   args: {
     unit: '(명)',
-    highlightLabel: '134,302명',
+    tooltipFormatter: (p) => `${p.value.toLocaleString()}명`,
     yFormatter: (v) => `${Math.round(v / 10000)}만`,
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('3년 추이')).toBeInTheDocument()
+    // 선택 전엔 pill 없음
+    await expect(canvas.queryByText(/명$/)).not.toBeInTheDocument()
+  },
+}
+
+/** 값 — 선택된 상태 (마지막 포인트). */
+export const ValueSelected: Story = {
+  name: '값 (선택됨)',
+  args: {
+    unit: '(명)',
+    tooltipFormatter: (p) => `${p.value.toLocaleString()}명`,
+    defaultActiveIndex: VALUE_DATA.length - 1,
+    yFormatter: (v) => `${Math.round(v / 10000)}만`,
+  },
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText('134,302명')).toBeInTheDocument()
   },
 }
 
-/** 값 + 퍼센트 툴팁. */
+/** 값 + 퍼센트 pill (선택됨). */
 export const Percent: Story = {
   name: '값 (퍼센트)',
   args: {
     data: PERCENT_DATA,
-    highlightLabel: '13%',
+    tooltipFormatter: (p) => `${p.value}%`,
+    defaultActiveIndex: PERCENT_DATA.length - 1,
     yFormatter: (v) => `${v}`,
+  },
+}
+
+/** 탭 → 해당 포인트 선택 (세로선·점·pill). */
+export const TapToSelect: Story = {
+  name: '탭 선택',
+  args: {
+    unit: '(명)',
+    tooltipFormatter: (p) => `${p.value.toLocaleString()}명`,
+    yFormatter: (v) => `${Math.round(v / 10000)}만`,
+  },
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await expect(canvas.queryByText(/명$/)).not.toBeInTheDocument()
+    const surface = canvasElement.querySelector('.recharts-surface')
+    if (!surface) throw new Error('recharts surface 를 찾지 못함')
+    await userEvent.click(surface)
+    await expect(await canvas.findByText(/명$/)).toBeInTheDocument()
   },
 }
 
