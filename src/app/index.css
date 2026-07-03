@@ -141,6 +141,8 @@
   --spacing-safe-right: env(safe-area-inset-right);
   /* 항상 보이는 UI(하단 탭 등)용: 노치 없으면 최소 12px, 있으면 인셋만큼 확장 */
   --spacing-safe-bottom-or-3: max(env(safe-area-inset-bottom), calc(var(--spacing) * 3));
+  /* 바텀시트 하단 여백: 노치 없으면 최소 24px, 있으면 인셋만큼 확장 */
+  --spacing-safe-bottom-or-6: max(env(safe-area-inset-bottom), calc(var(--spacing) * 6));
 }
 
 /* 그라데이션 유틸: --gradient-* 는 Tailwind 네임스페이스가 아니라 유틸을 직접 정의 */
