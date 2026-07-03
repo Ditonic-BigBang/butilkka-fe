@@ -6,7 +6,7 @@ const meta = {
   title: 'Report/ScoreCard',
   component: ScoreCard,
   parameters: {
-    layout: 'padded',
+    layout: 'fullscreen',
     docs: {
       description: {
         component: [
@@ -30,6 +30,14 @@ const meta = {
     description:
       '현재 상권은 회복보다 쇠퇴 신호가 강하게 나타나고\n있어요. 지금 바로 대응이 필요해요.',
   },
+  // 흰 카드라 회색 페이지 배경 위에서만 카드로 보임 (Figma 의도 — 테두리·그림자 없음)
+  decorators: [
+    (Story) => (
+      <div className="bg-gray-70 p-5">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof ScoreCard>
 
 export default meta
