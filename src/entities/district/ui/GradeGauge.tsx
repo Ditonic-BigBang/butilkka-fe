@@ -4,8 +4,8 @@ import { cn } from '@/shared/lib/cn'
 const CX = 108
 const CY = 108
 const RMID = 101 // 밴드 중심선 반지름 (바깥 반지름 ≈ 107, Figma 비율)
-const T = 13 // 밴드 두께 (얇게)
-const GAP = 4 // 세그먼트 사이 간격(각도)
+const T = 14 // 밴드 두께 (얇게)
+const GAP = 2 // 세그먼트 사이 간격(각도)
 const SEGLEN = (180 - 4 * GAP) / 5 // 균일 세그먼트 길이 (각도) — 5칸 균등 + 4간격
 const MARK_R = 80 // 마커 반지름 (밴드 안쪽 여백)
 
