@@ -31,7 +31,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
 
   return (
     <svg viewBox={`0 0 ${W} 70`} preserveAspectRatio="none" className="h-[70px] w-full" aria-hidden>
-      {/* 세로 가이드선 (포인트 → 라벨 위) */}
+      {/* 세로 가이드선 (포인트 → 라벨 위, 점선 — Figma dasharray 3 1.5) */}
       {points.map((p) => (
         <line
           key={p.label}
@@ -41,6 +41,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
           y2={GUIDE_BOTTOM}
           stroke="#e4e4e4"
           strokeWidth={1}
+          strokeDasharray="3 1.5"
         />
       ))}
       <polyline
