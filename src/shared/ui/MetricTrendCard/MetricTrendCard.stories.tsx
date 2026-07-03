@@ -2,15 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MetricTrendCard } from './MetricTrendCard'
 
 const DOWN_TREND = [
-  { label: '4월', value: 152000 },
-  { label: '5월', value: 148000 },
-  { label: '이번 달', value: 134302 },
+  { label: '3분기', value: 152000 },
+  { label: '4분기', value: 148000 },
+  { label: '1분기', value: 134302 },
 ]
 
 const UP_TREND = [
-  { label: '4월', value: 412 },
-  { label: '5월', value: 430 },
-  { label: '이번 달', value: 506 },
+  { label: '3분기', value: 412 },
+  { label: '4분기', value: 430 },
+  { label: '1분기', value: 506 },
 ]
 
 /** 홈 지표 추이 카드. Figma: Home_Graph 585:11060 · 585:11172. */

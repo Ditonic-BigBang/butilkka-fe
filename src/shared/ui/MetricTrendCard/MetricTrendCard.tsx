@@ -5,13 +5,13 @@ type Direction = 'up' | 'down'
 
 export type SparkPoint = { label: string; value: number }
 
-// 스파크라인 지오메트리 (viewBox 140 x 70)
-const W = 140
+// 스파크라인 지오메트리 (viewBox 138.5 x 70, Figma 585:11046)
+const W = 138.5
 const PLOT_TOP = 6 // 상단 여백 (링 점 잘림 방지)
 const PLOT_BOTTOM = 40 // 데이터 라인 하한
 const GUIDE_BOTTOM = 48 // 세로 가이드선 하단 (라벨 위)
-const LABEL_Y = 66 // x축 라벨 베이스라인
-const X_POS = [10, 64, 119] // 3포인트 x 좌표 (Figma 비율)
+const LABEL_Y = 65 // x축 라벨 베이스라인
+const X_POS = [12, 69, 126] // 3포인트 x 좌표 (Figma 라벨 중심)
 
 // 3포인트 미니 라인 차트 — 각 포인트 아래 세로 가이드선 + 라벨, 마지막 점 흰 링
 function Sparkline({ data }: { data: SparkPoint[] }) {
@@ -57,7 +57,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
       )}
       {/* x축 라벨 */}
       {points.map((p) => (
-        <text key={p.label} x={p.x} y={LABEL_Y} textAnchor="middle" fontSize={12} fill="#adadad">
+        <text key={p.label} x={p.x} y={LABEL_Y} textAnchor="middle" fontSize={10} fill="#adadad">
           {p.label}
         </text>
       ))}
@@ -72,7 +72,7 @@ type MetricTrendCardProps = {
   value: string
   /** 증감 칩 — up(▲빨강/soft red)·down(▼파랑/soft blue) + 텍스트 (예: "1,215명") */
   change?: { direction: Direction; label: string }
-  /** 추이 3포인트 (예: 4월·5월·이번 달) */
+  /** 추이 3포인트 (예: 3분기·4분기·1분기) */
   trend: SparkPoint[]
   /** vertical(반폭 카드) · horizontal(전폭, 차트 우측) */
   layout?: 'vertical' | 'horizontal'
