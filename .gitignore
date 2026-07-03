@@ -44,3 +44,5 @@ storybook-static
 
 # Playwright MCP 산출물 (스냅샷·콘솔 로그·스크린샷)
 .playwright-mcp/
+# 루트에 임시로 저장하는 검증용 스크린샷 (레포에 커밋 금지)
+/*.png
