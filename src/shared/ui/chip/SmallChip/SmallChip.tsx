@@ -1,4 +1,4 @@
-import { tv, type VariantProps } from 'tailwind-variants'
+import { tv, type VariantProps } from '@/shared/lib/tv'
 
 const smallChip = tv({
   base: 'inline-flex items-center justify-center rounded-6 px-3 py-2 text-caption-l-regular whitespace-nowrap',

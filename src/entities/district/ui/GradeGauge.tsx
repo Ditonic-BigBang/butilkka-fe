@@ -7,6 +7,7 @@ const RMID = 101 // 밴드 중심선 반지름 (바깥 반지름 ≈ 107, Figma 
 const T = 14 // 밴드 두께 (얇게)
 const GAP = 2 // 세그먼트 사이 간격(각도)
 const SEGLEN = (180 - 4 * GAP) / 5 // 균일 세그먼트 길이 (각도) — 5칸 균등 + 4간격
+const END_CAP_DEG = (T / 2 / RMID) * (180 / Math.PI) // 양끝 둥근 캡이 튀어나오는 각도
 const MARK_R = 80 // 마커 반지름 (밴드 안쪽 여백)
 
 const GRADES = ['A', 'B', 'C', 'D', 'E'] as const
@@ -28,7 +29,9 @@ function arcPath(fromDeg: number, toDeg: number) {
 // i번째 세그먼트(0=A 좌 … 4=E 우). 모두 균일 길이, 사이 간격 균일. 양끝은 180°/0° 도달
 function segmentPath(i: number) {
   const from = 180 - i * (SEGLEN + GAP)
-  return arcPath(from, from - SEGLEN)
+  const start = i === 0 ? from - END_CAP_DEG : from
+  const end = i === 4 ? from - SEGLEN + END_CAP_DEG : from - SEGLEN
+  return arcPath(start, end)
 }
 
 type GradeGaugeProps = {
@@ -52,8 +55,8 @@ export function GradeGauge({ grade, status, level, className }: GradeGaugeProps)
   const mark = polar(markAngle, MARK_R)
   const markRot = (Math.atan2(mark.y - CY, mark.x - CX) * 180) / Math.PI - 90
 
-  const left = polar(180, RMID)
-  const right = polar(0, RMID)
+  const left = polar(180 - END_CAP_DEG, RMID)
+  const right = polar(END_CAP_DEG, RMID)
   const rightColor = lv >= 5 ? 'url(#grade-gauge)' : '#e4e4e4'
 
   return (
@@ -88,7 +91,7 @@ export function GradeGauge({ grade, status, level, className }: GradeGaugeProps)
         <circle cx={right.x} cy={right.y} r={T / 2} fill={rightColor} />
         {/* 현재 등급 마커 (밴드 밖, 세그먼트 향해) */}
         <polygon
-          points="-4.5,-4 4.5,-4 0,5"
+          points="-6.5,-7 6.5,-7 0,8"
           fill="#ffc7a8"
           transform={`translate(${mark.x} ${mark.y}) rotate(${markRot})`}
         />
