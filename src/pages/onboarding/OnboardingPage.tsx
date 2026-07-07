@@ -20,7 +20,6 @@ import { CompleteStep } from './ui/steps/CompleteStep'
 export default function OnboardingPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const setUser = useAuthStore((s) => s.setUser)
   const status = useAuthStore((s) => s.status)
   const stepIndex = useOnboardingStore((s) => s.stepIndex)
   const draft = useOnboardingStore((s) => s.draft)
@@ -29,8 +28,9 @@ export default function OnboardingPage() {
 
   const saveStore = useMutation({
     mutationFn: putMyStore,
+    // 저장 성공 → 가이드로 이동. isOnboarded 플립은 가이드 마지막 '시작하기'에서 한다.
+    // (여기서 플립하면 아래 'onboarded → 홈' 가드와 경합해 가이드를 건너뛰고 홈으로 튄다)
     onSuccess: () => {
-      if (user) setUser({ ...user, isOnboarded: true })
       reset()
       navigate('/onboarding/guide', { replace: true })
     },

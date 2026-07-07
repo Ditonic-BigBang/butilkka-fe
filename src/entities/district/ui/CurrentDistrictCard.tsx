@@ -13,6 +13,15 @@ const GRADE_STATUS: Record<Grade, string> = {
   E: '위험',
 }
 
+// 등급 바 세그먼트 색 (Figma "Home Card/01~05") — A 밝은 주황 → E 진한 빨강(가장 진함)
+const SEGMENT_COLORS: Record<Grade, string> = {
+  A: '#ff9d47',
+  B: '#ff793c',
+  C: '#ff621b',
+  D: '#ef4419',
+  E: '#da3b26',
+}
+
 type CurrentDistrictCardProps = {
   /** 제목 */
   question?: string
@@ -30,7 +39,7 @@ type CurrentDistrictCardProps = {
 
 /**
  * 홈 현재 상권 히어로 카드 (Figma: Card_홈_현재상권 554:12983).
- * 제목 + 등급(큰 글자)·상태 칩 + A~E 게이지(현재까지 오렌지 fill·현재 위치 흰 링) + 지난 분기 등급 pill.
+ * 제목 + 등급(큰 글자)·상태 칩 + A~E 등급 바(현재 등급까지 색 채움·나머지 회색·현재 위 ▼ 포인터) + 지난 분기 등급 pill.
  * 우상단 가게 일러스트는 `illustration` 슬롯. 상태는 등급에서 유도(A 양호~E 위험).
  */
 export function CurrentDistrictCard({
@@ -43,7 +52,6 @@ export function CurrentDistrictCard({
   className,
 }: CurrentDistrictCardProps) {
   const currentIndex = GRADES.indexOf(grade)
-  const fillPct = (currentIndex / (GRADES.length - 1)) * 100
   const statusLabel = status ?? GRADE_STATUS[grade]
 
   return (
@@ -67,34 +75,37 @@ export function CurrentDistrictCard({
         </span>
       </div>
 
-      {/* A~E 게이지 */}
+      {/* A~E 등급 바 — 5색 세그먼트 + 현재 등급 위 ▼ 포인터 (Figma: 1082:13181) */}
       <div className="mt-8">
-        <div className="relative h-2 w-full rounded-full bg-gray-200">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full bg-key"
-            style={{ width: `${fillPct}%` }}
-          />
+        {/* ▼ 현재 등급 포인터 — 세그먼트와 동일한 5칸 그리드로 정렬 */}
+        <div className="mb-1 flex gap-1">
+          {GRADES.map((g, i) => (
+            <div key={g} className="flex flex-1 justify-center">
+              {i === currentIndex && (
+                <span className="size-0 border-x-[8px] border-t-[10px] border-x-transparent border-t-gray-300" />
+              )}
+            </div>
+          ))}
+        </div>
+        {/* 세그먼트 — 현재 등급까지만 색 채움(각 칸 고유색), 이후 칸은 gray-100 */}
+        <div className="flex gap-1">
           {GRADES.map((g, i) => {
-            const pos = (i / (GRADES.length - 1)) * 100
-            const isCurrent = i === currentIndex
-            const isPast = i < currentIndex
+            const filled = i <= currentIndex
             return (
               <span
                 key={g}
-                className={cn(
-                  'absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full',
-                  isCurrent
-                    ? 'size-5 border-[3px] border-key bg-white'
-                    : cn('size-3.5', isPast ? 'bg-key' : 'bg-gray-200'),
-                )}
-                style={{ left: `${pos}%` }}
+                className={cn('h-2.5 flex-1 rounded-full', !filled && 'bg-gray-100')}
+                style={filled ? { backgroundColor: SEGMENT_COLORS[g] } : undefined}
               />
             )
           })}
         </div>
-        <div className="mt-2 flex justify-between text-caption-l-medium text-gray-500">
+        {/* A~E 라벨 */}
+        <div className="mt-1.5 flex gap-1">
           {GRADES.map((g) => (
-            <span key={g}>{g}</span>
+            <span key={g} className="flex-1 text-center text-caption-l-medium text-gray-500">
+              {g}
+            </span>
           ))}
         </div>
       </div>

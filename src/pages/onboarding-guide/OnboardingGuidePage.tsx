@@ -61,6 +61,7 @@ export default function OnboardingGuidePage() {
   const navigate = useNavigate()
   const status = useAuthStore((s) => s.status)
   const user = useAuthStore((s) => s.user)
+  const setUser = useAuthStore((s) => s.setUser)
   const reduceMotion = usePrefersReducedMotion()
 
   const [index, setIndex] = useState(0)
@@ -70,12 +71,19 @@ export default function OnboardingGuidePage() {
   const startXRef = useRef(0)
 
   if (status !== 'authenticated') return <Navigate to="/login" replace />
-  if (user && !user.isOnboarded) return <Navigate to="/onboarding" replace />
 
   const isLast = index === LAST
 
+  // 온보딩(폼+가이드) 최종 완료 — 여기서 isOnboarded 를 플립한다.
+  // 저장 시점이 아닌 이 시점에 플립해야 OnboardingPage 의 'onboarded → 홈' 가드와
+  // 경합하지 않는다(= confetti '다음'에서 가이드를 건너뛰고 홈으로 튀는 문제 방지).
+  const finishGuide = () => {
+    if (user && !user.isOnboarded) setUser({ ...user, isOnboarded: true })
+    navigate('/', { replace: true })
+  }
+
   const next = () => {
-    if (isLast) navigate('/', { replace: true })
+    if (isLast) finishGuide()
     else setIndex((i) => Math.min(i + 1, LAST))
   }
 
