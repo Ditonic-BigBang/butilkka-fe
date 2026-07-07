@@ -43,6 +43,37 @@ const GRID = '#e4e4e4'
 const AXIS_TEXT = '#acacac'
 const Y_AXIS_WIDTH = 30
 const RIGHT_MARGIN = 8
+const PERCENT_TICK_COUNT = 4 // 3칸
+const DEFAULT_TICK_COUNT = 5 // 4칸
+
+function getValueDomain(data: TrendPoint[]): [number, number] {
+  if (data.length === 0) return [0, 1]
+
+  const values = data.map((point) => point.value)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+
+  if (min !== max) return [min, max]
+
+  const padding = Math.max(Math.abs(min) * 0.1, 1)
+  return [min - padding, max + padding]
+}
+
+function getUniformTicks([min, max]: [number, number], count: number) {
+  return Array.from({ length: count }, (_, index) => min + ((max - min) / (count - 1)) * index)
+}
+
+function getUniformGridCoordinates(
+  { top, height }: { top: number; height: number },
+  count: number,
+) {
+  if (count <= 1) return [top]
+  return Array.from({ length: count }, (_, index) => top + (height / (count - 1)) * index)
+}
+
+function hasPercentUnit(value: string | undefined) {
+  return value?.includes('%') ?? false
+}
 
 // 선택 포인트 위 다크 pill (Figma: Data point container) — 점 위로 띄워서 표시
 function PillLabel(props: {
@@ -94,6 +125,17 @@ export function TrendGraph({
 }: TrendGraphProps) {
   const grade = variant === 'grade'
   const [activeIndex, setActiveIndex] = useState<number | null>(defaultActiveIndex ?? null)
+  const samplePoint = data[0]
+  const percent =
+    !grade &&
+    (hasPercentUnit(unit) ||
+      (samplePoint != null && hasPercentUnit(tooltipFormatter?.(samplePoint))) ||
+      (samplePoint != null && hasPercentUnit(yFormatter?.(samplePoint.value))))
+  const tickCount = percent ? PERCENT_TICK_COUNT : DEFAULT_TICK_COUNT
+  const valueDomain = getValueDomain(data)
+  const yTicks = grade ? GRADE_TICKS : getUniformTicks(valueDomain, tickCount)
+  const horizontalGridCoordinates = ({ offset }: { offset: { top: number; height: number } }) =>
+    getUniformGridCoordinates(offset, yTicks.length)
 
   const interactive = Boolean(tooltipFormatter)
   const active = tooltipFormatter && activeIndex != null ? data[activeIndex] : undefined
@@ -136,7 +178,12 @@ export function TrendGraph({
                 <stop offset="100%" stopColor={KEY} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="4 4" />
+            <CartesianGrid
+              vertical={false}
+              stroke={GRID}
+              strokeDasharray="2 3"
+              horizontalCoordinatesGenerator={horizontalGridCoordinates}
+            />
             <XAxis
               dataKey="label"
               axisLine={false}
@@ -151,8 +198,8 @@ export function TrendGraph({
               tickLine={false}
               width={30}
               tick={{ fontSize: 12, fill: AXIS_TEXT }}
-              domain={grade ? [1, 5] : ['auto', 'auto']}
-              ticks={grade ? GRADE_TICKS : undefined}
+              domain={grade ? [1, 5] : valueDomain}
+              ticks={yTicks}
               tickFormatter={grade ? (v: number) => GRADE_LABEL[v] ?? '' : yFormatter}
             />
             <Area
@@ -160,6 +207,7 @@ export function TrendGraph({
               dataKey="value"
               stroke={KEY}
               strokeWidth={2}
+              strokeLinecap="round"
               fill="url(#trend-fill)"
               dot={false}
               activeDot={false}

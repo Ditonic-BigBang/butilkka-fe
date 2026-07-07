@@ -1,4 +1,4 @@
-import { tv, type VariantProps } from 'tailwind-variants'
+import { tv, type VariantProps } from '@/shared/lib/tv'
 import ChevronDown from '~icons/ci/chevron-down'
 
 const filterChip = tv({
