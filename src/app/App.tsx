@@ -1,15 +1,21 @@
 import { useEffect, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import { MobileLayout } from '@/widgets/mobile-layout'
 import { MapPage } from '@/pages/map'
 import { LoginPage } from '@/pages/login'
 import { AuthCallbackPage } from '@/pages/auth-callback'
+import { OnboardingPage } from '@/pages/onboarding'
+import { OnboardingGuidePage } from '@/pages/onboarding-guide'
 import { useAuthStore, useIsAuthenticated } from '@/entities/session'
 
 // 셸(바텀탭)을 쓰는 일반 화면. 지도(/map)는 풀스크린이라 셸 밖에서 렌더.
 function Home() {
   const isAuthenticated = useIsAuthenticated()
+  const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+
+  // 로그인은 했지만 온보딩을 안 마쳤으면 온보딩부터
+  if (isAuthenticated && user && !user.isOnboarded) return <Navigate to="/onboarding" replace />
 
   return (
     <MobileLayout>
@@ -89,6 +95,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/kakao" element={<AuthCallbackPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
           <Route path="/map" element={<MapPage />} />
         </Routes>
       </SessionGate>

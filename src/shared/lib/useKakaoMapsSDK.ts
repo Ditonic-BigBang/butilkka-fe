@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
-const KAKAO_SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_JS_KEY}&autoload=false`
+// services: 주소 검색(Geocoder) — 온보딩·가게위치 변경에서 사용
+const KAKAO_SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_JS_KEY}&autoload=false&libraries=services`
 
 export function useKakaoMapsSDK() {
   const [isLoaded, setIsLoaded] = useState(false)

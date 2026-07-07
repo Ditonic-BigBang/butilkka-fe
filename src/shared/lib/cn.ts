@@ -24,14 +24,16 @@ const TEXT_STYLES = [
 // @theme 커스텀 색 중 표준 팔레트명이 아닌 것 (gray-*·orange-* 는 표준명이라 자동 인식)
 const TEXT_COLORS = ['key', 'status-red', 'status-red-soft', 'info-blue', 'info-blue-soft']
 
-const twMerge = extendTailwindMerge({
+export const tailwindMergeConfig = {
   extend: {
     classGroups: {
       'font-size': [{ text: TEXT_STYLES }],
       'text-color': [{ text: TEXT_COLORS }],
     },
   },
-})
+}
+
+const twMerge = extendTailwindMerge(tailwindMergeConfig)
 
 /**
  * 조건부 className 을 합치고 Tailwind 클래스 충돌을 정리한다.

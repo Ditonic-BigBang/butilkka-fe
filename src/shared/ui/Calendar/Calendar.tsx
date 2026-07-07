@@ -58,7 +58,7 @@ export function Calendar({ value, onSelect, defaultMonth, className }: CalendarP
         >
           <ChevronLeft aria-hidden className="size-6" />
         </button>
-        <span className="text-body-l-semibold text-gray-900">
+        <span className="text-title-s-semibold text-gray-900">
           {view.year}년 {view.month + 1}월
         </span>
         <button
@@ -76,7 +76,7 @@ export function Calendar({ value, onSelect, defaultMonth, className }: CalendarP
         {WEEKDAYS.map((w) => (
           <div
             key={w}
-            className="flex h-9 items-center justify-center text-caption-l-medium text-gray-400"
+            className="flex h-9 items-center justify-center text-body-m-medium text-gray-400"
           >
             {w}
           </div>
@@ -100,7 +100,7 @@ export function Calendar({ value, onSelect, defaultMonth, className }: CalendarP
             >
               <span
                 className={cn(
-                  'flex size-9 items-center justify-center rounded-max text-body-m-medium leading-none tabular-nums',
+                  'flex size-9 items-center justify-center rounded-max text-body-l-medium leading-none tabular-nums',
                   selected
                     ? 'bg-key text-white'
                     : !inMonth

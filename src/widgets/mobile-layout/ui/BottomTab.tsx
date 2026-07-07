@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import { tv } from 'tailwind-variants'
+import { tv } from '@/shared/lib/tv'
 import { TABS, type TabKey } from '../model/tabs'
 
 const tabItem = tv({
-  base: 'flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-caption-m-regular transition-colors select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none focus-visible:ring-inset',
+  base: 'flex min-h-14 flex-1 flex-col items-center  justify-center gap-1 py-2.5 text-caption-m-regular transition-colors select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none focus-visible:ring-inset',
   variants: {
     active: {
-      // 활성 = 명도 대비(gray-900 vs gray-300, Figma 디자인대로). 색만 의존하지만
-      // 명도 차이라 색각이상에도 구분되고, aria-current 로 스크린리더도 대응.
       true: 'text-gray-900',
       false: 'text-gray-300 hover:text-gray-500',
     },
@@ -40,7 +38,7 @@ export function BottomTab({ activeTab, defaultTab = TABS[0].key, onTabChange }: 
   return (
     <nav
       aria-label="메인 내비게이션"
-      className="flex shrink-0 items-stretch border-t border-gray-200 bg-white pb-safe-bottom-or-3"
+      className="flex border-t border-gray-200 bg-white px-5 pb-safe-bottom-or-3"
     >
       {TABS.map((tab) => {
         const isActive = tab.key === active
