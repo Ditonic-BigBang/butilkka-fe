@@ -2,23 +2,28 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="버틸까 — 모바일 웹앱" />
+    <meta name="description" content="버틸까 — 상권 쇠퇴 분석 모바일 웹앱" />
 
-    <!-- 모바일 웹앱 / 홈 화면 추가 (라이트 PWA: 서비스워커 없음) -->
-    <meta name="theme-color" content="#ffffff" />
+    <!-- 폰트: Pretendard Variable 다이나믹 서브셋 (한글은 화면에 쓰는 글자만 로드) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+    />
+
+    <!-- 모바일 웹앱 / 홈 화면 추가.
+         아이콘·매니페스트·theme-color·iOS 스플래시 <link> 는 vite-plugin-pwa 가 빌드 시 자동 주입한다.
+         (소스: public/app-icon.svg → pwa-assets.config.ts) -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="버틸까" />
-    <link rel="manifest" href="/manifest.json" />
-    <!-- TODO(디자인): apple-touch-icon.png(180²) + manifest PNG 아이콘(192/512, maskable) 로 교체, theme-color 도 브랜드색으로 -->
 
     <title>버틸까</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>
