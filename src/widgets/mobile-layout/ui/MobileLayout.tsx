@@ -22,9 +22,11 @@ export function MobileLayout({ children, showBottomTab = true, className }: Mobi
 
   return (
     <div className="flex min-h-dvh justify-center bg-gray-100">
+      {/* pt-safe-top: PWA(standalone)에서 viewport-fit=cover 로 노치 밑까지 확장될 때
+          GNB 가 상태바에 깔리지 않게 — 일반 브라우저에선 env()=0 이라 영향 없음 */}
       <div
         className={cn(
-          'relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white shadow-xl',
+          'relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white pt-safe-top shadow-xl',
           className,
         )}
       >

@@ -1,4 +1,4 @@
-import { tv, type VariantProps } from 'tailwind-variants'
+import { tv, type VariantProps } from '@/shared/lib/tv'
 
 const selectButton = tv({
   base: 'inline-flex h-[50px] w-[169px] items-center justify-center rounded-8 border bg-white px-11 py-2 text-body-l-medium whitespace-nowrap transition-colors disabled:pointer-events-none',

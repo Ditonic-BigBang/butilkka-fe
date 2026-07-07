@@ -1,4 +1,4 @@
-import { tv, type VariantProps } from 'tailwind-variants'
+import { tv, type VariantProps } from '@/shared/lib/tv'
 
 const cta = tv({
   base: 'flex h-13 w-full items-center justify-center rounded-12 text-body-l-semibold text-white transition-colors select-none',

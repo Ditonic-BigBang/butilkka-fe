@@ -6,10 +6,11 @@ import { queryClient } from '@/shared/api/queryClient'
 import './index.css'
 import App from './App.tsx'
 
-// 개발 환경에서, 그리고 VITE_ENABLE_MSW=true 일 때만 MSW worker 를 시작한다.
-// 동적 import 라서 MSW 코드는 프로덕션 번들에 포함되지 않는다(코드 스플리팅).
+// VITE_ENABLE_MSW=true 일 때만 MSW worker 를 시작한다 (기본 꺼짐).
+// - 로컬: .env 로 토글 (백엔드 없이 UI 작업할 때 켜기)
+// - 배포: 백엔드 배포 전 mock 데모용으로 Vercel 환경변수에서 켜고, 실서버 전환 시 제거
+// 동적 import 라서 꺼져 있으면 MSW 코드는 로드되지 않는다(코드 스플리팅).
 async function enableMocking() {
-  if (!import.meta.env.DEV) return
   if (import.meta.env.VITE_ENABLE_MSW !== 'true') return
 
   const { worker } = await import('@/shared/api/mocks/browser')

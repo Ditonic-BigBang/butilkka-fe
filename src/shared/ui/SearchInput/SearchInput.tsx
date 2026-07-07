@@ -13,7 +13,9 @@ type SearchInputProps = Omit<React.ComponentProps<'input'>, 'value' | 'onChange'
 
 /**
  * 검색 입력 (Figma: Search Bar 176:2650 · Default/Selected/Typing/Result).
- * controlled input — 포커스 시 좌측이 🔍→‹(back), 값 있으면 우측 ✕(clear).
+ * controlled input — 값 있으면 우측 ✕(clear).
+ * 좌측 아이콘: 기본은 🔍 유지(주소 검색 446:21470), `onBack` 을 넘긴 화면(지도 검색 오버레이)만
+ * 포커스 시 🔍→‹(검색 취소)로 전환.
  * 검색 *동작*(쿼리·결과)은 상위 feature 가 처리, 여기는 입력 UI 만.
  */
 export function SearchInput({
@@ -33,7 +35,7 @@ export function SearchInput({
     <div
       className={cn('flex h-12 w-full items-center gap-2.5 rounded-8 bg-gray-70 px-4', className)}
     >
-      {focused ? (
+      {focused && onBack ? (
         <button
           type="button"
           aria-label="검색 취소"
