@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import { dashboardMock, makeNotificationsMock } from './fixtures'
 
 // MSW v2 요청 핸들러 — browser worker(개발)와 node server(테스트)가 공유한다.
 // API 가 생길 때마다 여기에 기능별로 추가한다. 응답 형식은 API명세서 V3 의
@@ -31,6 +32,9 @@ const MOCK_CATEGORIES = [
 
 // 온보딩 완료(PUT store) 시 true — /me 의 isOnboarded 에 반영 (페이지 새로고침까지 유지)
 let mockOnboarded = false
+
+// 알림 목록 — 세션 동안 상태 유지(읽음 처리가 새로고침 전까지 반영되도록). 모듈 로드 시 1회 생성.
+const notificationState = makeNotificationsMock()
 
 export const handlers = [
   // 예시 핸들러 — 실제 엔드포인트가 생기면 교체/삭제할 것.
@@ -87,5 +91,27 @@ export const handlers = [
       regionName: '가로수길',
       categoryName: MOCK_CATEGORIES.find((c) => c.categoryCode === body.categoryCode)?.categoryName,
     })
+  }),
+
+  // ── 홈 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
+  // 홈 대시보드 (내 가게 기준 상권 등급·브리핑·지표)
+  http.get(`${API}/api/v1/dashboard`, () => ok('대시보드 조회 성공', dashboardMock)),
+
+  // ── 알림 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
+  // 받은 알림 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
+  http.get(`${API}/api/v1/notifications`, () => ok('알림 목록 조회 성공', notificationState)),
+
+  // 알림 읽음 처리 — 상태를 갱신해 재조회 시 유지
+  http.patch(`${API}/api/v1/notifications/:notificationId`, ({ params }) => {
+    const id = Number(params.notificationId)
+    const target = notificationState.notifications.find((n) => n.notificationId === id)
+    if (!target) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 알림입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    target.isRead = true
+    return ok('알림 읽음 처리 성공', { notificationId: id, isRead: true })
   }),
 ]

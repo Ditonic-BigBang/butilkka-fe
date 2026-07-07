@@ -43,6 +43,7 @@ describe('App', () => {
       ),
     )
     renderApp()
-    expect(await screen.findByRole('heading', { name: '버틸까?' })).toBeInTheDocument()
+    // 대시보드(GET /api/v1/dashboard) 목이 로드되면 헤더에 내 상권 위치가 뜬다 = 홈 렌더 성공
+    expect(await screen.findByText('마포구 가로수길')).toBeInTheDocument()
   })
 })

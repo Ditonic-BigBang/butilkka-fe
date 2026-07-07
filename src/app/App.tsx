@@ -1,56 +1,13 @@
 import { useEffect, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
-import { MobileLayout } from '@/widgets/mobile-layout'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { HomePage } from '@/pages/home'
 import { MapPage } from '@/pages/map'
 import { LoginPage } from '@/pages/login'
 import { AuthCallbackPage } from '@/pages/auth-callback'
 import { OnboardingPage } from '@/pages/onboarding'
 import { OnboardingGuidePage } from '@/pages/onboarding-guide'
-import { useAuthStore, useIsAuthenticated } from '@/entities/session'
-
-// 셸(바텀탭)을 쓰는 일반 화면. 지도(/map)는 풀스크린이라 셸 밖에서 렌더.
-function Home() {
-  const isAuthenticated = useIsAuthenticated()
-  const user = useAuthStore((s) => s.user)
-  const logout = useAuthStore((s) => s.logout)
-
-  // 로그인은 했지만 온보딩을 안 마쳤으면 온보딩부터
-  if (isAuthenticated && user && !user.isOnboarded) return <Navigate to="/onboarding" replace />
-
-  return (
-    <MobileLayout>
-      <div className="flex flex-col items-center gap-4 px-6 py-10 text-gray-900">
-        <h1 className="text-2xl font-bold tracking-tight">버틸까?</h1>
-        <p className="text-sm text-gray-500">서울 자치구 지도</p>
-        <Link
-          to="/map"
-          className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition hover:bg-indigo-700"
-        >
-          지도 보기
-        </Link>
-        {isAuthenticated ? (
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-green-600">로그인됨 ✅</span>
-            <button
-              type="button"
-              onClick={() => void logout()}
-              className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-600 transition hover:bg-gray-50"
-            >
-              로그아웃
-            </button>
-          </div>
-        ) : (
-          <Link
-            to="/login"
-            className="rounded-lg border border-indigo-200 px-4 py-2 font-medium text-indigo-600 transition hover:bg-indigo-50"
-          >
-            로그인
-          </Link>
-        )}
-      </div>
-    </MobileLayout>
-  )
-}
+import { NotificationsPage } from '@/pages/notifications'
+import { useAuthStore } from '@/entities/session'
 
 function AuthBootstrap() {
   const location = useLocation()
@@ -92,12 +49,13 @@ export default function App() {
       <AuthBootstrap />
       <SessionGate>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/kakao" element={<AuthCallbackPage />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
           <Route path="/map" element={<MapPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Routes>
       </SessionGate>
     </BrowserRouter>
