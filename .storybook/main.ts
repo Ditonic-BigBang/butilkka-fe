@@ -20,6 +20,12 @@ const config: StorybookConfig = {
   viteFinal: (viteConfig) => {
     const flat = ((viteConfig.plugins ?? []) as unknown[]).flat(Infinity) as unknown[]
     viteConfig.plugins = flat.filter((p) => !isPwaPlugin(p)) as PluginOption[]
+    // 페이지 스토리가 쓰는 react-query 를 미리 번들 — 콜드 캐시에서 테스트 중 dep 재최적화로
+    // 리로드되며 실패하는 플레이크(Failed to fetch dynamically imported module) 방지.
+    viteConfig.optimizeDeps = {
+      ...viteConfig.optimizeDeps,
+      include: [...(viteConfig.optimizeDeps?.include ?? []), '@tanstack/react-query'],
+    }
     return viteConfig
   },
 }

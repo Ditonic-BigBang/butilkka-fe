@@ -145,6 +145,15 @@
   --spacing-safe-bottom-or-6: max(env(safe-area-inset-bottom), calc(var(--spacing) * 6));
 }
 
+@layer base {
+  /* macOS/Retina 에서 기본 subpixel AA 로 텍스트가 디자인보다 두껍게 렌더되는 것 방지.
+     grayscale AA 로 맞춰 Figma(동일 방식)와 글자 굵기를 일치시킨다. */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
 /* 그라데이션 유틸: --gradient-* 는 Tailwind 네임스페이스가 아니라 유틸을 직접 정의 */
 @utility bg-gradation-1 {
   background-image: var(--gradient-1);

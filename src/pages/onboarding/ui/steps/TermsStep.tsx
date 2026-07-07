@@ -17,7 +17,7 @@ const FOOTNOTE =
  * 전체 동의(26px) + 필수 3 / 선택 1 체크리스트 — 필수 모두 체크 시 CTA 활성.
  */
 export function TermsStep() {
-  const { terms, setTerms, next, back, draft } = useOnboardingStore()
+  const { terms, setTerms, next, draft } = useOnboardingStore()
   const allAgreed = TERM_ITEMS.every((item) => terms[item.key])
 
   const toggleAll = () =>
@@ -26,7 +26,7 @@ export function TermsStep() {
   return (
     <OnboardingStepLayout
       title={'서비스 이용약관에\n동의해주세요'}
-      onBack={back}
+      showBack={false}
       ctaDisabled={!canProceed('terms', { draft, terms })}
       onCta={next}
     >

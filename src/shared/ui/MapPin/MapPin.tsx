@@ -31,9 +31,12 @@ export function MapPin({ variant = 'active', className, ...props }: MapPinProps)
           base,
         )}
       />
-      {/* 물방울 핀 */}
+      {/* 물방울 핀 — iOS 사파리는 CSS·inset 만으로 크기 잡은 인라인 SVG 를 오작동시켜서
+          width/height 속성으로 크기를 못박는다 (46×55 컨테이너 기준 px = 기존 inset% 와 동일) */}
       <svg
-        className="absolute top-[2.04%] right-[7.69%] bottom-[14.28%] left-[10.26%]"
+        width="37.74"
+        height="46.02"
+        className="absolute top-[1.12px] left-[4.72px]"
         viewBox="0 0 38.7436 47.0204"
         preserveAspectRatio="none"
         fill="none"
@@ -47,9 +50,11 @@ export function MapPin({ variant = 'active', className, ...props }: MapPinProps)
           strokeLinejoin="round"
         />
       </svg>
-      {/* 깃발 아이콘 */}
+      {/* 깃발 아이콘 — 크기를 CSS 클래스가 아니라 width/height 속성으로 (iOS 사파리 대응) */}
       <svg
-        className="absolute top-[14.6px] left-[17.5px] h-[15.75px] w-[14px]"
+        width="14"
+        height="15.75"
+        className="absolute top-[14.6px] left-[17.5px]"
         viewBox="0 0 16 17.7499"
         preserveAspectRatio="none"
         fill="none"
