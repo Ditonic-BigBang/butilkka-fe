@@ -71,6 +71,8 @@ export interface AuthUser {
   id: string | number
   name?: string
   isOnboarded?: boolean
+  /** 리포트 PRO 구독 여부 (선규격 — 구독 API 미정). true면 이용중 카드, false/미정이면 업그레이드 카드 */
+  isReportPro?: boolean
   /** 온보딩 완료 사용자의 가게 요약 (미완료면 null) */
   store?: {
     regionCode: string
@@ -79,6 +81,11 @@ export interface AuthUser {
     categoryName: string
     lat: number
     lng: number
+    /** 가게명·주소·창업일 — 명세 "수정 필요"(store 응답 범위 논의중)라 마이페이지 표시용 선반영 */
+    storeName?: string
+    address?: string
+    /** 창업일 (YYYY-MM-DD) */
+    storeOpenDate?: string
   } | null
 }
 

@@ -8,6 +8,7 @@ interface AuthState {
   status: AuthStatus
   setUser: (user: AuthUser | null) => void
   restoreSession: () => Promise<AuthUser | null>
+  refreshUser: () => Promise<AuthUser | null>
   logout: () => Promise<void>
 }
 
@@ -26,6 +27,18 @@ export const useAuthStore = create<AuthState>()((set) => ({
     } catch (error) {
       set({ user: null, status: 'anonymous' })
       throw error
+    }
+  },
+  // 로그인된 상태에서 서버의 최신 user 를 조용히 재조회한다(온보딩 완료 후 store 반영 등).
+  // restoreSession 과 달리 status 를 'checking' 으로 바꾸지 않아 SessionGate 스플래시가 안 뜬다.
+  // 실패(네트워크·만료)해도 현재 세션을 흔들지 않는다 — 최신화 실패일 뿐이므로 조용히 넘어간다.
+  refreshUser: async () => {
+    try {
+      const user = await getCurrentUser()
+      if (user) set({ user, status: 'authenticated' })
+      return user
+    } catch {
+      return null
     }
   },
   logout: async () => {

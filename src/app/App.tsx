@@ -7,6 +7,10 @@ import { AuthCallbackPage } from '@/pages/auth-callback'
 import { OnboardingPage } from '@/pages/onboarding'
 import { OnboardingGuidePage } from '@/pages/onboarding-guide'
 import { NotificationsPage } from '@/pages/notifications'
+import { MyPage } from '@/pages/my'
+import { MyStorePage } from '@/pages/my-store'
+import { MyStoreEditPage } from '@/pages/my-store-edit'
+import { MyCategoryPage } from '@/pages/my-category'
 import { useAuthStore } from '@/entities/session'
 
 function AuthBootstrap() {
@@ -56,6 +60,11 @@ export default function App() {
           <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/my" element={<MyPage />} />
+          <Route path="/my/store" element={<MyStorePage />} />
+          <Route path="/my/store/new" element={<MyStoreEditPage />} />
+          <Route path="/my/store/:storeId/edit" element={<MyStoreEditPage />} />
+          <Route path="/my/category" element={<MyCategoryPage />} />
         </Routes>
       </SessionGate>
     </BrowserRouter>

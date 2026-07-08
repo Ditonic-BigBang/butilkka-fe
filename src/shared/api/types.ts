@@ -27,6 +27,16 @@ export interface DashboardResponse {
   metrics: { footTraffic: MetricSeries; storeCount: MetricSeries; closureRate: MetricSeries }
 }
 
+// ── 알림 설정 (GET/PATCH /api/v1/users/me/notification-settings) ──
+export interface NotificationSettings {
+  /** SMS(카카오톡) 알림 연동 */
+  smsAlert: boolean
+  /** 분기별 자동 리포트 */
+  autoReport: boolean
+  /** 이상(비상) 신호 즉시 알림 */
+  urgentAlert: boolean
+}
+
 // ── 알림 (GET /api/v1/notifications, PATCH …/{id}) ────────────────
 export type NotificationCategory = 'EMERGENCY' | 'REPORT' | 'SYSTEM'
 

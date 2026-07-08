@@ -10,20 +10,29 @@ type TextFieldProps = {
   caption?: string
   /** text: 자유 입력(+ 값 있으면 지우기) · date: 캘린더 아이콘, 클릭 시 onPick */
   variant?: 'text' | 'date'
+  /** filled: gray-70 채움(온보딩) · outlined: 흰 배경 + 테두리(마이페이지 List_S) */
+  appearance?: 'filled' | 'outlined'
   /** date 필드 클릭 시(날짜 피커 열기 등) */
   onPick?: () => void
   disabled?: boolean
   className?: string
 }
 
-// 공통 필드 셸 — gray-70 배경 · 48px · radius-8 · 좌우 16px (Figma 온보딩_입력 353:8787)
-const FIELD = 'flex h-12 w-full items-center rounded-8 bg-gray-70 px-4 text-body-l-regular'
+// 공통 필드 셸 — 48px · radius-8 · 좌우 16px (Figma 온보딩_입력 353:8787 / List_S 301:5613)
+const FIELD = 'flex h-12 w-full items-center rounded-8 px-4 text-body-l-regular'
+
+// filled = gray-70 채움(placeholder gray-300) · outlined = 흰 배경 + gray-100 테두리(placeholder gray-500)
+const APPEARANCE = {
+  filled: { shell: 'bg-gray-70', placeholder: 'text-gray-300' },
+  outlined: { shell: 'bg-white border border-gray-100', placeholder: 'text-gray-500' },
+} as const
 
 /**
- * 온보딩 입력 필드 (Figma: 온보딩_입력 353:8787 · Blank/Filled/Date/Date_Selected).
- * 값이 있으면 텍스트 gray-900, 없으면 placeholder gray-300.
+ * 입력 필드 (Figma: 온보딩_입력 353:8787 · List_S 301:5613).
+ * 값이 있으면 텍스트 gray-900, 없으면 placeholder(appearance 별 색).
  * - `text`: 자유 입력, 값 있으면 우측 지우기(✕) 버튼
  * - `date`: 우측 캘린더 아이콘(값 있으면 gray-600, 없으면 gray-300), 클릭 시 `onPick`
+ * - `appearance`: `filled`(gray-70, 온보딩) · `outlined`(흰+테두리, 마이페이지)
  * `caption` 은 필드 아래 gray-300 14px 로 표시.
  */
 export function TextField({
@@ -32,11 +41,13 @@ export function TextField({
   placeholder,
   caption,
   variant = 'text',
+  appearance = 'filled',
   onPick,
   disabled,
   className,
 }: TextFieldProps) {
   const hasValue = value.length > 0
+  const { shell, placeholder: placeholderColor } = APPEARANCE[appearance]
 
   return (
     <div className={cn('flex w-full flex-col gap-2', className)}>
@@ -45,9 +56,9 @@ export function TextField({
           type="button"
           onClick={onPick}
           disabled={disabled}
-          className={cn(FIELD, 'justify-between disabled:opacity-60')}
+          className={cn(FIELD, shell, 'justify-between disabled:opacity-60')}
         >
-          <span className={hasValue ? 'text-gray-900' : 'text-gray-300'}>
+          <span className={hasValue ? 'text-gray-900' : placeholderColor}>
             {hasValue ? value : placeholder}
           </span>
           <CalendarDays
@@ -56,13 +67,16 @@ export function TextField({
           />
         </button>
       ) : (
-        <div className={cn(FIELD, 'gap-2.5')}>
+        <div className={cn(FIELD, shell, 'gap-2.5')}>
           <input
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
-            className="min-w-0 flex-1 bg-transparent text-gray-900 placeholder:text-gray-300 focus:outline-none disabled:opacity-60"
+            className={cn(
+              'min-w-0 flex-1 bg-transparent text-gray-900 focus:outline-none disabled:opacity-60',
+              appearance === 'outlined' ? 'placeholder:text-gray-500' : 'placeholder:text-gray-300',
+            )}
           />
           {hasValue && !disabled && (
             <button

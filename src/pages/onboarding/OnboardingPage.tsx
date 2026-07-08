@@ -56,6 +56,7 @@ export default function OnboardingPage() {
       lng: location.lng,
       storeName: name,
       storeOpenDate: foundedDate,
+      address: location.roadAddress,
     })
   }
 

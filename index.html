@@ -17,7 +17,10 @@
          (소스: public/app-icon.svg → pwa-assets.config.ts) -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- black-translucent: 상태바 투명 → 앱이 노치 뒤까지 확장. 노치 영역은 각 화면 프레임 배경색
+         (MobileLayout의 pt-safe-top)이 채워서 배경과 이어져 보인다. viewport-fit=cover 필수(위에 있음).
+         주의: 이 모드는 상태바 글자(시계·배터리)가 흰색 고정이라 밝은 배경에선 대비가 약할 수 있다. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="버틸까" />
 
     <!-- 소셜 링크 미리보기 (카카오톡·페북 등은 OG 태그를 읽음. og:image/url 은 절대 URL 필수) -->
