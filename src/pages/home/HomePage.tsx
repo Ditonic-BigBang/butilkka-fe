@@ -1,6 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom'
 import storeIllustration from '@/shared/assets/illustrations/store.png'
 import { MobileLayout } from '@/widgets/mobile-layout'
+import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { CurrentDistrictCard } from '@/entities/district'
 import { MetricTrendCard } from '@/shared/ui'
 import { useAuthStore, useIsAuthenticated } from '@/entities/session'
@@ -18,6 +19,8 @@ export default function HomePage() {
   const isAuthenticated = useIsAuthenticated()
   const user = useAuthStore((s) => s.user)
   const dashboard = useHomeDashboard()
+  // 홈 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
+  useThemeColor('#f7f7f7')
 
   // 로그인은 했지만 온보딩을 안 마쳤으면 온보딩부터
   if (isAuthenticated && user && !user.isOnboarded) return <Navigate to="/onboarding" replace />
@@ -32,7 +35,8 @@ export default function HomePage() {
   }
 
   return (
-    <MobileLayout>
+    // className: 프레임(노치 영역 포함) 배경을 gray-70 로 → iOS 노치가 홈 배경과 이어짐
+    <MobileLayout className="bg-gray-70">
       <div className="min-h-full bg-gray-70">
         <HomeHeader
           location={dashboard.data?.location ?? ''}

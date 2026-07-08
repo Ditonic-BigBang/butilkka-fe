@@ -20,7 +20,7 @@ const meta = {
     },
   },
   args: {
-    founded: '2022년 8월 창업',
+    founded: '2022년 8월 12일 창업',
     name: '뽀짜이 베트남쌀국수 명동본점',
     address: '서울 중구 명동10길 52 신한익스페이스',
     onEdit: () => {},
@@ -50,7 +50,7 @@ export const List: Story = {
     <div className="w-full">
       <StoreCard {...args} primary />
       <StoreCard
-        founded="2020년 3월 창업"
+        founded="2020년 3월 5일 창업"
         name="명동 칼국수 본점"
         address="서울 중구 명동8길 27"
         onEdit={() => {}}

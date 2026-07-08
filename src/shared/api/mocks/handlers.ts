@@ -33,6 +33,28 @@ const MOCK_CATEGORIES = [
 // 온보딩 완료(PUT store) 시 true — /me 의 isOnboarded 에 반영 (페이지 새로고침까지 유지)
 let mockOnboarded = false
 
+// 내 가게 목록 — 온보딩 완료(PUT store) 시 대표 가게로 저장.
+// 백엔드 store 테이블 분리 예정(유저당 여러 가게 + 대표 지정)이라 목록·isPrimary 선규격.
+let mockStores: {
+  storeId: number
+  storeName: string
+  address?: string
+  storeOpenDate?: string
+  regionCode: string
+  regionName?: string
+  categoryCode: string
+  categoryName?: string
+  lat: number
+  lng: number
+  isPrimary: boolean
+}[] = []
+
+// 알림 설정 — 세션 동안 유지. 초깃값은 Figma 마이페이지 기본 상태(연동·리포트 ON, 비상 OFF).
+const mockNotificationSettings = { smsAlert: true, autoReport: true, urgentAlert: false }
+
+// 리포트 PRO 구독 여부 — 데모용(구독 API 미정). false면 마이페이지에 업그레이드 카드가 뜬다.
+const mockReportPro = false
+
 // 알림 목록 — 세션 동안 상태 유지(읽음 처리가 새로고침 전까지 반영되도록). 모듈 로드 시 1회 생성.
 const notificationState = makeNotificationsMock()
 
@@ -48,7 +70,9 @@ export const handlers = [
       id: 1,
       name: '테스트유저',
       isOnboarded: mockOnboarded,
-      store: null,
+      isReportPro: mockReportPro,
+      // /me 의 store 요약은 대표 가게 기준
+      store: mockStores.find((s) => s.isPrimary) ?? null,
     }),
   ),
   http.post(`${API}/api/v1/auth/logout`, () => new HttpResponse(null, { status: 204 })),
@@ -86,11 +110,84 @@ export const handlers = [
   http.put(`${API}/api/v1/users/me/store`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
     mockOnboarded = true
-    return ok('가게 정보 저장 성공', {
-      ...body,
-      regionName: '가로수길',
-      categoryName: MOCK_CATEGORIES.find((c) => c.categoryCode === body.categoryCode)?.categoryName,
-    })
+    const categoryName = MOCK_CATEGORIES.find(
+      (c) => c.categoryCode === body.categoryCode,
+    )?.categoryName
+    // 온보딩은 대표 가게 1개 등록 — 목록을 통째로 교체한다.
+    mockStores = [
+      {
+        storeId: 1,
+        storeName: typeof body.storeName === 'string' ? body.storeName : '내 가게',
+        // 온보딩에서 선택한 도로명 주소를 그대로 저장(실서버 store.address 와 동일 계약)
+        address: typeof body.address === 'string' ? body.address : undefined,
+        storeOpenDate: typeof body.storeOpenDate === 'string' ? body.storeOpenDate : undefined,
+        regionCode: String(body.regionCode ?? ''),
+        regionName: '가로수길',
+        categoryCode: String(body.categoryCode ?? ''),
+        categoryName,
+        lat: Number(body.lat ?? 0),
+        lng: Number(body.lng ?? 0),
+        isPrimary: true,
+      },
+    ]
+    return ok('가게 정보 저장 성공', { ...body, regionName: '가로수길', categoryName })
+  }),
+
+  // 내 가게 목록 조회 (다점포·대표가게 — 백엔드 스펙 확정 전 선규격)
+  http.get(`${API}/api/v1/users/me/stores`, () => ok('내 가게 목록 조회 성공', mockStores)),
+
+  // 가게 추가 — 목록 맨 뒤에 append(대표 아님). 업종 입력이 없어 categoryCode 는 비워둔다.
+  http.post(`${API}/api/v1/users/me/stores`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const nextId = mockStores.reduce((max, s) => Math.max(max, s.storeId), 0) + 1
+    const store = {
+      storeId: nextId,
+      storeName: typeof body.storeName === 'string' ? body.storeName : '내 가게',
+      address: typeof body.address === 'string' ? body.address : undefined,
+      storeOpenDate: typeof body.storeOpenDate === 'string' ? body.storeOpenDate : undefined,
+      regionCode: String(body.regionCode ?? ''),
+      regionName: '가로수길', // 목: 실서버는 regionCode 로 조회해 채운다
+      categoryCode: '',
+      categoryName: undefined,
+      lat: Number(body.lat ?? 0),
+      lng: Number(body.lng ?? 0),
+      isPrimary: false,
+    }
+    mockStores.push(store)
+    return ok('가게 추가 성공', store)
+  }),
+
+  // 가게 수정/대표 지정 — isPrimary: true 부분 전송이면 기존 대표를 해제하고 교체
+  http.patch(`${API}/api/v1/users/me/stores/:storeId`, async ({ params, request }) => {
+    const id = Number(params.storeId)
+    const target = mockStores.find((s) => s.storeId === id)
+    if (!target) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 가게입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    const { isPrimary, ...rest } = (await request.json()) as Record<string, unknown>
+    // isPrimary: true 면 기존 대표를 해제하고 이 가게로 교체
+    if (isPrimary === true) {
+      for (const s of mockStores) s.isPrimary = s.storeId === id
+    }
+    // 나머지 필드(이름·주소·창업일·좌표 등)는 부분 갱신
+    Object.assign(target, rest)
+    return ok('가게 정보 수정 성공', target)
+  }),
+
+  // ── 마이페이지 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
+  // 알림 설정 조회
+  http.get(`${API}/api/v1/users/me/notification-settings`, () =>
+    ok('알림 설정 조회 성공', mockNotificationSettings),
+  ),
+
+  // 알림 설정 변경 — 부분 갱신 후 전체 반환 (세션 동안 유지)
+  http.patch(`${API}/api/v1/users/me/notification-settings`, async ({ request }) => {
+    const patch = (await request.json()) as Partial<typeof mockNotificationSettings>
+    Object.assign(mockNotificationSettings, patch)
+    return ok('알림 설정 변경 성공', mockNotificationSettings)
   }),
 
   // ── 홈 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──

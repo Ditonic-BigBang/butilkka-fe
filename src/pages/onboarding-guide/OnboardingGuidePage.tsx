@@ -62,6 +62,7 @@ export default function OnboardingGuidePage() {
   const status = useAuthStore((s) => s.status)
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
+  const refreshUser = useAuthStore((s) => s.refreshUser)
   const reduceMotion = usePrefersReducedMotion()
 
   const [index, setIndex] = useState(0)
@@ -78,7 +79,10 @@ export default function OnboardingGuidePage() {
   // 저장 시점이 아닌 이 시점에 플립해야 OnboardingPage 의 'onboarded → 홈' 가드와
   // 경합하지 않는다(= confetti '다음'에서 가이드를 건너뛰고 홈으로 튀는 문제 방지).
   const finishGuide = () => {
+    // isOnboarded 는 즉시 플립해 홈 가드 통과를 보장하고(store 는 아직 stale),
+    // 서버에서 최신 user(store 포함)를 조용히 다시 읽어 마이페이지 등에 반영한다.
     if (user && !user.isOnboarded) setUser({ ...user, isOnboarded: true })
+    void refreshUser()
     navigate('/', { replace: true })
   }
 

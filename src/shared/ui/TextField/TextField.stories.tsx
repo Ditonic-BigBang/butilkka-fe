@@ -74,3 +74,10 @@ export const DateSelected: Story = {
   name: 'Date_Selected (선택됨)',
   args: { variant: 'date', value: '2025.01.15', placeholder: '날짜를 선택해주세요' },
 }
+
+/** outlined — 흰 배경 + gray-100 테두리(마이페이지 List_S). placeholder gray-500. */
+export const Outlined: Story = {
+  name: 'Outlined (흰+테두리)',
+  args: { appearance: 'outlined', placeholder: '가게 이름을 입력해주세요.' },
+  render: (args) => <ControlledText {...args} />,
+}
