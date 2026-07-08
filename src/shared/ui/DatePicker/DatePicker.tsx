@@ -11,6 +11,8 @@ type DatePickerProps = {
   onChange?: (date: Date) => void
   placeholder?: string
   caption?: string
+  /** 필드 외형 — filled(gray-70, 온보딩) · outlined(흰+테두리, 마이페이지) */
+  appearance?: 'filled' | 'outlined'
   /** 시트 접근성 라벨 (화면에는 안 보임) */
   title?: string
   className?: string
@@ -26,6 +28,7 @@ export function DatePicker({
   onChange,
   placeholder = '날짜를 선택해주세요',
   caption,
+  appearance,
   title = '날짜 선택',
   className,
 }: DatePickerProps) {
@@ -35,6 +38,7 @@ export function DatePicker({
     <>
       <TextField
         variant="date"
+        appearance={appearance}
         value={value ? format(value) : ''}
         placeholder={placeholder}
         caption={caption}

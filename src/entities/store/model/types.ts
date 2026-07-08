@@ -51,6 +51,27 @@ export interface StoreDraft {
   foundedDate?: string
 }
 
+/**
+ * 내 가게 (GET /api/v1/users/me/stores).
+ * 백엔드 store 테이블 분리 예정(유저당 여러 가게 + 대표 지정) — 명세 확정 전 선규격.
+ */
+export interface MyStore {
+  storeId: number
+  storeName: string
+  /** 도로명 주소 */
+  address?: string
+  /** 창업일 (YYYY-MM-DD) */
+  storeOpenDate?: string
+  regionCode: string
+  regionName?: string
+  categoryCode: string
+  categoryName?: string
+  lat: number
+  lng: number
+  /** 대표 가게 여부 */
+  isPrimary: boolean
+}
+
 /** 등록 완료된 가게 (PUT /api/v1/users/me/store 응답) */
 export interface Store {
   regionCode: string

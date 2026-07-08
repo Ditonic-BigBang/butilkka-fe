@@ -8,11 +8,17 @@ declare namespace kakao {
       getCenter(): LatLng
       setLevel(level: number, options?: { animate?: boolean }): void
       getLevel(): number
+      /** 드래그 이동 허용 여부 (프리뷰 지도는 false) */
+      setDraggable(draggable: boolean): void
+      /** 스크롤 줌 허용 여부 (프리뷰 지도는 false) */
+      setZoomable(zoomable: boolean): void
     }
 
     interface MapOptions {
       center: LatLng
       level: number
+      /** 드래그 이동 허용 여부 (기본 true) */
+      draggable?: boolean
     }
 
     class LatLng {
