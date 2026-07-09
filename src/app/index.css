@@ -33,6 +33,13 @@
   --color-info-blue: #4193ff;
   --color-info-blue-soft: #f3fafe;
 
+  /* ===================== Home Card (쇠퇴 등급 스케일 01~05, Figma Home Card) ===================== */
+  --color-home-card-1: #ff9d47;
+  --color-home-card-2: #ff793c;
+  --color-home-card-3: #ff621b; /* = key */
+  --color-home-card-4: #ef4419;
+  --color-home-card-5: #da3b26;
+
   /* ===================== Typography ===================== */
   /* Pretendard Variable, 자간 일괄 -2% (= -0.02em), 행간 140% */
   --font-sans: 'Pretendard Variable', system-ui, sans-serif;
@@ -41,6 +48,11 @@
   --text-headline-medium--line-height: 1.4;
   --text-headline-medium--letter-spacing: -0.02em;
   --text-headline-medium--font-weight: 500;
+
+  --text-headline-bold: 28px;
+  --text-headline-bold--line-height: 1.4;
+  --text-headline-bold--letter-spacing: -0.02em;
+  --text-headline-bold--font-weight: 700;
 
   --text-title-l-medium: 28px;
   --text-title-l-medium--line-height: 1.4;
@@ -131,6 +143,8 @@
   /* 보간을 oklch로 → 중간색이 칙칙해지는 sRGB 데드존 회피 (색 stop은 hex 유지) */
   --gradient-1: linear-gradient(in oklch to right, #ffe9df 0%, #f8f8f8 100%);
   --gradient-2: linear-gradient(in oklch to right, #ffc78a 0%, #ff9058 100%);
+  /* Gradation/3: 상단 웜 페이드(구독 헤더 등) — #ffd6ad → 흰 투명(세로). 투명 페이드라 sRGB 보간. */
+  --gradient-3: linear-gradient(to bottom, #ffd6ad 0%, rgb(255 255 255 / 0) 100%);
 
   /* ===================== Safe-area (기존 유지) ===================== */
   /* iOS safe-area 인셋 → pt-safe-top / pb-safe-bottom / px-safe-* 등으로 사용
@@ -160,6 +174,9 @@
 }
 @utility bg-gradation-2 {
   background-image: var(--gradient-2);
+}
+@utility bg-gradation-3 {
+  background-image: var(--gradient-3);
 }
 
 /* ── 지도 페이지 레이아웃 ── */
