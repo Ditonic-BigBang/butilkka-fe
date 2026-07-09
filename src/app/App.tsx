@@ -11,7 +11,10 @@ import { MyPage } from '@/pages/my'
 import { MyStorePage } from '@/pages/my-store'
 import { MyStoreEditPage } from '@/pages/my-store-edit'
 import { MyCategoryPage } from '@/pages/my-category'
+import { SubscriptionPage } from '@/pages/subscription'
+import { SubscriptionCompletePage } from '@/pages/subscription-complete'
 import { useAuthStore } from '@/entities/session'
+import { useAppHeight } from '@/shared/lib/useAppHeight'
 
 function AuthBootstrap() {
   const location = useLocation()
@@ -48,6 +51,9 @@ function SessionGate({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
+  // iOS PWA 뷰포트 높이 안정화 (100dvh 첫 렌더 어긋남 → 하단 탭 위로 뜨는 문제 방지)
+  useAppHeight()
+
   return (
     <BrowserRouter>
       <AuthBootstrap />
@@ -65,6 +71,8 @@ export default function App() {
           <Route path="/my/store/new" element={<MyStoreEditPage />} />
           <Route path="/my/store/:storeId/edit" element={<MyStoreEditPage />} />
           <Route path="/my/category" element={<MyCategoryPage />} />
+          <Route path="/my/subscription" element={<SubscriptionPage />} />
+          <Route path="/my/subscription/complete" element={<SubscriptionCompletePage />} />
         </Routes>
       </SessionGate>
     </BrowserRouter>

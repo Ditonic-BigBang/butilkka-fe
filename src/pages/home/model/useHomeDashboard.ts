@@ -7,7 +7,8 @@ import type { SparkPoint } from '@/shared/ui'
 export type HomeMetric = {
   title: string
   value: string
-  change: { direction: 'up' | 'down'; label: string }
+  /** 값 옆 증감(개수) 칩 — 생략 시 미표시 (폐업률은 현재 숨김) */
+  change?: { direction: 'up' | 'down'; label: string }
   trend: SparkPoint[]
 }
 
@@ -35,15 +36,18 @@ function fetchDashboard(): Promise<DashboardResponse> {
 // "2026Q1" → "1분기"
 const quarterLabel = (quarter: string) => `${quarter.slice(-1)}분기`
 
-function toMetric(title: string, unit: string, m: MetricSeries): HomeMetric {
+// withChange=false 면 개수 칩을 숨긴다(폐업률). m.gap 은 그대로라 다시 켜기는 인자만 바꾸면 됨.
+function toMetric(title: string, unit: string, m: MetricSeries, withChange = true): HomeMetric {
   const sign = m.direction === 'UP' ? '+' : '-'
   return {
     title,
     value: `${sign}${m.delta}%`,
-    change: {
-      direction: m.direction === 'UP' ? 'up' : 'down',
-      label: `${m.gap.toLocaleString('ko-KR')}${unit}`,
-    },
+    change: withChange
+      ? {
+          direction: m.direction === 'UP' ? 'up' : 'down',
+          label: `${m.gap.toLocaleString('ko-KR')}${unit}`,
+        }
+      : undefined,
     // 스파크라인은 내부에서 min-max 정규화하므로 원값을 그대로 넘긴다.
     trend: m.points.map((p) => ({ label: quarterLabel(p.quarter), value: p.value })),
   }
@@ -58,7 +62,8 @@ function toHomeDashboard(d: DashboardResponse): HomeDashboard {
     metrics: {
       floating: toMetric('유동인구', '명', d.metrics.footTraffic),
       stores: toMetric('점포수', '개', d.metrics.storeCount),
-      closure: toMetric('폐업률', '개', d.metrics.closureRate),
+      // 폐업률은 개수 칩 숨김(디자인 변경) — 다시 켜려면 마지막 인자 제거/ true
+      closure: toMetric('폐업률', '개', d.metrics.closureRate, false),
     },
   }
 }
