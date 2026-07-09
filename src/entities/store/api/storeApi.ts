@@ -13,12 +13,10 @@ export function getMyStores(): Promise<MyStore[]> {
   return apiJson<MyStore[]>('/api/v1/users/me/stores')
 }
 
-/**
- * 가게 추가 요청 (POST /api/v1/users/me/stores, 선규격).
- * 내 가게 설정의 등록 폼엔 업종 입력이 없어 categoryCode 는 보내지 않는다(백엔드에서 nullable 처리 필요).
- */
+/** 가게 추가 요청 (POST /api/v1/users/me/stores, 선규격) */
 export interface CreateStorePayload {
   regionCode: string
+  categoryCode: string
   lat: number
   lng: number
   storeName: string

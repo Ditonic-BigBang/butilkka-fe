@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
@@ -46,8 +46,10 @@ describe('MyCategoryPage', () => {
     server.use(http.get(`${API}/api/v1/users/me/stores`, () => ok('목록', [primary])))
     renderPage()
 
-    // 현재 업종 칩
-    expect(await screen.findByText('커피전문점')).toBeInTheDocument()
+    // 현재 업종 박스 안 칩에 대표 가게 업종이 표시된다
+    // (그리드에도 같은 이름의 항목이 있으므로 "현재 업종" 박스로 스코프해 구분)
+    const box = (await screen.findByText('현재 업종')).parentElement as HTMLElement
+    expect(within(box).getByText('커피전문점')).toBeInTheDocument()
     // 미선택 → "다음" 비활성
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })

@@ -86,6 +86,7 @@ export default function MyStorePage() {
               founded={formatFounded(store.storeOpenDate)}
               name={store.storeName}
               address={store.address ?? store.regionName ?? ''}
+              category={store.categoryName}
               primary={store.isPrimary}
               onSelect={store.isPrimary ? undefined : () => selectAsPrimary(store.storeId)}
               onEdit={() => navigate(`/my/store/${store.storeId}/edit`)}

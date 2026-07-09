@@ -3,7 +3,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { StoreLocationPicker, LocationPreviewMap } from '@/widgets/store-location-picker'
 import { CTA, TextField, DatePicker } from '@/shared/ui'
-import { lookupRegion, useMyStores, type MyStore, type StoreLocation } from '@/entities/store'
+import {
+  lookupRegion,
+  CategorySelect,
+  type Category,
+  type MyStore,
+  type StoreLocation,
+  useMyStores,
+} from '@/entities/store'
 import { useUpdateStore } from './model/useUpdateStore'
 import { useCreateStore } from './model/useCreateStore'
 
@@ -90,7 +97,10 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
   const [regionCode, setRegionCode] = useState(store?.regionCode ?? initialRegionCode ?? '')
   const [name, setName] = useState(store?.storeName ?? '')
   const [foundedDate, setFoundedDate] = useState(store?.storeOpenDate ?? '')
+  const [categoryCode, setCategoryCode] = useState(store?.categoryCode ?? '')
+  const [categoryName, setCategoryName] = useState(store?.categoryName ?? '')
   const [picking, setPicking] = useState(false)
+  const [pickingCategory, setPickingCategory] = useState(false)
 
   // 위치 확정 → 상권코드 재매핑 (저장 payload 에 regionCode 필요). 실패해도 진행은 막지 않는다.
   const completeLocation = (loc: StoreLocation) => {
@@ -105,6 +115,13 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
       })
   }
 
+  // 업종 선택 → 폼 값 반영 후 폼으로 복귀 (라우트 이동 X — 폼 입력 유지)
+  const completeCategory = (category: Category) => {
+    setCategoryCode(category.categoryCode)
+    setCategoryName(category.categoryName)
+    setPickingCategory(false)
+  }
+
   if (picking) {
     return (
       <MobileLayout showBottomTab={false}>
@@ -117,7 +134,19 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
     )
   }
 
-  const canSave = !!location && name.trim().length > 0 && foundedDate.length > 0
+  if (pickingCategory) {
+    return (
+      <MobileLayout showBottomTab={false}>
+        <div className="flex min-h-full flex-col bg-white">
+          <GNB title="업종 설정" showSettings={false} onBack={() => setPickingCategory(false)} />
+          <CategorySelect currentCategoryName={categoryName} onComplete={completeCategory} />
+        </div>
+      </MobileLayout>
+    )
+  }
+
+  const canSave =
+    !!location && name.trim().length > 0 && foundedDate.length > 0 && categoryCode.length > 0
 
   const handleSave = () => {
     if (!location || pending) return
@@ -130,6 +159,7 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
             storeOpenDate: foundedDate,
             address: location.roadAddress,
             regionCode,
+            categoryCode,
             lat: location.lat,
             lng: location.lng,
           },
@@ -140,6 +170,7 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
       create.mutate(
         {
           regionCode,
+          categoryCode,
           lat: location.lat,
           lng: location.lng,
           storeName: name.trim(),
@@ -216,6 +247,18 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
               placeholder="창업일을 선택해주세요."
               title="창업일 선택"
             />
+          </Field>
+
+          <Field label="가게 업종">
+            <button
+              type="button"
+              onClick={() => setPickingCategory(true)}
+              className="flex h-12 w-full items-center rounded-8 border border-gray-100 bg-white px-4 text-left text-body-l-regular"
+            >
+              <span className={categoryName ? 'truncate text-gray-900' : 'text-gray-500'}>
+                {categoryName || '업종을 선택해주세요.'}
+              </span>
+            </button>
           </Field>
         </div>
 
