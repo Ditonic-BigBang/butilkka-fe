@@ -140,6 +140,7 @@ export const handlers = [
   http.post(`${API}/api/v1/users/me/stores`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>
     const nextId = mockStores.reduce((max, s) => Math.max(max, s.storeId), 0) + 1
+    const categoryCode = String(body.categoryCode ?? '')
     const store = {
       storeId: nextId,
       storeName: typeof body.storeName === 'string' ? body.storeName : '내 가게',
@@ -147,8 +148,8 @@ export const handlers = [
       storeOpenDate: typeof body.storeOpenDate === 'string' ? body.storeOpenDate : undefined,
       regionCode: String(body.regionCode ?? ''),
       regionName: '가로수길', // 목: 실서버는 regionCode 로 조회해 채운다
-      categoryCode: '',
-      categoryName: undefined,
+      categoryCode,
+      categoryName: MOCK_CATEGORIES.find((c) => c.categoryCode === categoryCode)?.categoryName,
       lat: Number(body.lat ?? 0),
       lng: Number(body.lng ?? 0),
       isPrimary: false,

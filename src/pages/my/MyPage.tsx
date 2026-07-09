@@ -1,9 +1,8 @@
 import { Navigate, useNavigate } from 'react-router-dom'
 import Building from '~icons/ci/building-01'
-import TagIcon from '~icons/ci/tag'
 import ChevronRight from '~icons/ci/chevron-right'
 import { MobileLayout } from '@/widgets/mobile-layout'
-import { MyPageRow, SettingRow, Tag, Toggle, ToastHost } from '@/shared/ui'
+import { SettingRow, Tag, Toggle, ToastHost } from '@/shared/ui'
 import { ReportProUpgradeCard, ReportProActiveCard } from '@/entities/report'
 import { useAuthStore, useIsAuthenticated } from '@/entities/session'
 import type { NotificationSettings } from '@/shared/api/types'
@@ -67,34 +66,38 @@ export default function MyPage() {
 
         <div className="flex flex-col gap-5 px-5 pb-6">
           <div className="flex flex-col gap-3">
+            {/* 가게+업종 통합 카드 (Figma: List_M/가게 427:18737) — 가게명·주소 + 업종 칩 한 행 */}
             {store && (
-              <section className="overflow-hidden rounded-12 border border-gray-100">
-                <MyPageRow
-                  icon={<Building aria-hidden className="size-6 text-gray-900" />}
-                  onClick={() => navigate('/my/store')}
-                >
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <span className="truncate text-body-l-semibold text-gray-900">
-                      {store.storeName ?? '내 가게'}
+              <button
+                type="button"
+                onClick={() => navigate('/my/store')}
+                className="flex w-full items-center justify-between gap-3 rounded-12 border border-gray-100 bg-white p-4 text-left"
+              >
+                <span className="flex min-w-0 items-start gap-2.5">
+                  <Building aria-hidden className="size-6 shrink-0 text-gray-900" />
+                  <span className="flex min-w-0 flex-col gap-2">
+                    <span className="flex min-w-0 flex-col gap-1">
+                      <span className="truncate text-body-l-semibold text-gray-900">
+                        {store.storeName ?? '내 가게'}
+                      </span>
+                      <span className="truncate text-caption-l-regular text-gray-500">
+                        {store.address ?? store.regionName}
+                      </span>
                     </span>
-                    <span className="truncate text-caption-l-regular text-gray-500">
-                      {store.address ?? store.regionName}
-                    </span>
+                    {store.categoryName && <Tag className="self-start">{store.categoryName}</Tag>}
                   </span>
-                </MyPageRow>
-                <MyPageRow
-                  icon={<TagIcon aria-hidden className="size-6 text-gray-900" />}
-                  label="업종"
-                  onClick={() => navigate('/my/category')}
-                >
-                  <Tag>{store.categoryName}</Tag>
-                </MyPageRow>
-              </section>
+                </span>
+                <ChevronRight aria-hidden className="size-6 shrink-0 text-gray-200" />
+              </button>
             )}
 
             {/* 리포트 PRO — 구독 여부로 업그레이드/이용중 카드 (Figma Card_요금제, 가게 카드와 알림 설정 사이).
-                이동 동작(리포트 상세·업그레이드)은 해당 화면 구현 시 연결. */}
-            {user?.isReportPro ? <ReportProActiveCard /> : <ReportProUpgradeCard />}
+                미구독이면 업그레이드 → 구독 플랜 확인 화면으로 이동. */}
+            {user?.isReportPro ? (
+              <ReportProActiveCard />
+            ) : (
+              <ReportProUpgradeCard onUpgrade={() => navigate('/my/subscription')} />
+            )}
 
             <section className="overflow-hidden rounded-14 border border-gray-100">
               <h2 className="px-5 py-4 text-body-m-semibold text-gray-700">알림 설정</h2>

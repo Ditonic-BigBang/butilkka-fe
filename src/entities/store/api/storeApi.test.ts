@@ -40,6 +40,7 @@ describe('createStore — 새 가게 추가', () => {
     })
     await createStore({
       regionCode: '3110001',
+      categoryCode: 'CS100006',
       lat: 37.5636,
       lng: 126.9857,
       storeName: '명동 신규점',

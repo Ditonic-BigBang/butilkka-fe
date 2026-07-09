@@ -59,13 +59,13 @@ export const FloatingPopulation: Story = {
   ),
 }
 
-/** 폐업률 — 가로(전폭), ▲빨강 칩. */
+/** 폐업률 — 가로(전폭), 개수 칩 없음(디자인 변경). */
 export const ClosureRate: Story = {
   name: '폐업률 (가로)',
   args: {
     title: '폐업률',
     value: '+18%',
-    change: { direction: 'up', label: '94개' },
+    change: undefined, // meta 기본 칩을 덮어 개수 미표시
     trend: UP_TREND,
     layout: 'horizontal',
   },
@@ -90,13 +90,7 @@ export const HomeLayout: Story = {
           trend={DOWN_TREND}
         />
       </div>
-      <MetricTrendCard
-        title="폐업률"
-        value="+18%"
-        change={{ direction: 'up', label: '94개' }}
-        trend={UP_TREND}
-        layout="horizontal"
-      />
+      <MetricTrendCard title="폐업률" value="+18%" trend={UP_TREND} layout="horizontal" />
     </div>
   ),
 }

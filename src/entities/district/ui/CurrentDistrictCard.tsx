@@ -13,13 +13,13 @@ const GRADE_STATUS: Record<Grade, string> = {
   E: '위험',
 }
 
-// 등급 바 세그먼트 색 (Figma "Home Card/01~05") — A 밝은 주황 → E 진한 빨강(가장 진함)
+// 등급 바 세그먼트 색 (Figma "Home Card/01~05" 토큰) — A 밝은 주황 → E 진한 빨강(가장 진함)
 const SEGMENT_COLORS: Record<Grade, string> = {
-  A: '#ff9d47',
-  B: '#ff793c',
-  C: '#ff621b',
-  D: '#ef4419',
-  E: '#da3b26',
+  A: 'bg-home-card-1',
+  B: 'bg-home-card-2',
+  C: 'bg-home-card-3',
+  D: 'bg-home-card-4',
+  E: 'bg-home-card-5',
 }
 
 type CurrentDistrictCardProps = {
@@ -94,8 +94,10 @@ export function CurrentDistrictCard({
             return (
               <span
                 key={g}
-                className={cn('h-2.5 flex-1 rounded-full', !filled && 'bg-gray-100')}
-                style={filled ? { backgroundColor: SEGMENT_COLORS[g] } : undefined}
+                className={cn(
+                  'h-2.5 flex-1 rounded-full',
+                  filled ? SEGMENT_COLORS[g] : 'bg-gray-100',
+                )}
               />
             )
           })}
