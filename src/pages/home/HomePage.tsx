@@ -9,6 +9,11 @@ import { useHomeDashboard, type HomeDashboard } from './model/useHomeDashboard'
 import { HomeHeader } from './ui/HomeHeader'
 import { AiBriefingCard } from './ui/AiBriefingCard'
 
+// 가게 일러스트 프리로드 — 히어로 카드는 대시보드 데이터 도착 후 마운트되므로,
+// 그때 fetch 를 시작하면 카드보다 이미지가 늦게 떠서 팝 인이 생긴다.
+// 모듈 로드(앱 부팅) 시점에 미리 받아 캐시에 올려둔다.
+new Image().src = storeIllustration
+
 /**
  * 홈 대시보드 (Figma: [1] 홈 558:12360 · API: GET /api/v1/dashboard).
  * 헤더(위치·알림) + 현재 상권 히어로 카드 + AI 한 줄 브리핑 + 지표 그래프(유동인구·점포수·폐업률).
@@ -48,10 +53,10 @@ export default function HomePage() {
   )
 }
 
-/** 대시보드 본문 — 현재 상권 카드 + 브리핑 + 지표 그래프 */
+/** 대시보드 본문 — 현재 상권 카드 + 브리핑 + 지표 그래프. 진입 시 순차 페이드업 */
 function DashboardContent({ data }: { data: HomeDashboard }) {
   return (
-    <>
+    <div className="stagger-fade-up">
       <CurrentDistrictCard
         grade={data.grade}
         lastGrade={data.lastGrade}
@@ -75,7 +80,7 @@ function DashboardContent({ data }: { data: HomeDashboard }) {
           <MetricTrendCard layout="horizontal" {...data.metrics.closure} />
         </div>
       </section>
-    </>
+    </div>
   )
 }
 

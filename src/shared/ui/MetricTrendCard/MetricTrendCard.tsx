@@ -44,8 +44,11 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
           strokeDasharray="3 1.5"
         />
       ))}
+      {/* 데이터 라인 — pathLength=1 정규화로 왜곡 무관하게 왼쪽부터 그려짐 */}
       <polyline
         points={points.map((p) => `${p.x},${p.y}`).join(' ')}
+        pathLength={1}
+        className="animate-draw-line"
         fill="none"
         stroke="#ff621b"
         strokeWidth={2}
@@ -53,7 +56,16 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
         strokeLinecap="round"
       />
       {last && (
-        <circle cx={last.x} cy={last.y} r={4.5} fill="#fff" stroke="#ff621b" strokeWidth={2} />
+        // 라인이 끝에 맺힐 즈음(950ms) 마지막 점 팝 인
+        <circle
+          cx={last.x}
+          cy={last.y}
+          r={4.5}
+          fill="#fff"
+          stroke="#ff621b"
+          strokeWidth={2}
+          className="animate-pop-in [animation-delay:950ms]"
+        />
       )}
       {/* x축 라벨 */}
       {points.map((p) => (

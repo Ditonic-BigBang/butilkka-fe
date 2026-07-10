@@ -289,6 +289,36 @@
   }
 }
 
+/* 등급 바 세그먼트 — 왼쪽에서 펼쳐지며 채움 */
+@keyframes segment-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* 등급 포인터 — 위에서 살짝 떨어지며 페이드 인 */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* 스파크라인 그리기 — pathLength=1 기준 dashoffset 1→0 */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* 스케일 팝 인 — SVG 요소는 transform-box 로 자기 중심 기준 */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
 @utility animate-fade-up {
   animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -297,6 +327,24 @@
 }
 @utility animate-gauge-fill {
   animation: gauge-fill 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+@utility animate-segment-in {
+  transform-origin: left;
+  animation: segment-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility animate-drop-in {
+  animation: drop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* 정적 dasharray 는 reduced-motion 으로 animation 이 꺼져도 라인 전체 표시(offset 0)를 보장 */
+@utility animate-draw-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: draw-line 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+@utility animate-pop-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 /* 자식 순차 등장 — 카드 리스트/컬럼 엔트런스 (6번째부터는 동일 딜레이) */
 @utility stagger-fade-up {
@@ -324,6 +372,10 @@
   .animate-fade-up,
   .animate-menu-in,
   .animate-gauge-fill,
+  .animate-segment-in,
+  .animate-drop-in,
+  .animate-draw-line,
+  .animate-pop-in,
   .stagger-fade-up > * {
     animation: none;
   }
