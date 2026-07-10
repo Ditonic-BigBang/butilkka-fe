@@ -22,13 +22,18 @@ export function HomeHeader({ location, onLocation, onBell, className }: HomeHead
         <button
           type="button"
           onClick={onLocation}
-          className="flex items-center gap-0.5 rounded-max bg-gray-90 p-2"
+          className="flex items-center gap-0.5 rounded-max bg-gray-90 p-2 transition duration-150 active:scale-[0.97] active:bg-gray-100"
         >
           <MapPin aria-hidden className="size-5 text-gray-300" />
           <span className="text-body-m-medium text-gray-600">{location}</span>
         </button>
       </div>
-      <button type="button" onClick={onBell} aria-label="알림">
+      <button
+        type="button"
+        onClick={onBell}
+        aria-label="알림"
+        className="transition-transform duration-150 active:scale-90"
+      >
         <Bell aria-hidden className="size-6 text-gray-700" />
       </button>
     </header>

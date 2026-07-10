@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect } from 'storybook/test'
+import { expect, waitFor } from 'storybook/test'
 import { RankedDistrictCard } from './RankedDistrictCard'
 
 const STATS = [
@@ -63,9 +63,11 @@ export const Interaction: Story = {
   args: { defaultExpanded: false },
   play: async ({ canvas, userEvent }) => {
     const header = canvas.getByRole('button', { expanded: false })
-    await expect(canvas.queryByText('점포수')).not.toBeInTheDocument()
+    // 펼침 애니메이션(grid-rows)을 위해 항상 마운트 — 접힘은 invisible 로 숨김
+    await expect(canvas.getByText('점포수')).not.toBeVisible()
     await userEvent.click(header)
-    await expect(canvas.getByText('점포수')).toBeInTheDocument()
+    // 펼침 전환(opacity) 완료를 기다린 뒤 확인
+    await waitFor(() => expect(canvas.getByText('점포수')).toBeVisible())
     await expect(canvas.getByRole('button', { name: '지도에서 확인하기' })).toBeInTheDocument()
   },
 }

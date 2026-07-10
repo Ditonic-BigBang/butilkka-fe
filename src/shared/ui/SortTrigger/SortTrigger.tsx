@@ -32,7 +32,10 @@ export function SortTrigger({
         viewBox="0 0 12 8"
         fill="currentColor"
         aria-hidden
-        className={cn('text-gray-300', direction === 'asc' && 'rotate-180')}
+        className={cn(
+          'text-gray-300 transition-transform duration-200',
+          direction === 'asc' && 'rotate-180',
+        )}
       >
         <path d="M1 1.5h10L6 7.5Z" />
       </svg>

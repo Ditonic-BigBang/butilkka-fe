@@ -1,3 +1,4 @@
+import { preload } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router-dom'
 import storeIllustration from '@/shared/assets/illustrations/store.png'
 import { MobileLayout } from '@/widgets/mobile-layout'
@@ -8,6 +9,11 @@ import { useAuthStore, useIsAuthenticated } from '@/entities/session'
 import { useHomeDashboard, type HomeDashboard } from './model/useHomeDashboard'
 import { HomeHeader } from './ui/HomeHeader'
 import { AiBriefingCard } from './ui/AiBriefingCard'
+
+// 가게 일러스트 프리로드 — 히어로 카드는 대시보드 데이터 도착 후 마운트되므로,
+// 그때 fetch 를 시작하면 카드보다 이미지가 늦게 떠서 팝 인이 생긴다.
+// 모듈 로드(앱 부팅) 시점에 React 공식 preload 로 미리 받아둔다.
+preload(storeIllustration, { as: 'image' })
 
 /**
  * 홈 대시보드 (Figma: [1] 홈 558:12360 · API: GET /api/v1/dashboard).
@@ -21,6 +27,10 @@ export default function HomePage() {
   const dashboard = useHomeDashboard()
   // 홈 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
   useThemeColor('#f7f7f7')
+
+  // 위치 pill — 마이페이지처럼 온보딩에서 저장한 가게 주소 기준, "서울" 접두만 생략
+  // (예: "서울 중구 충무로2가 111" → "중구 충무로2가 111"). 주소 없으면 상권명으로 폴백.
+  const storeAddress = user?.store?.address?.replace(/^서울(특별시)?\s+/, '')
 
   // 로그인은 했지만 온보딩을 안 마쳤으면 온보딩부터
   if (isAuthenticated && user && !user.isOnboarded) return <Navigate to="/onboarding" replace />
@@ -39,7 +49,7 @@ export default function HomePage() {
     <MobileLayout className="bg-gray-70">
       <div className="min-h-full bg-gray-70">
         <HomeHeader
-          location={dashboard.data?.location ?? ''}
+          location={storeAddress ?? dashboard.data?.location ?? ''}
           onBell={() => navigate('/notifications')}
         />
         <div className="px-5 pt-3 pb-6">{content}</div>
@@ -48,10 +58,10 @@ export default function HomePage() {
   )
 }
 
-/** 대시보드 본문 — 현재 상권 카드 + 브리핑 + 지표 그래프 */
+/** 대시보드 본문 — 현재 상권 카드 + 브리핑 + 지표 그래프. 진입 시 순차 페이드업 */
 function DashboardContent({ data }: { data: HomeDashboard }) {
   return (
-    <>
+    <div className="stagger-fade-up">
       <CurrentDistrictCard
         grade={data.grade}
         lastGrade={data.lastGrade}
@@ -75,7 +85,7 @@ function DashboardContent({ data }: { data: HomeDashboard }) {
           <MetricTrendCard layout="horizontal" {...data.metrics.closure} />
         </div>
       </section>
-    </>
+    </div>
   )
 }
 

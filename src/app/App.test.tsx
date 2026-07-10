@@ -44,6 +44,6 @@ describe('App', () => {
     )
     renderApp()
     // 대시보드(GET /api/v1/dashboard) 목이 로드되면 헤더에 내 상권 위치가 뜬다 = 홈 렌더 성공
-    expect(await screen.findByText('마포구 가로수길')).toBeInTheDocument()
+    expect(await screen.findByText('강남구 가로수길')).toBeInTheDocument()
   })
 })

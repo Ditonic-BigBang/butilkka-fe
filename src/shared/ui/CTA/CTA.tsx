@@ -1,12 +1,12 @@
 import { tv, type VariantProps } from '@/shared/lib/tv'
 
 const cta = tv({
-  base: 'flex h-13 w-full items-center justify-center rounded-12 text-body-l-semibold text-white transition-colors select-none',
+  base: 'flex h-13 w-full items-center justify-center rounded-12 text-body-l-semibold text-white transition duration-150 select-none',
   variants: {
-    // 비활성 = orange-200 (Figma Variant2). 활성 = key, 누르면 orange-600.
+    // 비활성 = orange-200 (Figma Variant2). 활성 = key, 누르면 orange-600 + 살짝 눌림.
     disabled: {
       true: 'pointer-events-none bg-orange-200',
-      false: 'bg-key active:bg-orange-600',
+      false: 'bg-key active:scale-[0.98] active:bg-orange-600',
     },
   },
   defaultVariants: { disabled: false },

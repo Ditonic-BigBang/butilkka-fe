@@ -7,6 +7,10 @@ import { AuthCallbackPage } from '@/pages/auth-callback'
 import { OnboardingPage } from '@/pages/onboarding'
 import { OnboardingGuidePage } from '@/pages/onboarding-guide'
 import { NotificationsPage } from '@/pages/notifications'
+import { ReportPage } from '@/pages/report'
+import { ReportHistoryPage } from '@/pages/report-history'
+import { ReportDetailPage } from '@/pages/report-detail'
+import { ReportCasesPage } from '@/pages/report-cases'
 import { MyPage } from '@/pages/my'
 import { MyStorePage } from '@/pages/my-store'
 import { MyStoreEditPage } from '@/pages/my-store-edit'
@@ -65,6 +69,10 @@ export default function App() {
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
           <Route path="/map" element={<MapPage />} />
+          <Route path="/report" element={<ReportPage />} />
+          <Route path="/report/history" element={<ReportHistoryPage />} />
+          <Route path="/report/:reportId" element={<ReportDetailPage />} />
+          <Route path="/report/:reportId/cases" element={<ReportCasesPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/my" element={<MyPage />} />
           <Route path="/my/store" element={<MyStorePage />} />
