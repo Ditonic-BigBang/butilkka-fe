@@ -13,8 +13,6 @@ export function useActiveTab() {
   const tab: TabKey = TABS.find((t) => t.path === pathname)?.key ?? 'home'
 
   const setTab = (next: TabKey) => {
-    // TODO(리포트): /report 페이지 구현 전까지는 이동하지 않는다 (빈 화면 방지)
-    if (next === 'report') return
     const target = TABS.find((t) => t.key === next)
     if (target && target.path !== pathname) navigate(target.path)
   }

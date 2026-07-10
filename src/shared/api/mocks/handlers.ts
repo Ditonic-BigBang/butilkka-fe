@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { dashboardMock, makeNotificationsMock } from './fixtures'
+import { dashboardMock, makeNotificationsMock, makeReportMock, reportHistoryMock } from './fixtures'
 
 // MSW v2 요청 핸들러 — browser worker(개발)와 node server(테스트)가 공유한다.
 // API 가 생길 때마다 여기에 기능별로 추가한다. 응답 형식은 API명세서 V3 의
@@ -194,6 +194,15 @@ export const handlers = [
   // ── 홈 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
   // 홈 대시보드 (내 가게 기준 상권 등급·브리핑·지표)
   http.get(`${API}/api/v1/dashboard`, () => ok('대시보드 조회 성공', dashboardMock)),
+
+  // ── 리포트 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
+  // 최신 분기 리포트(종합) — 데모는 '이동' 추천 시나리오 (버티기는 makeReportMock('버티기'))
+  http.get(`${API}/api/v1/reports/latest`, () => ok('리포트 조회 성공', makeReportMock())),
+
+  // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
+  http.get(`${API}/api/v1/reportsHistory`, () =>
+    ok('리포트 히스토리 조회 성공', reportHistoryMock),
+  ),
 
   // ── 알림 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
   // 받은 알림 목록 (offset/limit 은 데모에선 무시하고 전체 반환)

@@ -27,6 +27,78 @@ export interface DashboardResponse {
   metrics: { footTraffic: MetricSeries; storeCount: MetricSeries; closureRate: MetricSeries }
 }
 
+// ── AI 리포트 (GET /api/v1/reports/latest · /api/v1/reports/{reportId}) ──
+export type ReportGrade = 'A' | 'B' | 'C' | 'D' | 'E'
+export type ReportDeclineType = '성장형' | '순환형' | '쇠퇴형' | '정체형'
+export type ReportCauseLevel = '높음' | '중간' | '낮음'
+export type ReportRecommendation = '버티기' | '이동'
+
+export interface ReportCause {
+  title: string
+  level: ReportCauseLevel
+  description?: string
+}
+
+export interface ReportLeadingSignal {
+  title: string
+  description: string
+}
+
+export interface ReportSimilarCase {
+  caseId: string
+  regionCode: string
+  regionName: string
+  summary: string
+  period: { startYear: number; endYear: number }
+}
+
+export interface ReportAlternativeRegion {
+  rank: number
+  regionCode: string
+  regionName: string
+  reason: string
+  /** 핵심 지표 한 줄 (예: "유동인구 +6.2%") */
+  stat: string
+}
+
+export interface ReportResponse {
+  reportId: number
+  regionCode: string
+  regionName: string
+  categoryName: string
+  districtName: string
+  /** 분기 ("{year}Q{quarter}" 형식, 예: "2026Q2") */
+  quarter: string
+  grade: ReportGrade
+  declineType: ReportDeclineType
+  /** 상권 점수 0~100 (가로 막대그래프용) */
+  score: number
+  /** AI 한 줄 브리핑 */
+  briefing: string
+  /** AI 종합 전망 (5~6줄) */
+  aiOutlook: string
+  causes: ReportCause[]
+  leadingSignals: ReportLeadingSignal[]
+  similarCases: ReportSimilarCase[]
+  /** AI 의사결정 지원 */
+  decision: { recommendation: ReportRecommendation; title: string; description: string }
+  alternativeRegions: ReportAlternativeRegion[]
+}
+
+// ── 리포트 히스토리 (GET /api/v1/reportsHistory) ──────────────────
+export interface ReportHistoryItem {
+  reportId: number
+  quarter: string
+  grade: ReportGrade
+  briefing: string
+}
+
+export interface ReportHistoryResponse {
+  totalCount: number
+  hasNext: boolean
+  reports: ReportHistoryItem[]
+}
+
 // ── 알림 설정 (GET/PATCH /api/v1/users/me/notification-settings) ──
 export interface NotificationSettings {
   /** SMS(카카오톡) 알림 연동 */

@@ -1,14 +1,6 @@
 import { useState } from 'react'
 import { cn } from '@/shared/lib/cn'
-
-// AI 인사이트 표시용 4점 스파클(✦)
-function Sparkle({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
-      <path d="M12 1.5c.45 5.4 5.1 10.05 10.5 10.5-5.4.45-10.05 5.1-10.5 10.5-.45-5.4-5.1-10.05-10.5-10.5C6.9 11.55 11.55 6.9 12 1.5Z" />
-    </svg>
-  )
-}
+import { Sparkle } from './Sparkle'
 
 // 안정 참조(기본값 재생성 방지)
 const NO_TAGS: string[] = []
@@ -20,8 +12,8 @@ type SimilarCaseCardProps = {
   period: string
   /** 요약 (예: "오피스 공실이 선행되며 ... → 2022년 일부 회복") */
   summary: string
-  /** AI 설명 (펼침 시, 자동 줄바꿈) */
-  explanation: string
+  /** AI 설명 (펼침 시, 자동 줄바꿈) — 없으면 펼침 없는 요약 카드(Figma Variant3, 테두리 없음) */
+  explanation?: string
   /** 관련 태그 (펼침 시) */
   tags?: string[]
   /** 펼침 제어 (미지정 시 내부 토글) */
@@ -35,6 +27,7 @@ type SimilarCaseCardProps = {
  * 유사 사례 카드 — 펼침/접힘 아코디언 (Figma: Card_L_유사사례 390:17656).
  * 접힘: 지역·기간 + 요약. 헤더 탭 → 펼침: 구분선 + AI 설명(✦) + 관련 태그.
  * 펼치면 테두리가 진해짐(gray-100 → gray-500), rounded-12 → rounded-14.
+ * `explanation` 이 없으면 펼침 없는 요약 카드(Variant3 — 테두리 없는 흰 카드)로 렌더된다.
  */
 export function SimilarCaseCard({
   region,
@@ -53,6 +46,19 @@ export function SimilarCaseCard({
   const toggle = () => {
     if (expanded === undefined) setInternal(!open)
     onToggle?.(!open)
+  }
+
+  // 요약 카드 (Variant3) — 펼칠 내용이 없으니 정적 카드로
+  if (explanation === undefined) {
+    return (
+      <div className={cn('flex w-full flex-col gap-[13px] rounded-12 bg-white p-4', className)}>
+        <span className="flex w-full items-start justify-between gap-2">
+          <span className="text-body-l-semibold text-gray-800">{region}</span>
+          <span className="shrink-0 text-body-m-regular text-gray-400">{period}</span>
+        </span>
+        <span className="text-body-m-regular text-gray-700">{summary}</span>
+      </div>
+    )
   }
 
   return (
