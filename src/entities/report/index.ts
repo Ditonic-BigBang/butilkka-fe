@@ -8,4 +8,9 @@ export { ScoreCard } from './ui/ScoreCard'
 export { SimilarCaseCard } from './ui/SimilarCaseCard'
 export { Sparkle } from './ui/Sparkle'
 export { reportBenefitIcons } from './model/reportBenefitIcons'
-export { reportKeys, fetchLatestReport, fetchReportHistory } from './model/reportQueries'
+export {
+  reportKeys,
+  fetchLatestReport,
+  fetchReport,
+  fetchReportHistory,
+} from './model/reportQueries'

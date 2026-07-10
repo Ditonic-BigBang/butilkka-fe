@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import ChevronLeft from '~icons/ci/chevron-left'
 import Settings from '~icons/ci/settings'
 import Close from '~icons/ci/close-md'
@@ -20,6 +21,8 @@ type GNBProps = {
   onSettings?: () => void
   /** 오른쪽 닫기(X) — 설정 대신 X 노출 (완료 화면 등) */
   onClose?: () => void
+  /** 오른쪽 커스텀 슬롯 — 지정 시 설정/닫기 대신 렌더 (예: 지난 리포트 undo) */
+  right?: ReactNode
   // home variant
   /** 현재 위치 (예: 마포구 00동) */
   location?: string
@@ -44,6 +47,7 @@ export function GNB({
   onBack,
   onSettings,
   onClose,
+  right,
   location = '',
   onLocation,
   onBell,
@@ -77,17 +81,18 @@ export function GNB({
       </div>
       <p className="text-title-s-semibold whitespace-nowrap text-gray-900">{title}</p>
       <div className="flex w-6 justify-end">
-        {onClose ? (
-          <button type="button" onClick={onClose} aria-label="닫기">
-            <Close aria-hidden className={ICON} />
-          </button>
-        ) : (
-          showSettings && (
-            <button type="button" onClick={onSettings} aria-label="설정">
-              <Settings aria-hidden className={ICON} />
+        {right ??
+          (onClose ? (
+            <button type="button" onClick={onClose} aria-label="닫기">
+              <Close aria-hidden className={ICON} />
             </button>
-          )
-        )}
+          ) : (
+            showSettings && (
+              <button type="button" onClick={onSettings} aria-label="설정">
+                <Settings aria-hidden className={ICON} />
+              </button>
+            )
+          ))}
       </div>
     </header>
   )

@@ -9,12 +9,18 @@ import type { ReportHistoryResponse, ReportResponse } from '@/shared/api/types'
 export const reportKeys = {
   all: ['reports'] as const,
   latest: () => [...reportKeys.all, 'latest'] as const,
+  detail: (reportId: number) => [...reportKeys.all, 'detail', reportId] as const,
   history: () => [...reportKeys.all, 'history'] as const,
 }
 
 /** GET /api/v1/reports/latest (명세: envelope.data = ReportResponse) */
 export function fetchLatestReport(): Promise<ReportResponse> {
   return apiJson<ReportResponse>('/api/v1/reports/latest')
+}
+
+/** GET /api/v1/reports/{reportId} — 특정(지난) 분기 리포트, 응답 구조는 latest 와 동일 */
+export function fetchReport(reportId: number): Promise<ReportResponse> {
+  return apiJson<ReportResponse>(`/api/v1/reports/${reportId}`)
 }
 
 /** GET /api/v1/reportsHistory */

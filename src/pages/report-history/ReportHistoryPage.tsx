@@ -49,12 +49,12 @@ export default function ReportHistoryPage() {
       <ul className="flex flex-col">
         {reports.data.map((report) => (
           <li key={report.reportId}>
-            {/* TODO(리포트 상세): 특정 리포트 상세(/api/v1/reports/{reportId}) 화면 구현 시 이동 연결 */}
             <ReportCard
               quarter={report.quarter}
               title={report.title}
               summary={report.summary}
               read={report.read}
+              onClick={() => navigate(`/report/${report.reportId}`)}
             />
           </li>
         ))}

@@ -3,6 +3,8 @@
 import type {
   DashboardResponse,
   NotificationListResponse,
+  ReportGrade,
+  ReportHistoryItem,
   ReportHistoryResponse,
   ReportRecommendation,
   ReportResponse,
@@ -156,6 +158,26 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
         referenceDate: '26.03',
       },
     ],
+  }
+}
+
+// 등급 → 데모 쇠퇴 위험도 점수 (지난 리포트 상세 목 생성용)
+const GRADE_SCORES: Record<ReportGrade, number> = { A: 16, B: 38, C: 64, D: 82, E: 94 }
+
+/**
+ * GET /api/v1/reports/{reportId} 데모 데이터 — 히스토리 항목의 분기·등급·브리핑을
+ * 최신 리포트 목에 덮어쓴다. 등급이 좋으면(A·B) '버티기', 나쁘면 '이동' 추천으로
+ * 데모에서 두 추천 상태를 모두 볼 수 있게 한다.
+ */
+export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
+  const recommendation = item.grade === 'A' || item.grade === 'B' ? '버티기' : '이동'
+  return {
+    ...makeReportMock(recommendation),
+    reportId: item.reportId,
+    quarter: item.quarter,
+    grade: item.grade,
+    score: GRADE_SCORES[item.grade],
+    briefing: item.briefing,
   }
 }
 
