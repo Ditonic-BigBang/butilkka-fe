@@ -159,30 +159,53 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
   }
 }
 
-/** GET /api/v1/reportsHistory 데모 데이터 — 최신(2026Q2)부터 내림차순 */
+/** GET /api/v1/reportsHistory 데모 데이터 — 최신(2026Q2)부터 내림차순, 최신만 안 읽음 */
 export const reportHistoryMock: ReportHistoryResponse = {
-  totalCount: 4,
+  totalCount: 6,
   hasNext: false,
   reports: [
     {
       reportId: 17,
       quarter: '2026Q2',
       grade: 'C',
-      briefing: '유동인구 감소와 공실 증가가 겹치는 주의 구간입니다.',
+      briefing: '상권 점수는 C등급이며,\n유동인구가 18% 감소했어요.',
+      isRead: false,
     },
     {
       reportId: 12,
       quarter: '2026Q1',
       grade: 'B',
-      briefing: '유동인구가 소폭 줄었지만 매출 지표는 안정적입니다.',
+      briefing: '상권 점수는 B등급이며,\n유동인구가 1.4% 증가했어요.',
+      isRead: true,
     },
     {
       reportId: 8,
       quarter: '2025Q4',
       grade: 'B',
-      briefing: '연말 특수로 유동인구가 일시 회복했습니다.',
+      briefing: '상권 점수는 B등급이며,\n연말 특수로 유동인구가 일시 회복했어요.',
+      isRead: true,
     },
-    { reportId: 5, quarter: '2025Q3', grade: 'A', briefing: '상권 활력이 높게 유지되고 있습니다.' },
+    {
+      reportId: 5,
+      quarter: '2025Q3',
+      grade: 'A',
+      briefing: '상권 점수는 A등급이며,\n상권 활력이 높게 유지되고 있어요.',
+      isRead: true,
+    },
+    {
+      reportId: 3,
+      quarter: '2025Q2',
+      grade: 'A',
+      briefing: '상권 점수는 A등급이며,\n신규 점포 유입이 이어지고 있어요.',
+      isRead: true,
+    },
+    {
+      reportId: 1,
+      quarter: '2025Q1',
+      grade: 'B',
+      briefing: '상권 점수는 B등급이며,\n유동인구가 완만하게 증가했어요.',
+      isRead: true,
+    },
   ],
 }
 

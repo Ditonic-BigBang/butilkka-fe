@@ -107,6 +107,8 @@ export interface ReportHistoryItem {
   quarter: string
   grade: ReportGrade
   briefing: string
+  /** 열람 여부 — 안 읽음은 목록에서 강조. 명세 미반영 선규격(백엔드 협의 필요), 없으면 읽음 취급 */
+  isRead?: boolean
 }
 
 export interface ReportHistoryResponse {

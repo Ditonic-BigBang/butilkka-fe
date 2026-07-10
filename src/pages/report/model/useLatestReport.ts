@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiJson } from '@/shared/api/api'
+import { fetchLatestReport, fetchReportHistory, reportKeys } from '@/entities/report'
+import { formatQuarter } from '@/shared/lib/quarter'
 import type {
   ReportAlternativeRegion,
   ReportHistoryResponse,
@@ -7,19 +8,11 @@ import type {
 } from '@/shared/api/types'
 import {
   alternativesTitle,
-  formatQuarter,
   GRADE_STATUS,
   parseStat,
   RECOMMENDATION_TITLES,
   type RegionStat,
 } from '../lib/reportFormat'
-
-/** reports 쿼리 키 팩토리 (TkDodo 패턴) */
-export const reportKeys = {
-  all: ['reports'] as const,
-  latest: () => [...reportKeys.all, 'latest'] as const,
-  history: () => [...reportKeys.all, 'history'] as const,
-}
 
 /** AI 리포트 화면에 필요한 데이터 묶음 (뷰모델) */
 export type ReportView = {
@@ -54,16 +47,6 @@ export type ReportView = {
     /** 지표 기준 시점 표시 (예: "26.03 기준") */
     referenceDate?: string
   }[]
-}
-
-/** GET /api/v1/reports/latest (명세: envelope.data = ReportResponse) */
-function fetchLatestReport(): Promise<ReportResponse> {
-  return apiJson<ReportResponse>('/api/v1/reports/latest')
-}
-
-/** GET /api/v1/reportsHistory */
-function fetchReportHistory(): Promise<ReportHistoryResponse> {
-  return apiJson<ReportHistoryResponse>('/api/v1/reportsHistory')
 }
 
 // ── DTO → 뷰모델 매핑 ────────────────────────────────────────────

@@ -11,9 +11,9 @@ import {
   Sparkle,
 } from '@/entities/report'
 import { RankedDistrictCard } from '@/entities/district'
+import { formatQuarter } from '@/shared/lib/quarter'
 import { useLatestReport, useReportHistory, type ReportView } from './model/useLatestReport'
 import { pickAnalysisIcon } from './lib/analysisIcons'
-import { formatQuarter } from './lib/reportFormat'
 
 /**
  * AI 리포트 (Figma: [3] AI 리포트/[3-1] 기본 267:4266·4528 · API: GET /api/v1/reports/latest).
@@ -39,7 +39,12 @@ export default function ReportPage() {
     content = <ReportError onRetry={() => report.refetch()} />
   } else {
     content = (
-      <ReportContent data={report.data} previous={previous} onViewMap={() => navigate('/map')} />
+      <ReportContent
+        data={report.data}
+        previous={previous}
+        onHistory={() => navigate('/report/history')}
+        onViewMap={() => navigate('/map')}
+      />
     )
   }
 
@@ -80,12 +85,14 @@ type ReportContentProps = {
   data: ReportView
   /** 이전 분기 리포트 (없으면 이동 버튼 숨김) */
   previous?: { quarter: string; grade: string }
+  /** 이전 리포트 버튼 → 히스토리 목록 */
+  onHistory: () => void
   /** 대체 상권 "지도에서 확인하기" */
   onViewMap: () => void
 }
 
 /** 리포트 본문 — 점수/전망/분석 카드 + 유사 사례 + AI 추천 */
-function ReportContent({ data, previous, onViewMap }: ReportContentProps) {
+function ReportContent({ data, previous, onHistory, onViewMap }: ReportContentProps) {
   return (
     <>
       <div className="flex flex-col gap-3 px-5 pt-1">
@@ -99,9 +106,12 @@ function ReportContent({ data, previous, onViewMap }: ReportContentProps) {
           description={data.briefing}
         />
 
-        {/* TODO(리포트 히스토리): 이전 리포트 목록 화면 구현 시 onClick 네비게이션 연결 */}
         {previous && (
-          <ReportLinkButton quarter={formatQuarter(previous.quarter)} grade={previous.grade} />
+          <ReportLinkButton
+            quarter={formatQuarter(previous.quarter)}
+            grade={previous.grade}
+            onClick={onHistory}
+          />
         )}
 
         <InsightCard label="AI 종합 전망" description={data.aiOutlook} />

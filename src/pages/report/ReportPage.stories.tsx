@@ -3,8 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReportRecommendation } from '@/shared/api/types'
 import { makeReportMock, reportHistoryMock } from '@/shared/api/mocks/fixtures'
+import { reportKeys } from '@/entities/report'
 import ReportPage from './ReportPage'
-import { reportKeys } from './model/useLatestReport'
 
 // 스토리는 네트워크 없이 렌더 — 리포트 목 DTO 를 쿼리 캐시에 시드하고 refetch 를 끈다.
 function seededClient(recommendation: ReportRecommendation) {
