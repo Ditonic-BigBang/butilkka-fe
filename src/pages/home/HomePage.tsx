@@ -27,6 +27,10 @@ export default function HomePage() {
   // 홈 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
   useThemeColor('#f7f7f7')
 
+  // 위치 pill — 마이페이지처럼 온보딩에서 저장한 가게 주소 기준, "서울" 접두만 생략
+  // (예: "서울 중구 충무로2가 111" → "중구 충무로2가 111"). 주소 없으면 상권명으로 폴백.
+  const storeAddress = user?.store?.address?.replace(/^서울(특별시)?\s+/, '')
+
   // 로그인은 했지만 온보딩을 안 마쳤으면 온보딩부터
   if (isAuthenticated && user && !user.isOnboarded) return <Navigate to="/onboarding" replace />
 
@@ -44,7 +48,7 @@ export default function HomePage() {
     <MobileLayout className="bg-gray-70">
       <div className="min-h-full bg-gray-70">
         <HomeHeader
-          location={dashboard.data?.location ?? ''}
+          location={storeAddress ?? dashboard.data?.location ?? ''}
           onBell={() => navigate('/notifications')}
         />
         <div className="px-5 pt-3 pb-6">{content}</div>
