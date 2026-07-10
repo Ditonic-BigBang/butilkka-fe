@@ -82,12 +82,17 @@ export function CurrentDistrictCard({
           {GRADES.map((g, i) => (
             <div key={g} className="flex flex-1 justify-center">
               {i === currentIndex && (
-                <span className="size-0 border-x-[8px] border-t-[10px] border-x-transparent border-t-gray-300" />
+                // 마지막 세그먼트가 절반쯤 찼을 때(300 + 80×현재등급) 떨어지며 등장
+                <span
+                  className="size-0 animate-drop-in border-x-[8px] border-t-[10px] border-x-transparent border-t-gray-300"
+                  style={{ animationDelay: `${300 + currentIndex * 80}ms` }}
+                />
               )}
             </div>
           ))}
         </div>
-        {/* 세그먼트 — 현재 등급까지만 색 채움(각 칸 고유색), 이후 칸은 gray-100 */}
+        {/* 세그먼트 — 현재 등급까지만 색 채움(각 칸 고유색), 이후 칸은 gray-100.
+            채움 칸은 A부터 순차(80ms 간격)로 펼쳐진다 */}
         <div className="flex gap-1">
           {GRADES.map((g, i) => {
             const filled = i <= currentIndex
@@ -96,8 +101,9 @@ export function CurrentDistrictCard({
                 key={g}
                 className={cn(
                   'h-2.5 flex-1 rounded-full',
-                  filled ? SEGMENT_COLORS[g] : 'bg-gray-100',
+                  filled ? cn(SEGMENT_COLORS[g], 'animate-segment-in') : 'bg-gray-100',
                 )}
+                style={filled ? { animationDelay: `${150 + i * 80}ms` } : undefined}
               />
             )
           })}
@@ -118,7 +124,7 @@ export function CurrentDistrictCard({
           <button
             type="button"
             onClick={onViewLast}
-            className="flex items-center gap-1.5 rounded-max bg-info-blue-soft px-3 py-1 text-body-m-regular"
+            className="flex items-center gap-1.5 rounded-max bg-info-blue-soft px-3 py-1 text-body-m-regular transition-transform duration-150 active:scale-[0.97]"
           >
             <span className="text-gray-500">지난 분기 등급</span>
             <span className="font-semibold text-info-blue">{lastGrade}</span>

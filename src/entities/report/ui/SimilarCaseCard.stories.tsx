@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { expect } from 'storybook/test'
+import { expect, waitFor } from 'storybook/test'
 import { SimilarCaseCard } from './SimilarCaseCard'
 
 /** 유사 사례 카드 (펼침/접힘). Figma: Card_L_유사사례 390:17656. */
@@ -59,9 +59,11 @@ export const Interaction: Story = {
   play: async ({ canvas, userEvent }) => {
     const header = canvas.getByRole('button')
     await expect(header).toHaveAttribute('aria-expanded', 'false')
-    await expect(canvas.queryByText('AI가 핵심만 설명할게요')).not.toBeInTheDocument()
+    // 펼침 애니메이션(grid-rows)을 위해 항상 마운트 — 접힘은 invisible 로 숨김
+    await expect(canvas.getByText('AI가 핵심만 설명할게요')).not.toBeVisible()
     await userEvent.click(header)
     await expect(header).toHaveAttribute('aria-expanded', 'true')
-    await expect(canvas.getByText('AI가 핵심만 설명할게요')).toBeInTheDocument()
+    // 펼침 전환(opacity) 완료를 기다린 뒤 확인
+    await waitFor(() => expect(canvas.getByText('AI가 핵심만 설명할게요')).toBeVisible())
   },
 }

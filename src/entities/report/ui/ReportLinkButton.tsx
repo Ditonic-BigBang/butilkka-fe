@@ -27,7 +27,7 @@ export function ReportLinkButton({
     <button
       type={type}
       className={cn(
-        'flex w-full items-center justify-between rounded-12 bg-gray-900 p-4 transition-colors active:bg-gray-800',
+        'flex w-full items-center justify-between rounded-12 bg-gray-900 p-4 transition duration-150 active:scale-[0.98] active:bg-gray-800',
         className,
       )}
       {...props}

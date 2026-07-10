@@ -1,5 +1,12 @@
 import { http, HttpResponse } from 'msw'
-import { dashboardMock, makeNotificationsMock } from './fixtures'
+import {
+  dashboardMock,
+  makeNotificationsMock,
+  makeReportDetailMock,
+  makeReportMock,
+  reportCasesMock,
+  reportHistoryMock,
+} from './fixtures'
 
 // MSW v2 요청 핸들러 — browser worker(개발)와 node server(테스트)가 공유한다.
 // API 가 생길 때마다 여기에 기능별로 추가한다. 응답 형식은 API명세서 V3 의
@@ -52,11 +59,31 @@ let mockStores: {
 // 알림 설정 — 세션 동안 유지. 초깃값은 Figma 마이페이지 기본 상태(연동·리포트 ON, 비상 OFF).
 const mockNotificationSettings = { smsAlert: true, autoReport: true, urgentAlert: false }
 
-// 리포트 PRO 구독 여부 — 데모용(구독 API 미정). false면 마이페이지에 업그레이드 카드가 뜬다.
-const mockReportPro = false
+// 리포트 PRO 구독 여부 — 구독(POST subscription) 시 true 로 전환(새로고침 전까지 유지).
+// false 면 마이페이지에 업그레이드 카드, 리포트에 결제 유도 잠금이 뜬다.
+let mockReportPro = false
 
 // 알림 목록 — 세션 동안 상태 유지(읽음 처리가 새로고침 전까지 반영되도록). 모듈 로드 시 1회 생성.
 const notificationState = makeNotificationsMock()
+
+// 리포트 히스토리 — 세션 동안 상태 유지(상세 조회 시 읽음 처리 반영). 모듈 로드 시 1회 복제.
+const reportHistoryState = structuredClone(reportHistoryMock)
+
+// 온보딩에서 저장한 대표 가게 요약 — 대시보드·리포트 목이 이걸 반영해
+// 홈/리포트 헤더에 사용자가 입력한 가게 기준 상권이 뜬다(실서버 동작과 동일).
+// 자치구는 도로명 주소("서울 강남구 …")에서 추출, 없으면 목 기본값 유지.
+function primaryStoreSummary() {
+  const primary = mockStores.find((s) => s.isPrimary)
+  if (!primary) return null
+  return {
+    regionCode: primary.regionCode || dashboardMock.store.regionCode,
+    regionName: primary.regionName ?? dashboardMock.store.regionName,
+    categoryName: primary.categoryName ?? dashboardMock.store.categoryName,
+    district:
+      primary.address?.split(' ').find((token) => token.endsWith('구')) ??
+      dashboardMock.store.district,
+  }
+}
 
 export const handlers = [
   // 예시 핸들러 — 실제 엔드포인트가 생기면 교체/삭제할 것.
@@ -178,6 +205,14 @@ export const handlers = [
     return ok('가게 정보 수정 성공', target)
   }),
 
+  // ── 구독 (명세 미반영 선규격 — 백엔드 전달 예정) ──
+  // 구독 확정 — 데모는 결제 없이 즉시 PRO 전환. 이후 GET /users/me 의 isReportPro 에 반영.
+  http.post(`${API}/api/v1/users/me/subscription`, async ({ request }) => {
+    const body = (await request.json()) as { plan?: string }
+    mockReportPro = true
+    return ok('구독 완료', { isReportPro: true, plan: body.plan ?? 'ANNUAL' })
+  }),
+
   // ── 마이페이지 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
   // 알림 설정 조회
   http.get(`${API}/api/v1/users/me/notification-settings`, () =>
@@ -192,8 +227,67 @@ export const handlers = [
   }),
 
   // ── 홈 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
-  // 홈 대시보드 (내 가게 기준 상권 등급·브리핑·지표)
-  http.get(`${API}/api/v1/dashboard`, () => ok('대시보드 조회 성공', dashboardMock)),
+  // 홈 대시보드 (내 가게 기준 상권 등급·브리핑·지표) — 온보딩 저장 가게를 반영
+  http.get(`${API}/api/v1/dashboard`, () => {
+    const store = primaryStoreSummary()
+    return ok(
+      '대시보드 조회 성공',
+      store ? { ...dashboardMock, store: { ...dashboardMock.store, ...store } } : dashboardMock,
+    )
+  }),
+
+  // ── 리포트 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
+  // 최신 분기 리포트(종합) — 데모는 '이동' 추천 시나리오 (버티기는 makeReportMock('버티기')).
+  // 헤더(상권·업종·자치구)는 온보딩 저장 가게를 반영.
+  // 주의: 아래 :reportId 핸들러보다 먼저 등록해야 "latest" 가 id 로 매칭되지 않는다.
+  http.get(`${API}/api/v1/reports/latest`, () => {
+    const store = primaryStoreSummary()
+    const report = makeReportMock()
+    return ok(
+      '리포트 조회 성공',
+      store
+        ? {
+            ...report,
+            regionCode: store.regionCode,
+            regionName: store.regionName,
+            categoryName: store.categoryName,
+            districtName: store.district,
+          }
+        : report,
+    )
+  }),
+
+  // 특정(지난) 리포트 상세 — 히스토리 항목의 분기·등급 기준으로 생성.
+  // 상세를 조회하면 읽음 처리(isRead) — 히스토리 목록의 안 읽음 강조가 사라진다.
+  http.get(`${API}/api/v1/reports/:reportId`, ({ params }) => {
+    const id = Number(params.reportId)
+    const item = reportHistoryState.reports.find((r) => r.reportId === id)
+    if (!item) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 리포트입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    item.isRead = true
+    return ok('리포트 상세 조회 성공', makeReportDetailMock(item))
+  }),
+
+  // 유사 사례 전체 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
+  http.get(`${API}/api/v1/reports/:reportId/cases`, ({ params }) => {
+    const id = Number(params.reportId)
+    if (!reportHistoryState.reports.some((r) => r.reportId === id)) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 리포트입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    return ok('유사 사례 조회 성공', reportCasesMock)
+  }),
+
+  // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
+  http.get(`${API}/api/v1/reportsHistory`, () =>
+    ok('리포트 히스토리 조회 성공', reportHistoryState),
+  ),
 
   // ── 알림 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
   // 받은 알림 목록 (offset/limit 은 데모에선 무시하고 전체 반환)

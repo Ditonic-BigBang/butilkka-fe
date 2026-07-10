@@ -27,13 +27,14 @@ export function AiBriefingCard({ message, onClick, className }: AiBriefingCardPr
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-2 rounded-12 bg-white px-4 py-3 text-left',
+        'flex w-full items-center gap-2 rounded-12 bg-white px-4 py-3 text-left transition-transform duration-150 active:scale-[0.98]',
         className,
       )}
     >
       <span className="flex min-w-0 flex-1 flex-col gap-2">
         <span className="flex items-center gap-2">
-          <SparkleIcon className="size-4 shrink-0 text-key" />
+          {/* 카드 등장이 안착할 무렵 별이 1회 팝 (루프 없음) */}
+          <SparkleIcon className="size-4 shrink-0 animate-pop-in text-key [animation-delay:250ms]" />
           <span className="text-body-m-semibold text-key">AI 한 줄 브리핑</span>
         </span>
         <span className="text-body-m-medium whitespace-pre-line text-gray-800">{message}</span>
