@@ -52,13 +52,29 @@ export interface ReportSimilarCase {
   period: { startYear: number; endYear: number }
 }
 
+/** 대체 상권 상세 지표 (Dropdown_L 펼침 스탯 타일 — 명세 미반영 선규격) */
+export interface ReportRegionStat {
+  /** 지표명 (예: "점포수") */
+  label: string
+  /** 표시 값 (예: "-4개", "+1,240") */
+  value: string
+  /** 증감 방향 — 화살표 색(▲빨강/▼파랑) */
+  direction: 'UP' | 'DOWN'
+  /** 화살표 옆 표기 (예: "감소"·"명/일"·"증가") */
+  note: string
+}
+
 export interface ReportAlternativeRegion {
   rank: number
   regionCode: string
   regionName: string
   reason: string
-  /** 핵심 지표 한 줄 (예: "유동인구 +6.2%") */
+  /** 핵심 지표 한 줄 (예: "유동인구 +6.2%") — stats 없을 때 타일 1개로 폴백 */
   stat: string
+  /** 펼침 스탯 타일 3개(점포수·유동인구·공실) — 명세 미반영 선규격(백엔드 협의 필요) */
+  stats?: ReportRegionStat[]
+  /** 지표 기준 시점 (예: "26.03") — 명세 미반영 선규격 */
+  referenceDate?: string
 }
 
 export interface ReportResponse {

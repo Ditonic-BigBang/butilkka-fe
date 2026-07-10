@@ -122,6 +122,12 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
         regionName: '망원동',
         reason: '2026년 1분기부터 2분기까지 유동인구 증가율이 88% 증가했어요.',
         stat: '유동인구 +88%',
+        stats: [
+          { label: '점포수', value: '+12개', direction: 'UP', note: '증가' },
+          { label: '유동인구', value: '+8,420', direction: 'UP', note: '명/일' },
+          { label: '공실', value: '-3건', direction: 'DOWN', note: '감소' },
+        ],
+        referenceDate: '26.03',
       },
       {
         rank: 2,
@@ -129,6 +135,12 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
         regionName: '성수동',
         reason: '유동인구 증가율이 82% 상승했으며, 최근 성수동 공실률이 3.7%로 낮은 편이에요.',
         stat: '유동인구 +82%',
+        stats: [
+          { label: '점포수', value: '+9개', direction: 'UP', note: '증가' },
+          { label: '유동인구', value: '+6,180', direction: 'UP', note: '명/일' },
+          { label: '공실', value: '-2건', direction: 'DOWN', note: '감소' },
+        ],
+        referenceDate: '26.03',
       },
       {
         rank: 3,
@@ -136,6 +148,12 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
         regionName: '한남동',
         reason: '유동인구 증가율이 79% 상승했으며, 2025년 1분기부터 꾸준히 증가 추세에요.',
         stat: '유동인구 +79%',
+        stats: [
+          { label: '점포수', value: '+5개', direction: 'UP', note: '증가' },
+          { label: '유동인구', value: '+4,930', direction: 'UP', note: '명/일' },
+          { label: '공실', value: '-1건', direction: 'DOWN', note: '감소' },
+        ],
+        referenceDate: '26.03',
       },
     ],
   }

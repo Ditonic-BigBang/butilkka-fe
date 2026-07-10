@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiJson } from '@/shared/api/api'
-import type { ReportHistoryResponse, ReportResponse } from '@/shared/api/types'
+import type {
+  ReportAlternativeRegion,
+  ReportHistoryResponse,
+  ReportResponse,
+} from '@/shared/api/types'
 import {
   alternativesTitle,
   formatQuarter,
@@ -47,6 +51,8 @@ export type ReportView = {
     name: string
     description: string
     stats: RegionStat[]
+    /** 지표 기준 시점 표시 (예: "26.03 기준") */
+    referenceDate?: string
   }[]
 }
 
@@ -61,6 +67,20 @@ function fetchReportHistory(): Promise<ReportHistoryResponse> {
 }
 
 // ── DTO → 뷰모델 매핑 ────────────────────────────────────────────
+// 상세 지표(stats·선규격)가 있으면 타일 3개, 없으면 핵심 지표 한 줄(stat)을 타일 1개로 폴백
+function toRegionStats(r: ReportAlternativeRegion): RegionStat[] {
+  if (r.stats?.length) {
+    return r.stats.map((s) => ({
+      label: s.label,
+      value: s.value,
+      direction: s.direction === 'UP' ? 'up' : 'down',
+      change: s.note,
+    }))
+  }
+  const parsed = parseStat(r.stat)
+  return parsed ? [parsed] : []
+}
+
 function toReportView(d: ReportResponse): ReportView {
   return {
     regionName: d.regionName,
@@ -84,10 +104,13 @@ function toReportView(d: ReportResponse): ReportView {
     recommendationTitle: RECOMMENDATION_TITLES[d.decision.recommendation],
     reason: { title: d.decision.title, description: d.decision.description },
     alternativesTitle: alternativesTitle(d.decision.recommendation, d.quarter),
-    alternatives: d.alternativeRegions.map((r) => {
-      const stat = parseStat(r.stat)
-      return { rank: r.rank, name: r.regionName, description: r.reason, stats: stat ? [stat] : [] }
-    }),
+    alternatives: d.alternativeRegions.map((r) => ({
+      rank: r.rank,
+      name: r.regionName,
+      description: r.reason,
+      stats: toRegionStats(r),
+      referenceDate: r.referenceDate ? `${r.referenceDate} 기준` : undefined,
+    })),
   }
 }
 

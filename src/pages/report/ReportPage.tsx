@@ -181,6 +181,7 @@ function ReportContent({ data, previous, onViewMap }: ReportContentProps) {
                 name={region.name}
                 description={region.description}
                 stats={region.stats}
+                referenceDate={region.referenceDate}
                 onViewMap={onViewMap}
               />
             ))}
