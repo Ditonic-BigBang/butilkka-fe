@@ -1,3 +1,4 @@
+import { preload } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router-dom'
 import storeIllustration from '@/shared/assets/illustrations/store.png'
 import { MobileLayout } from '@/widgets/mobile-layout'
@@ -11,8 +12,8 @@ import { AiBriefingCard } from './ui/AiBriefingCard'
 
 // 가게 일러스트 프리로드 — 히어로 카드는 대시보드 데이터 도착 후 마운트되므로,
 // 그때 fetch 를 시작하면 카드보다 이미지가 늦게 떠서 팝 인이 생긴다.
-// 모듈 로드(앱 부팅) 시점에 미리 받아 캐시에 올려둔다.
-new Image().src = storeIllustration
+// 모듈 로드(앱 부팅) 시점에 React 공식 preload 로 미리 받아둔다.
+preload(storeIllustration, { as: 'image' })
 
 /**
  * 홈 대시보드 (Figma: [1] 홈 558:12360 · API: GET /api/v1/dashboard).

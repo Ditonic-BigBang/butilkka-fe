@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { preload } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { CTA } from '@/shared/ui'
@@ -7,6 +8,10 @@ import { cn } from '@/shared/lib/cn'
 import analyzeImage from './assets/guide-analyze.svg'
 import warningImage from './assets/guide-warning.svg'
 import decisionImage from './assets/guide-decision.svg'
+
+// 가이드 일러스트 프리로드 — 페이지 마운트 후에 fetch 를 시작하면 첫 렌더에 늦게 뜬다.
+// 모듈 로드(앱 부팅) 시점에 React 공식 preload 로 미리 받아둔다 (홈 store.png 와 동일 패턴).
+for (const src of [analyzeImage, warningImage, decisionImage]) preload(src, { as: 'image' })
 
 // 일러스트 크기는 Figma 원본 px 고정 (viewBox 비율 유지)
 const SLIDES = [
