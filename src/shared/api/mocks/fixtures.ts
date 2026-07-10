@@ -15,7 +15,8 @@ import type {
 export const dashboardMock: DashboardResponse = {
   store: {
     regionCode: '3110001',
-    district: '마포구',
+    // 가로수길(신사동)의 실제 자치구 — regions/lookup 목 주소(서울 강남구 신사동)와 일치
+    district: '강남구',
     regionName: '가로수길',
     categoryName: '한식음식점',
   },
@@ -82,7 +83,7 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
     regionCode: '3110001',
     regionName: '가로수길',
     categoryName: '한식음식점',
-    districtName: '마포구',
+    districtName: '강남구',
     quarter: '2026Q2',
     grade: 'C',
     declineType: '쇠퇴형',

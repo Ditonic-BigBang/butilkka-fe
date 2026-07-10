@@ -339,7 +339,7 @@
 @utility animate-draw-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
-  animation: draw-line 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  animation: draw-line 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
 }
 @utility animate-pop-in {
   transform-box: fill-box;

@@ -56,7 +56,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
         strokeLinecap="round"
       />
       {last && (
-        // 라인이 끝에 맺힐 즈음(950ms) 마지막 점 팝 인
+        // 라인이 끝에 맺힐 즈음(600ms) 마지막 점 팝 인
         <circle
           cx={last.x}
           cy={last.y}
@@ -64,7 +64,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
           fill="#fff"
           stroke="#ff621b"
           strokeWidth={2}
-          className="animate-pop-in [animation-delay:950ms]"
+          className="animate-pop-in [animation-delay:600ms]"
         />
       )}
       {/* x축 라벨 */}
