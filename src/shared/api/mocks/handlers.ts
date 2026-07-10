@@ -64,6 +64,9 @@ const mockReportPro = false
 // 알림 목록 — 세션 동안 상태 유지(읽음 처리가 새로고침 전까지 반영되도록). 모듈 로드 시 1회 생성.
 const notificationState = makeNotificationsMock()
 
+// 리포트 히스토리 — 세션 동안 상태 유지(상세 조회 시 읽음 처리 반영). 모듈 로드 시 1회 복제.
+const reportHistoryState = structuredClone(reportHistoryMock)
+
 export const handlers = [
   // 예시 핸들러 — 실제 엔드포인트가 생기면 교체/삭제할 것.
   http.get(`${API}/api/health`, () => HttpResponse.json({ status: 'ok' })),
@@ -206,22 +209,24 @@ export const handlers = [
   // 주의: 아래 :reportId 핸들러보다 먼저 등록해야 "latest" 가 id 로 매칭되지 않는다.
   http.get(`${API}/api/v1/reports/latest`, () => ok('리포트 조회 성공', makeReportMock())),
 
-  // 특정(지난) 리포트 상세 — 히스토리 항목의 분기·등급 기준으로 생성
+  // 특정(지난) 리포트 상세 — 히스토리 항목의 분기·등급 기준으로 생성.
+  // 상세를 조회하면 읽음 처리(isRead) — 히스토리 목록의 안 읽음 강조가 사라진다.
   http.get(`${API}/api/v1/reports/:reportId`, ({ params }) => {
     const id = Number(params.reportId)
-    const item = reportHistoryMock.reports.find((r) => r.reportId === id)
+    const item = reportHistoryState.reports.find((r) => r.reportId === id)
     if (!item) {
       return HttpResponse.json(
         { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 리포트입니다.', data: null },
         { status: 404 },
       )
     }
+    item.isRead = true
     return ok('리포트 상세 조회 성공', makeReportDetailMock(item))
   }),
 
   // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
   http.get(`${API}/api/v1/reportsHistory`, () =>
-    ok('리포트 히스토리 조회 성공', reportHistoryMock),
+    ok('리포트 히스토리 조회 성공', reportHistoryState),
   ),
 
   // ── 알림 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──

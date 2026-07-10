@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { Dropdown, DropdownOption, SortTrigger } from '@/shared/ui'
-import { ReportCard } from '@/entities/report'
+import { ReportCard, reportKeys } from '@/entities/report'
+import type { ReportHistoryResponse } from '@/shared/api/types'
 import { SORT_LABELS, useReportHistoryList, type SortOrder } from './model/useReportHistoryList'
 
 /**
@@ -13,6 +15,7 @@ import { SORT_LABELS, useReportHistoryList, type SortOrder } from './model/useRe
  */
 export default function ReportHistoryPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [order, setOrder] = useState<SortOrder>('latest')
   const [menuOpen, setMenuOpen] = useState(false)
   const reports = useReportHistoryList(order)
@@ -20,6 +23,22 @@ export default function ReportHistoryPage() {
   const selectOrder = (next: SortOrder) => {
     setOrder(next)
     setMenuOpen(false)
+  }
+
+  // 상세로 이동하며 캐시도 읽음 처리 — 목록에 돌아왔을 때 강조가 바로 사라진다.
+  // (서버(목)도 상세 조회 시 읽음 처리하므로 이후 재조회와도 일치)
+  const openReport = (reportId: number) => {
+    queryClient.setQueryData<ReportHistoryResponse>(reportKeys.history(), (prev) =>
+      prev
+        ? {
+            ...prev,
+            reports: prev.reports.map((r) =>
+              r.reportId === reportId ? { ...r, isRead: true } : r,
+            ),
+          }
+        : prev,
+    )
+    navigate(`/report/${reportId}`)
   }
 
   let content
@@ -54,7 +73,7 @@ export default function ReportHistoryPage() {
               title={report.title}
               summary={report.summary}
               read={report.read}
-              onClick={() => navigate(`/report/${report.reportId}`)}
+              onClick={() => openReport(report.reportId)}
             />
           </li>
         ))}
