@@ -47,7 +47,7 @@ export default function ReportCasesPage() {
     )
   } else {
     content = (
-      <ul className="flex flex-col gap-3 px-5 pb-6">
+      <ul className="flex stagger-fade-up flex-col gap-3 px-5 pb-6">
         {cases.data.map((c) => (
           <li key={c.caseId}>
             <SimilarCaseCard

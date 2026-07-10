@@ -32,7 +32,7 @@ export function ReportCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center justify-between gap-3 px-5 py-3 text-left',
+        'flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition-transform duration-150 active:scale-[0.98]',
         read ? 'bg-white' : 'bg-info-blue-soft',
         className,
       )}

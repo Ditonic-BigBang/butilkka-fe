@@ -69,8 +69,9 @@ export function ScoreCard({
 
           {/* 게이지 바 */}
           <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-90">
+            {/* 채움 — 진입 시 0에서 점수까지 차오름 */}
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-orange-500"
+              className="absolute inset-y-0 left-0 animate-gauge-fill rounded-full bg-orange-500"
               style={{ width: `${clamped * 100}%` }}
             />
             {Array.from({ length: segments }, (_, i) => {

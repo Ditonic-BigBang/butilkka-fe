@@ -65,7 +65,7 @@ export default function ReportHistoryPage() {
     )
   } else {
     content = (
-      <ul className="flex flex-col">
+      <ul className="flex stagger-fade-up flex-col">
         {reports.data.map((report) => (
           <li key={report.reportId}>
             <ReportCard

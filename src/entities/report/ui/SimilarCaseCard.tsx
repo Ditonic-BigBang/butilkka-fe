@@ -27,6 +27,7 @@ type SimilarCaseCardProps = {
  * 유사 사례 카드 — 펼침/접힘 아코디언 (Figma: Card_L_유사사례 390:17656).
  * 접힘: 지역·기간 + 요약. 헤더 탭 → 펼침: 구분선 + AI 설명(✦) + 관련 태그.
  * 펼치면 테두리가 진해짐(gray-100 → gray-500), rounded-12 → rounded-14.
+ * 펼침/접힘은 grid-rows 전환으로 부드럽게 — 닫힌 콘텐츠는 inert 로 포커스·조작 차단.
  * `explanation` 이 없으면 펼침 없는 요약 카드(Variant3 — 테두리 없는 흰 카드)로 렌더된다.
  */
 export function SimilarCaseCard({
@@ -64,7 +65,7 @@ export function SimilarCaseCard({
   return (
     <div
       className={cn(
-        'w-full border bg-white transition-colors',
+        'w-full border bg-white transition-[border-color,transform] duration-150 has-[:active]:scale-[0.99]',
         open ? 'rounded-14 border-gray-500' : 'rounded-12 border-gray-100',
         className,
       )}
@@ -83,36 +84,44 @@ export function SimilarCaseCard({
         <span className="text-body-m-regular text-gray-700">{summary}</span>
       </button>
 
-      {/* 펼침 콘텐츠 */}
-      {open && (
-        <div className="flex flex-col gap-4 px-4 pb-4">
-          <div className="h-px w-full bg-gray-100" />
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-1">
-              <Sparkle className="size-[17px] shrink-0 text-key" />
-              <span className="text-body-m-semibold text-key">AI가 핵심만 설명할게요</span>
-            </div>
-            <p className="text-[16px] leading-[1.6] font-normal tracking-normal whitespace-pre-line text-gray-700">
-              {explanation}
-            </p>
-          </div>
-          {tags.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <span className="text-body-m-medium text-gray-500">관련 태그</span>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-6 bg-gray-90 px-3 py-2 text-caption-l-regular text-gray-500"
-                  >
-                    {tag}
-                  </span>
-                ))}
+      {/* 펼침 콘텐츠 — grid-rows 0fr→1fr 높이 전환 (닫힘 = invisible·inert) */}
+      <div
+        inert={!open}
+        className={cn(
+          'grid transition-[grid-template-rows,opacity,visibility] duration-300 ease-out motion-reduce:transition-none',
+          open ? 'visible grid-rows-[1fr] opacity-100' : 'invisible grid-rows-[0fr] opacity-0',
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-4 px-4 pb-4">
+            <div className="h-px w-full bg-gray-100" />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-1">
+                <Sparkle className="size-[17px] shrink-0 text-key" />
+                <span className="text-body-m-semibold text-key">AI가 핵심만 설명할게요</span>
               </div>
+              <p className="text-[16px] leading-[1.6] font-normal tracking-normal whitespace-pre-line text-gray-700">
+                {explanation}
+              </p>
             </div>
-          )}
+            {tags.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-body-m-medium text-gray-500">관련 태그</span>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-6 bg-gray-90 px-3 py-2 text-caption-l-regular text-gray-500"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

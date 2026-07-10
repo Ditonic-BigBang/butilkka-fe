@@ -43,7 +43,7 @@ export function ReportPaywallCard({ onConfirm, className }: ReportPaywallCardPro
       <button
         type="button"
         onClick={onConfirm}
-        className="rounded-max bg-key px-[18px] py-2.5 text-body-l-semibold text-white active:bg-orange-600"
+        className="rounded-max bg-key px-[18px] py-2.5 text-body-l-semibold text-white transition duration-150 active:scale-[0.97] active:bg-orange-600"
       >
         확인하러 가기
       </button>

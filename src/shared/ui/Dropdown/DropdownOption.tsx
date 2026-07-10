@@ -23,7 +23,7 @@ export function DropdownOption({
       type={type}
       aria-pressed={selected}
       className={cn(
-        'flex h-12 w-full items-center justify-between px-4 text-body-m-medium text-gray-800 transition-colors hover:bg-gray-70',
+        'flex h-12 w-full items-center justify-between px-4 text-body-m-medium text-gray-800 transition-colors hover:bg-gray-70 active:bg-gray-90',
         className,
       )}
       {...props}

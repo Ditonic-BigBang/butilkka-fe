@@ -50,14 +50,14 @@ function CasesSection({
           <ChevronRight aria-hidden className="size-4 shrink-0 text-gray-300" />
         </button>
       </div>
-      <div className="flex [scrollbar-width:none] gap-3 overflow-x-auto px-5 [&::-webkit-scrollbar]:hidden">
+      <div className="flex snap-x snap-mandatory scroll-pl-5 [scrollbar-width:none] gap-3 overflow-x-auto px-5 [&::-webkit-scrollbar]:hidden">
         {data.similarCases.map((c) => (
           <SimilarCaseCard
             key={c.caseId}
             region={c.region}
             period={c.period}
             summary={c.summary}
-            className="w-[286px] shrink-0"
+            className="w-[286px] shrink-0 snap-start"
           />
         ))}
       </div>
@@ -81,7 +81,8 @@ export function ReportOverview({
 }: ReportOverviewProps) {
   return (
     <>
-      <div className="flex flex-col gap-3 px-5 pt-1">
+      {/* 상단 카드 컬럼 — 진입 시 순차 페이드업 */}
+      <div className="flex stagger-fade-up flex-col gap-3 px-5 pt-1">
         <ScoreCard
           period={data.period}
           type={data.declineType}
