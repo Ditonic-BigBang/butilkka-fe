@@ -16,6 +16,7 @@ import { useLatestReport, useReportHistory } from './model/useLatestReport'
 export default function ReportPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const locked = !user?.isReportPro
   const report = useLatestReport()
   const history = useReportHistory()
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
@@ -40,11 +41,12 @@ export default function ReportPage() {
             <ReportLinkButton
               quarter={formatQuarter(previous.quarter)}
               grade={previous.grade}
-              onClick={() => navigate('/report/history')}
+              // 지난 리포트는 PRO 혜택 — 구독 전엔 구독 플랜 확인으로 유도
+              onClick={() => navigate(locked ? '/my/subscription' : '/report/history')}
             />
           )
         }
-        locked={!user?.isReportPro}
+        locked={locked}
         onUpgrade={() => navigate('/my/subscription')}
         onViewAllCases={() => navigate(`/report/${report.data.reportId}/cases`)}
         onViewMap={() => navigate('/map')}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
+import { useSubscribe, type PlanKey } from './model/useSubscribe'
 import { BenefitCard } from './ui/BenefitCard'
 import { PlanCard } from './ui/PlanCard'
 import { ComparisonTable } from './ui/ComparisonTable'
@@ -38,12 +39,20 @@ const BENEFITS = [
 
 /**
  * 구독 플랜 확인하기 (Figma: [4-9] 요금제 과정 1248:14758).
- * 마이페이지 "리포트 업그레이드 하기" → 진입. 헤더 + 구독 혜택 4종 + 일반 vs 구독 비교표 +
- * 연간/월간 플랜 선택 + "구독 시작하기" CTA. 구독 API 미정이라 CTA는 마이페이지로 복귀.
+ * 마이페이지 "리포트 업그레이드 하기"·리포트 잠금 카드 → 진입. 헤더 + 구독 혜택 4종 +
+ * 일반 vs 구독 비교표 + 연간/월간 플랜 선택 + "구독 시작하기" CTA.
+ * CTA 는 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 리포트 잠금이 풀린다.
  */
 export default function SubscriptionPage() {
   const navigate = useNavigate()
-  const [plan, setPlan] = useState<'annual' | 'monthly'>('annual')
+  const [plan, setPlan] = useState<PlanKey>('annual')
+  const subscription = useSubscribe()
+
+  const handleSubscribe = () => {
+    subscription.mutate(plan, {
+      onSuccess: () => navigate('/my/subscription/complete', { state: { plan } }),
+    })
+  }
 
   return (
     <MobileLayout showBottomTab={false}>
@@ -128,8 +137,13 @@ export default function SubscriptionPage() {
           </section>
         </div>
 
-        <CTA onClick={() => navigate('/my/subscription/complete', { state: { plan } })}>
-          구독 시작하기
+        {subscription.isError && (
+          <p className="px-5 pb-1 text-center text-body-m-medium text-status-red">
+            {subscription.error.message}
+          </p>
+        )}
+        <CTA disabled={subscription.isPending} onClick={handleSubscribe}>
+          {subscription.isPending ? '구독 처리 중…' : '구독 시작하기'}
         </CTA>
       </div>
     </MobileLayout>

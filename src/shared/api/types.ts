@@ -139,6 +139,15 @@ export interface ReportHistoryResponse {
   reports: ReportHistoryItem[]
 }
 
+// ── 구독 (POST /api/v1/users/me/subscription — 명세 미반영 선규격) ──
+export type SubscriptionPlan = 'ANNUAL' | 'MONTHLY'
+
+export interface SubscriptionResponse {
+  /** 구독 후 리포트 PRO 여부 (GET /users/me 의 isReportPro 와 동일 의미) */
+  isReportPro: boolean
+  plan: SubscriptionPlan
+}
+
 // ── 알림 설정 (GET/PATCH /api/v1/users/me/notification-settings) ──
 export interface NotificationSettings {
   /** SMS(카카오톡) 알림 연동 */

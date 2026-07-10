@@ -59,8 +59,9 @@ let mockStores: {
 // 알림 설정 — 세션 동안 유지. 초깃값은 Figma 마이페이지 기본 상태(연동·리포트 ON, 비상 OFF).
 const mockNotificationSettings = { smsAlert: true, autoReport: true, urgentAlert: false }
 
-// 리포트 PRO 구독 여부 — 데모용(구독 API 미정). false면 마이페이지에 업그레이드 카드가 뜬다.
-const mockReportPro = false
+// 리포트 PRO 구독 여부 — 구독(POST subscription) 시 true 로 전환(새로고침 전까지 유지).
+// false 면 마이페이지에 업그레이드 카드, 리포트에 결제 유도 잠금이 뜬다.
+let mockReportPro = false
 
 // 알림 목록 — 세션 동안 상태 유지(읽음 처리가 새로고침 전까지 반영되도록). 모듈 로드 시 1회 생성.
 const notificationState = makeNotificationsMock()
@@ -186,6 +187,14 @@ export const handlers = [
     // 나머지 필드(이름·주소·창업일·좌표 등)는 부분 갱신
     Object.assign(target, rest)
     return ok('가게 정보 수정 성공', target)
+  }),
+
+  // ── 구독 (명세 미반영 선규격 — 백엔드 전달 예정) ──
+  // 구독 확정 — 데모는 결제 없이 즉시 PRO 전환. 이후 GET /users/me 의 isReportPro 에 반영.
+  http.post(`${API}/api/v1/users/me/subscription`, async ({ request }) => {
+    const body = (await request.json()) as { plan?: string }
+    mockReportPro = true
+    return ok('구독 완료', { isReportPro: true, plan: body.plan ?? 'ANNUAL' })
   }),
 
   // ── 마이페이지 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
