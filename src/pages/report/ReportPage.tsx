@@ -4,15 +4,18 @@ import { ReportOverview, ReportOverviewSkeleton } from '@/widgets/report-overvie
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { formatQuarter } from '@/shared/lib/quarter'
 import { ReportLinkButton } from '@/entities/report'
+import { useAuthStore } from '@/entities/session'
 import { useLatestReport, useReportHistory } from './model/useLatestReport'
 
 /**
  * AI 리포트 (Figma: [3] AI 리포트/[3-1] 기본 267:4266·4528 · API: GET /api/v1/reports/latest).
  * 헤더(상권·업종) + 리포트 본문(ReportOverview 위젯) — 점수 카드 아래에
  * "이전 리포트 확인하러 가기" 버튼(히스토리 이동)을 끼운다. 하단 탭 있음.
+ * 리포트 PRO 구독 전이면 유사 사례부터 잠그고 결제 유도 카드를 띄운다.
  */
 export default function ReportPage() {
   const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
   const report = useLatestReport()
   const history = useReportHistory()
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
@@ -41,6 +44,8 @@ export default function ReportPage() {
             />
           )
         }
+        locked={!user?.isReportPro}
+        onUpgrade={() => navigate('/my/subscription')}
         onViewAllCases={() => navigate(`/report/${report.data.reportId}/cases`)}
         onViewMap={() => navigate('/map')}
       />
