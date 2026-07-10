@@ -41,6 +41,7 @@ export default function ReportPage() {
             />
           )
         }
+        onViewAllCases={() => navigate(`/report/${report.data.reportId}/cases`)}
         onViewMap={() => navigate('/map')}
       />
     )

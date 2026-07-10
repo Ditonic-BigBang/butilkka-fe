@@ -10,6 +10,8 @@ import {
 
 /** AI 리포트 본문에 필요한 데이터 묶음 (뷰모델) — 최신/지난 리포트 화면이 공유 */
 export type ReportView = {
+  /** 리포트 아이디 — 유사 사례 전체 보기 등 하위 라우팅용 */
+  reportId: number
   regionName: string
   categoryName: string
   /** 분기 원문 ("2026Q2") — 히스토리에서 이전 리포트를 찾을 때 비교용 */
@@ -60,6 +62,7 @@ function toRegionStats(r: ReportAlternativeRegion): RegionStat[] {
 /** 리포트 응답(DTO) → 본문 뷰모델. react-query `select` 로 쓴다. */
 export function toReportView(d: ReportResponse): ReportView {
   return {
+    reportId: d.reportId,
     regionName: d.regionName,
     categoryName: d.categoryName,
     quarter: d.quarter,

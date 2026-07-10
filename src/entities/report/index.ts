@@ -12,5 +12,6 @@ export {
   reportKeys,
   fetchLatestReport,
   fetchReport,
+  fetchReportCases,
   fetchReportHistory,
 } from './model/reportQueries'

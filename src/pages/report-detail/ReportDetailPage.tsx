@@ -35,7 +35,13 @@ export default function ReportDetailPage() {
       </div>
     )
   } else {
-    content = <ReportOverview data={report.data} onViewMap={() => navigate('/map')} />
+    content = (
+      <ReportOverview
+        data={report.data}
+        onViewAllCases={() => navigate(`/report/${report.data.reportId}/cases`)}
+        onViewMap={() => navigate('/map')}
+      />
+    )
   }
 
   return (

@@ -4,6 +4,7 @@ import {
   makeNotificationsMock,
   makeReportDetailMock,
   makeReportMock,
+  reportCasesMock,
   reportHistoryMock,
 } from './fixtures'
 
@@ -222,6 +223,18 @@ export const handlers = [
     }
     item.isRead = true
     return ok('리포트 상세 조회 성공', makeReportDetailMock(item))
+  }),
+
+  // 유사 사례 전체 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
+  http.get(`${API}/api/v1/reports/:reportId/cases`, ({ params }) => {
+    const id = Number(params.reportId)
+    if (!reportHistoryState.reports.some((r) => r.reportId === id)) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 리포트입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    return ok('유사 사례 조회 성공', reportCasesMock)
   }),
 
   // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환)

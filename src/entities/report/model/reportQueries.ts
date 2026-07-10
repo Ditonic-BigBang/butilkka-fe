@@ -1,5 +1,5 @@
 import { apiJson } from '@/shared/api/api'
-import type { ReportHistoryResponse, ReportResponse } from '@/shared/api/types'
+import type { ReportCasesResponse, ReportHistoryResponse, ReportResponse } from '@/shared/api/types'
 
 /**
  * reports 쿼리 키 팩토리 (TkDodo 패턴).
@@ -10,6 +10,7 @@ export const reportKeys = {
   all: ['reports'] as const,
   latest: () => [...reportKeys.all, 'latest'] as const,
   detail: (reportId: number) => [...reportKeys.all, 'detail', reportId] as const,
+  cases: (reportId: number) => [...reportKeys.all, 'cases', reportId] as const,
   history: () => [...reportKeys.all, 'history'] as const,
 }
 
@@ -21,6 +22,11 @@ export function fetchLatestReport(): Promise<ReportResponse> {
 /** GET /api/v1/reports/{reportId} — 특정(지난) 분기 리포트, 응답 구조는 latest 와 동일 */
 export function fetchReport(reportId: number): Promise<ReportResponse> {
   return apiJson<ReportResponse>(`/api/v1/reports/${reportId}`)
+}
+
+/** GET /api/v1/reports/{reportId}/cases — 유사 상권 사례 전체 목록 */
+export function fetchReportCases(reportId: number): Promise<ReportCasesResponse> {
+  return apiJson<ReportCasesResponse>(`/api/v1/reports/${reportId}/cases`)
 }
 
 /** GET /api/v1/reportsHistory */

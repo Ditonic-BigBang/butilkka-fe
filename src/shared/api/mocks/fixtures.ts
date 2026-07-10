@@ -3,6 +3,7 @@
 import type {
   DashboardResponse,
   NotificationListResponse,
+  ReportCasesResponse,
   ReportGrade,
   ReportHistoryItem,
   ReportHistoryResponse,
@@ -179,6 +180,75 @@ export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
     score: GRADE_SCORES[item.grade],
     briefing: item.briefing,
   }
+}
+
+/** GET /api/v1/reports/{reportId}/cases 데모 데이터 — 리포트의 유사 상권 사례 전체 */
+export const reportCasesMock: ReportCasesResponse = {
+  totalCount: 5,
+  cases: [
+    {
+      caseId: '7c9e6b2a-1f34-4d8a-9b21-3e5f8a0c1d22',
+      regionCode: '3170011',
+      regionName: '광화문',
+      summary: '오피스 공실이 선행되며 1층 상권 도미노 침체 → 2022년 일부 회복',
+      description:
+        '오피스 공실률 상승이 먼저 나타난 뒤 1층 소매 상권이 연쇄적으로 침체한 사례입니다. 재택근무 확산으로 주간 유동인구가 줄며 요식업 매출이 급감했지만, 정부 투자와 재개발이 진행되며 2022년부터 일부 회복세로 전환됐습니다.',
+      tag1: '종로구',
+      tag2: '정부 투자',
+      tag3: '재개발',
+      tag4: '침체 후 회복',
+      period: { startYear: 2018, endYear: 2020 },
+    },
+    {
+      caseId: '3f2a8c1d-5b67-4e90-8a12-9c4d7e6f0b31',
+      regionCode: '3170012',
+      regionName: '경리단길',
+      summary: '젠트리피케이션 이후 유동인구 급감으로 침체한 유사 사례',
+      description:
+        '임대료 급등으로 개성 있는 점포가 이탈하고, 대체 상권으로 수요가 분산되며 3년간 공실이 누적된 사례입니다. 상권 고유의 정체성이 약해지자 회복 동력도 함께 줄었습니다.',
+      tag1: '용산구',
+      tag2: '젠트리피케이션',
+      tag3: '임대료 급등',
+      period: { startYear: 2018, endYear: 2021 },
+    },
+    {
+      caseId: 'b81d4c7e-2a95-4f36-8d10-6e2f9a3c5d48',
+      regionCode: '3170013',
+      regionName: '이태원',
+      summary: '외국인 관광객 의존 상권이 외부 충격으로 급격히 위축',
+      description:
+        '관광객 비중이 높던 상권이 외부 충격으로 방문객이 끊기며 단기간에 폐업이 몰린 사례입니다. 이후 특색 있는 소규모 점포가 다시 모이며 완만하게 회복 중입니다.',
+      tag1: '용산구',
+      tag2: '관광 의존',
+      tag3: '외부 충격',
+      period: { startYear: 2020, endYear: 2022 },
+    },
+    {
+      caseId: 'e4c92f0a-7d18-4b63-9a54-1c8e0d6b2f77',
+      regionCode: '3170014',
+      regionName: '삼청동',
+      summary: '대형 프랜차이즈 진입 후 임대료 상승 → 소상공인 이탈',
+      description:
+        '프랜차이즈 진입으로 임대료가 오르자 기존 소상공인이 밀려나고 방문객의 발길도 줄어든 사례입니다. 한옥 상권 특성을 살린 콘텐츠가 재조명되며 최근 회복 조짐을 보입니다.',
+      tag1: '종로구',
+      tag2: '임대료 상승',
+      tag3: '프랜차이즈',
+      tag4: '회복 조짐',
+      period: { startYear: 2016, endYear: 2019 },
+    },
+    {
+      caseId: 'a25e8b3c-4f71-49d2-b680-3d9c1e7f4a06',
+      regionCode: '3170015',
+      regionName: '신촌',
+      summary: '대학 상권 축소와 온라인 소비 전환으로 완만한 장기 침체',
+      description:
+        '비대면 수업과 온라인 소비 확산으로 대학가 유동인구가 구조적으로 줄어든 사례입니다. 회복 속도가 느려 업종 전환과 청년 창업 지원이 병행되고 있습니다.',
+      tag1: '서대문구',
+      tag2: '대학 상권',
+      tag3: '온라인 전환',
+      period: { startYear: 2019, endYear: 2023 },
+    },
+  ],
 }
 
 /** GET /api/v1/reportsHistory 데모 데이터 — 최신(2026Q2)부터 내림차순, 최신만 안 읽음 */

@@ -101,6 +101,28 @@ export interface ReportResponse {
   alternativeRegions: ReportAlternativeRegion[]
 }
 
+// ── 유사 사례 전체 목록 (GET /api/v1/reports/{reportId}/cases) ────
+export interface ReportCaseDto {
+  caseId: string
+  regionCode: string
+  regionName: string
+  /** 사례 요약 (접힘 상태) */
+  summary: string
+  /** 사례 상세 — 펼침 시 AI 설명 */
+  description: string
+  /** 주요 키워드 (관련 태그, 없는 자리는 null/생략) */
+  tag1?: string | null
+  tag2?: string | null
+  tag3?: string | null
+  tag4?: string | null
+  period: { startYear: number; endYear: number }
+}
+
+export interface ReportCasesResponse {
+  totalCount: number
+  cases: ReportCaseDto[]
+}
+
 // ── 리포트 히스토리 (GET /api/v1/reportsHistory) ──────────────────
 export interface ReportHistoryItem {
   reportId: number

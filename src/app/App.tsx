@@ -10,6 +10,7 @@ import { NotificationsPage } from '@/pages/notifications'
 import { ReportPage } from '@/pages/report'
 import { ReportHistoryPage } from '@/pages/report-history'
 import { ReportDetailPage } from '@/pages/report-detail'
+import { ReportCasesPage } from '@/pages/report-cases'
 import { MyPage } from '@/pages/my'
 import { MyStorePage } from '@/pages/my-store'
 import { MyStoreEditPage } from '@/pages/my-store-edit'
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="/report" element={<ReportPage />} />
           <Route path="/report/history" element={<ReportHistoryPage />} />
           <Route path="/report/:reportId" element={<ReportDetailPage />} />
+          <Route path="/report/:reportId/cases" element={<ReportCasesPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/my" element={<MyPage />} />
           <Route path="/my/store" element={<MyStorePage />} />

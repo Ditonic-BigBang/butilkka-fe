@@ -15,6 +15,8 @@ type ReportOverviewProps = {
   data: ReportView
   /** 상권 점수 카드 바로 아래 슬롯 (예: 최신 리포트의 "이전 리포트 확인하러 가기" 버튼) */
   afterScore?: ReactNode
+  /** 유사 사례 "전체 보기" */
+  onViewAllCases: () => void
   /** 대체 상권 "지도에서 확인하기" */
   onViewMap: () => void
 }
@@ -24,7 +26,12 @@ type ReportOverviewProps = {
  * 점수/전망/분석 카드 + 유사 사례(가로 스크롤) + AI 추천(버티기/이동) + 대체 상권.
  * 최신(pages/report)·지난(pages/report-detail) 리포트 화면이 공유하는 조합 블록.
  */
-export function ReportOverview({ data, afterScore, onViewMap }: ReportOverviewProps) {
+export function ReportOverview({
+  data,
+  afterScore,
+  onViewAllCases,
+  onViewMap,
+}: ReportOverviewProps) {
   return (
     <>
       <div className="flex flex-col gap-3 px-5 pt-1">
@@ -64,9 +71,9 @@ export function ReportOverview({ data, afterScore, onViewMap }: ReportOverviewPr
       <section className="mt-5 flex flex-col gap-3">
         <div className="flex items-center justify-between px-5">
           <h2 className="text-title-s-semibold text-gray-900">유사 사례</h2>
-          {/* TODO(유사 사례): 전체 목록 화면(/api/v1/reports/{id}/cases) 구현 시 이동 연결 */}
           <button
             type="button"
+            onClick={onViewAllCases}
             className="flex items-center gap-1 text-body-m-medium text-gray-500"
           >
             전체 보기
