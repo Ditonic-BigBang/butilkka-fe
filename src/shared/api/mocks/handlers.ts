@@ -69,6 +69,22 @@ const notificationState = makeNotificationsMock()
 // 리포트 히스토리 — 세션 동안 상태 유지(상세 조회 시 읽음 처리 반영). 모듈 로드 시 1회 복제.
 const reportHistoryState = structuredClone(reportHistoryMock)
 
+// 온보딩에서 저장한 대표 가게 요약 — 대시보드·리포트 목이 이걸 반영해
+// 홈/리포트 헤더에 사용자가 입력한 가게 기준 상권이 뜬다(실서버 동작과 동일).
+// 자치구는 도로명 주소("서울 강남구 …")에서 추출, 없으면 목 기본값 유지.
+function primaryStoreSummary() {
+  const primary = mockStores.find((s) => s.isPrimary)
+  if (!primary) return null
+  return {
+    regionCode: primary.regionCode || dashboardMock.store.regionCode,
+    regionName: primary.regionName ?? dashboardMock.store.regionName,
+    categoryName: primary.categoryName ?? dashboardMock.store.categoryName,
+    district:
+      primary.address?.split(' ').find((token) => token.endsWith('구')) ??
+      dashboardMock.store.district,
+  }
+}
+
 export const handlers = [
   // 예시 핸들러 — 실제 엔드포인트가 생기면 교체/삭제할 것.
   http.get(`${API}/api/health`, () => HttpResponse.json({ status: 'ok' })),
@@ -211,13 +227,35 @@ export const handlers = [
   }),
 
   // ── 홈 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
-  // 홈 대시보드 (내 가게 기준 상권 등급·브리핑·지표)
-  http.get(`${API}/api/v1/dashboard`, () => ok('대시보드 조회 성공', dashboardMock)),
+  // 홈 대시보드 (내 가게 기준 상권 등급·브리핑·지표) — 온보딩 저장 가게를 반영
+  http.get(`${API}/api/v1/dashboard`, () => {
+    const store = primaryStoreSummary()
+    return ok(
+      '대시보드 조회 성공',
+      store ? { ...dashboardMock, store: { ...dashboardMock.store, ...store } } : dashboardMock,
+    )
+  }),
 
   // ── 리포트 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
-  // 최신 분기 리포트(종합) — 데모는 '이동' 추천 시나리오 (버티기는 makeReportMock('버티기'))
+  // 최신 분기 리포트(종합) — 데모는 '이동' 추천 시나리오 (버티기는 makeReportMock('버티기')).
+  // 헤더(상권·업종·자치구)는 온보딩 저장 가게를 반영.
   // 주의: 아래 :reportId 핸들러보다 먼저 등록해야 "latest" 가 id 로 매칭되지 않는다.
-  http.get(`${API}/api/v1/reports/latest`, () => ok('리포트 조회 성공', makeReportMock())),
+  http.get(`${API}/api/v1/reports/latest`, () => {
+    const store = primaryStoreSummary()
+    const report = makeReportMock()
+    return ok(
+      '리포트 조회 성공',
+      store
+        ? {
+            ...report,
+            regionCode: store.regionCode,
+            regionName: store.regionName,
+            categoryName: store.categoryName,
+            districtName: store.district,
+          }
+        : report,
+    )
+  }),
 
   // 특정(지난) 리포트 상세 — 히스토리 항목의 분기·등급 기준으로 생성.
   // 상세를 조회하면 읽음 처리(isRead) — 히스토리 목록의 안 읽음 강조가 사라진다.
