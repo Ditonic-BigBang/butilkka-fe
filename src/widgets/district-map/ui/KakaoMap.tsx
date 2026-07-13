@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useKakaoMapsSDK } from '@/shared/lib/useKakaoMapsSDK'
 import { LocationMarker, Spinner } from '@/shared/ui'
 import { cn } from '@/shared/lib/cn'
+import iconGps from '../assets/icon-gps.svg'
 
 /** 지도 위 등급 마커 데이터 (좌표 + LocationMarker 내용) */
 export type MapMarker = {
@@ -23,6 +24,8 @@ export type KakaoMapHandle = {
 type KakaoMapProps = {
   markers?: MapMarker[]
   onMarkerClick?: (id: string) => void
+  /** 현재 위치 GPS 점 (Figma: icon_gps 1418:14548) — 없으면 표시 안 함 */
+  myLocation?: { lat: number; lng: number } | null
   className?: string
   ref?: Ref<KakaoMapHandle>
 }
@@ -40,6 +43,7 @@ const NO_MARKERS: MapMarker[] = []
 export default function KakaoMap({
   markers = NO_MARKERS,
   onMarkerClick,
+  myLocation,
   className,
   ref,
 }: KakaoMapProps) {
@@ -47,6 +51,7 @@ export default function KakaoMap({
   const [map, setMap] = useState<kakao.maps.Map | null>(null)
   // 마커별 portal 컨테이너 — CustomOverlay content 로 붙인 DOM 노드
   const [overlayEls, setOverlayEls] = useState<{ id: string; el: HTMLDivElement }[]>([])
+  const [myLocationEl, setMyLocationEl] = useState<HTMLDivElement | null>(null)
 
   const { isLoaded, error } = useKakaoMapsSDK()
 
@@ -93,6 +98,27 @@ export default function KakaoMap({
     }
   }, [map, markers])
 
+  // 현재 위치 GPS 점 오버레이
+  useEffect(() => {
+    if (!map || !myLocation) return
+
+    const el = document.createElement('div')
+    const overlay = new kakao.maps.CustomOverlay({
+      content: el,
+      position: new kakao.maps.LatLng(myLocation.lat, myLocation.lng),
+      xAnchor: 0.5,
+      yAnchor: 0.5,
+      zIndex: 20,
+    })
+    overlay.setMap(map)
+    setMyLocationEl(el)
+
+    return () => {
+      overlay.setMap(null)
+      setMyLocationEl(null)
+    }
+  }, [map, myLocation])
+
   if (error) {
     return (
       <div className={cn('flex items-center justify-center bg-gray-70 px-5', className)}>
@@ -111,6 +137,15 @@ export default function KakaoMap({
         </div>
       )}
       <div ref={containerRef} className={cn('size-full', !isLoaded && 'hidden')} />
+      {myLocationEl &&
+        createPortal(
+          <img
+            src={iconGps}
+            alt="현재 위치"
+            className="pointer-events-none size-[50px] max-w-none"
+          />,
+          myLocationEl,
+        )}
       {overlayEls.map(({ id, el }) => {
         const marker = markerById.get(id)
         if (!marker) return null

@@ -10,15 +10,15 @@ import { useRegionSearch } from './model/useRegionSearch'
 import { useFavorites } from './model/useFavorites'
 import { RankingSheet } from './ui/RankingSheet'
 
-// 검색/마커 선택 시 구 확대 레벨, 내 위치는 더 가깝게
+// 검색/마커 선택 시 구 확대 레벨
 const GU_ZOOM_LEVEL = 7
-const MY_LOCATION_ZOOM_LEVEL = 5
 
 export default function MapPage() {
   const mapRef = useRef<KakaoMapHandle>(null)
   const [query, setQuery] = useState('')
   const [order, setOrder] = useState<RankingOrder>('top')
   const [registerMode, setRegisterMode] = useState(false)
+  const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   const { markers, centroids } = useRegionMarkers()
   const ranking = useDeclineRanking(order)
@@ -46,7 +46,10 @@ export default function MapPage() {
 
   const handleMyLocation = () => {
     navigator.geolocation?.getCurrentPosition((pos) => {
-      mapRef.current?.panTo(pos.coords.latitude, pos.coords.longitude, MY_LOCATION_ZOOM_LEVEL)
+      const point = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      setMyLocation(point)
+      // 줌 레벨은 건드리지 않고 현 위치로 이동만
+      mapRef.current?.panTo(point.lat, point.lng)
     })
   }
 
@@ -57,6 +60,7 @@ export default function MapPage() {
           ref={mapRef}
           markers={markers}
           onMarkerClick={panToDistrict}
+          myLocation={myLocation}
           className="absolute inset-0"
         />
 
