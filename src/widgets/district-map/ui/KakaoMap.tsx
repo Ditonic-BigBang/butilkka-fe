@@ -21,9 +21,14 @@ export type KakaoMapHandle = {
   panTo: (lat: number, lng: number, level?: number) => void
 }
 
+/** 구 경계 폴리곤 — 외곽 링 좌표 묶음 */
+export type MapOutline = { id: string; rings: { lat: number; lng: number }[][] }
+
 type KakaoMapProps = {
   markers?: MapMarker[]
   onMarkerClick?: (id: string) => void
+  /** 구 경계 폴리곤 (라인 + 옅은 채움) */
+  outlines?: MapOutline[]
   /** 현재 위치 GPS 점 (Figma: icon_gps 1418:14548) — 없으면 표시 안 함 */
   myLocation?: { lat: number; lng: number } | null
   className?: string
@@ -33,7 +38,12 @@ type KakaoMapProps = {
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 }
 const DEFAULT_LEVEL = 9
 
+// 구 경계 스타일 — orange-500(@theme). kakao Polygon 은 CSS 변수를 못 받아 hex 로 미러링.
+const OUTLINE_COLOR = '#ff6b1b'
+const OUTLINE_FILL_OPACITY = 0.2
+
 const NO_MARKERS: MapMarker[] = []
+const NO_OUTLINES: MapOutline[] = []
 
 /**
  * 상권 지도 (Figma: 지도 홈 596:23173).
@@ -43,6 +53,7 @@ const NO_MARKERS: MapMarker[] = []
 export default function KakaoMap({
   markers = NO_MARKERS,
   onMarkerClick,
+  outlines = NO_OUTLINES,
   myLocation,
   className,
   ref,
@@ -97,6 +108,31 @@ export default function KakaoMap({
       setOverlayEls([])
     }
   }, [map, markers])
+
+  // 구 경계 폴리곤 — 오렌지 라인 + 20% 채움
+  useEffect(() => {
+    if (!map || outlines.length === 0) return
+
+    const polygons = outlines.flatMap((outline) =>
+      outline.rings.map((ring) => {
+        const polygon = new kakao.maps.Polygon({
+          map,
+          path: ring.map((p) => new kakao.maps.LatLng(p.lat, p.lng)),
+          strokeWeight: 1.5,
+          strokeColor: OUTLINE_COLOR,
+          strokeOpacity: 1,
+          fillColor: OUTLINE_COLOR,
+          fillOpacity: OUTLINE_FILL_OPACITY,
+          zIndex: 1,
+        })
+        return polygon
+      }),
+    )
+
+    return () => {
+      polygons.forEach((polygon) => polygon.setMap(null))
+    }
+  }, [map, outlines])
 
   // 현재 위치 GPS 점 오버레이
   useEffect(() => {

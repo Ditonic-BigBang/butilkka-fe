@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MobileLayout } from '@/widgets/mobile-layout'
-import { KakaoMap, type KakaoMapHandle } from '@/widgets/district-map'
+import { KakaoMap, type KakaoMapHandle, type MapOutline } from '@/widgets/district-map'
+import { useGuBoundaries } from '@/entities/district'
 import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation } from '@/shared/ui'
 import { formatQuarter } from '@/shared/lib/quarter'
@@ -39,6 +40,13 @@ export default function MapPage() {
   } = useRegionMarkers(quarter ?? undefined)
   const ranking = useDeclineRanking(order, quarter ?? undefined)
   const detail = useRegionDetail(detailRegionCode)
+  const { data: guBoundaries } = useGuBoundaries()
+
+  // 구 경계 폴리곤 — 위젯 outline 형태로 변환
+  const outlines = useMemo<MapOutline[]>(
+    () => guBoundaries?.map((b) => ({ id: b.district, rings: b.rings })) ?? [],
+    [guBoundaries],
+  )
 
   // 기간 시트의 옵션 기준은 "데이터의 최신 분기" — 최초(미선택) 응답의 quarter 를 고정해둔다
   useEffect(() => {
@@ -106,6 +114,7 @@ export default function MapPage() {
           ref={mapRef}
           markers={markers}
           onMarkerClick={handleMarkerClick}
+          outlines={outlines}
           myLocation={myLocation}
           className="absolute inset-0"
         />

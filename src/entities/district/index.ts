@@ -1,4 +1,5 @@
 export * from './model/useSeoulGeoJson'
+export * from './model/useGuBoundaries'
 export * from './lib/guCentroids'
 export { CurrentDistrictCard } from './ui/CurrentDistrictCard'
 export { DistrictRankRow } from './ui/DistrictRankRow'
