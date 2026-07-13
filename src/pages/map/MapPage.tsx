@@ -71,7 +71,7 @@ export default function MapPage() {
           savedPlaces={favorites.map((f) => f.regionName)}
           onAddPlace={() => setRegisterMode(true)}
           registerMode={registerMode}
-          className="absolute inset-x-0 top-0 z-10 pt-4"
+          className="absolute inset-x-0 top-0 z-10"
         />
 
         <MyLocation onClick={handleMyLocation} className="absolute right-5 bottom-[118px] z-10" />

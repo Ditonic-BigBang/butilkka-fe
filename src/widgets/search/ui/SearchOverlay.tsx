@@ -76,7 +76,7 @@ export function SearchOverlay({
           onWheel={(e) => {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) e.currentTarget.scrollLeft += e.deltaY
           }}
-          className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-5 [&::-webkit-scrollbar]:hidden"
+          className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)] [&::-webkit-scrollbar]:hidden"
         >
           {filters.map((f) => (
             <FilterChip
@@ -173,11 +173,18 @@ export function SearchOverlay({
         }
       }}
       className={cn(
-        'flex w-full flex-col gap-4 bg-white pt-[60px] pb-4 shadow-[0_2px_10px_rgba(0,0,0,0.1)]',
+        'flex w-full flex-col',
+        // 포커스 시엔 흰 검색 시트, 평상시엔 투명 — 필터칩 행 뒤로 지도가 비친다
+        focused ? 'gap-4 bg-white pb-4 shadow-[0_2px_10px_rgba(0,0,0,0.1)]' : 'gap-2.5',
         className,
       )}
     >
-      <div className="px-5">
+      <div
+        className={cn(
+          'w-full px-5 pt-4',
+          !focused && 'bg-white pb-3 shadow-[0_2px_2px_rgba(0,0,0,0.05)]',
+        )}
+      >
         <SearchInput
           value={query}
           onChange={onQueryChange}
