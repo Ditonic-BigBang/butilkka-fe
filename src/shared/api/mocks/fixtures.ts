@@ -497,6 +497,23 @@ const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
     '3110013': { value: 3_620_000, direction: 'UP' }, // 잠실(송파구)
     '3110014': { value: 3_140_000, direction: 'FLAT' }, // 서초역
   },
+  // 유동인구(명) — 서대문구 대표 134,302명
+  footTraffic: {
+    '3110001': { value: 121_940, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 134_302, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 128_450, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 122_780, direction: 'UP' }, // 노원역
+    '3110005': { value: 118_630, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 112_940, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 96_210, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 74_380, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 81_020, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 88_760, direction: 'UP' }, // 종로3가
+    '3110011': { value: 102_540, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 91_830, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 78_150, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 68_930, direction: 'FLAT' }, // 서초역
+  },
   // 점포수(개) — 서대문구 대표 567개
   storeCount: {
     '3110001': { value: 521, direction: 'DOWN' }, // 신촌
@@ -519,6 +536,7 @@ const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
 // 시드 미등록 상권 폴백 값 (regionMapMock 에 상권을 추가해도 목이 깨지지 않게)
 const METRIC_SEED_FALLBACK: Record<string, MetricSeed> = {
   rentRatio: { value: 5_000_000, direction: 'UP' },
+  footTraffic: { value: 100_000, direction: 'UP' },
   storeCount: { value: 400, direction: 'UP' },
 }
 
@@ -637,6 +655,8 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
   // 지표 카테고리 대상 지표는 시드 값으로 수렴하는 추이 — 마커/랭킹 값과 상세가 일치
   const rent = metricSeed('rentRatio', region.regionCode)
   const rentTrend = seedTrend(rent, 10_000) // 만원 단위 스텝
+  const foot = metricSeed('footTraffic', region.regionCode)
+  const footTrend = seedTrend(foot, 10)
   const store = metricSeed('storeCount', region.regionCode)
   const storeTrend = seedTrend(store, 1)
 
@@ -657,10 +677,10 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
       trend: rentTrend,
     },
     footTraffic: {
-      value: 121940,
-      changeRate: -4.8,
-      direction: 'DOWN',
-      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 140210 - i * 1660 })),
+      value: foot.value,
+      changeRate: trendChangeRate(footTrend),
+      direction: foot.direction,
+      trend: footTrend,
     },
     vacancyRate: {
       value: 8.6,

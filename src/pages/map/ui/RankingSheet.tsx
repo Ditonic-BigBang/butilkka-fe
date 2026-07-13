@@ -36,9 +36,11 @@ function renderDetail(view: SheetDetailView) {
       trendTicks={view.trendTicks}
       trendUnit={view.trendUnit}
       trendTooltip={(p) => `${p.value.toLocaleString()}${view.unit}`}
-      // y축 눈금은 도메인 보간이라 소수가 나온다 — %만 소수 1자리, 나머지는 정수 표기
-      yFormatter={(v) =>
-        view.unit === '%' ? String(Math.round(v * 10) / 10) : Math.round(v).toLocaleString()
+      // y축 눈금은 도메인 보간이라 소수가 나온다 — 지표별 축약 라벨 우선, %만 소수 1자리, 나머지는 정수
+      yFormatter={
+        view.trendAxisLabel ??
+        ((v) =>
+          view.unit === '%' ? String(Math.round(v * 10) / 10) : Math.round(v).toLocaleString())
       }
     />
   )

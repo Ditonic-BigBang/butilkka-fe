@@ -17,6 +17,8 @@ export type MetricConfig = {
   unit: string
   /** 원시 값 → 표시 값 (예: 원 → 만원) */
   toDisplayValue: (raw: number) => number
+  /** 그래프 y축 눈금 라벨 (표시 값 기준) — 축 폭(30px)에 안 들어가는 큰 값만 축약 지정 */
+  toAxisLabel?: (value: number) => string
 }
 
 export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
@@ -25,7 +27,12 @@ export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
     unit: '만원',
     toDisplayValue: (v) => Math.round(v / 10000),
   },
-  footTraffic: { title: '유동인구', unit: '명', toDisplayValue: (v) => Math.round(v) },
+  footTraffic: {
+    title: '유동인구',
+    unit: '명',
+    toDisplayValue: (v) => Math.round(v),
+    toAxisLabel: (v) => `${(v / 10_000).toFixed(1)}만`,
+  },
   vacancyRate: { title: '공실률', unit: '%', toDisplayValue: (v) => Math.round(v * 10) / 10 },
   closureRate: { title: '폐업률', unit: '%', toDisplayValue: (v) => Math.round(v * 10) / 10 },
   storeCount: { title: '점포수', unit: '개', toDisplayValue: (v) => Math.round(v) },
@@ -39,6 +46,7 @@ export const CATEGORY_BY_FILTER: Partial<Record<string, MapCategory>> = {
   grade: 'grade',
   sales: 'rentRatio',
   stores: 'storeCount',
+  population: 'footTraffic',
 }
 
 const FILTER_BY_CATEGORY = Object.fromEntries(

@@ -61,6 +61,8 @@ export type MetricSheetView = {
   trend: TrendPoint[]
   trendTicks: string[]
   trendUnit: string
+  /** y축 눈금 축약 라벨 (예: 13.4만) — 없으면 기본 포맷 */
+  trendAxisLabel?: (value: number) => string
 }
 
 export type SheetDetailView = GradeSheetView | MetricSheetView
@@ -114,6 +116,7 @@ export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): M
     })),
     trendTicks: yearTicks(summary.trend.map((p) => p.quarter)),
     trendUnit: `(${config.unit})`,
+    trendAxisLabel: config.toAxisLabel,
   }
 }
 
