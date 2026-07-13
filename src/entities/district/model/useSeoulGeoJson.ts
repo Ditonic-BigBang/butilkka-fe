@@ -44,15 +44,3 @@ export function useSeoulGeoJson() {
 
   return { data, loading, error }
 }
-
-// GeoJSON 좌표 ([lng, lat]) → Kakao LatLng
-export function ringToLatLng(ring: number[][]): kakao.maps.LatLng[] {
-  return ring.map(([lng, lat]) => new kakao.maps.LatLng(lat, lng))
-}
-
-// 외곽 링의 무게중심
-export function ringCentroid(ring: number[][]): [number, number] {
-  const lat = ring.reduce((s, p) => s + p[1], 0) / ring.length
-  const lng = ring.reduce((s, p) => s + p[0], 0) / ring.length
-  return [lat, lng]
-}
