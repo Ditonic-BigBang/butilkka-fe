@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { MobileLayout } from '@/widgets/mobile-layout'
@@ -25,6 +26,7 @@ export default function OnboardingPage() {
   const draft = useOnboardingStore((s) => s.draft)
   const reset = useOnboardingStore((s) => s.reset)
   const step = ONBOARDING_STEPS[stepIndex]
+  const [clientError, setClientError] = useState<string | undefined>()
 
   const saveStore = useMutation({
     mutationFn: putMyStore,
@@ -45,10 +47,11 @@ export default function OnboardingPage() {
     if (!name || !location || !categoryCode || !foundedDate) return
     if (!region) {
       saveStore.reset()
-      alert('가게 주소의 상권 정보를 찾지 못했어요. 주소를 다시 선택해주세요.')
+      setClientError('가게 주소의 상권 정보를 찾지 못했어요. 주소를 다시 선택해주세요.')
       return
     }
 
+    setClientError(undefined)
     saveStore.mutate({
       regionCode: region.regionCode,
       categoryCode,
@@ -56,7 +59,7 @@ export default function OnboardingPage() {
       lng: location.lng,
       storeName: name,
       storeOpenDate: foundedDate,
-      address: location.roadAddress,
+      storeAddress: location.roadAddress,
     })
   }
 
@@ -71,7 +74,7 @@ export default function OnboardingPage() {
         <CompleteStep
           onFinish={finish}
           pending={saveStore.isPending}
-          errorMessage={saveStore.error?.message}
+          errorMessage={saveStore.error?.message ?? clientError}
         />
       )}
     </MobileLayout>

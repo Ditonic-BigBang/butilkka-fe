@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { notificationKeys } from '@/entities/notification'
 import { makeNotificationsMock } from '@/shared/api/mocks/fixtures'
 import NotificationsPage from './NotificationsPage'
-import { notificationKeys } from './model/notificationApi'
 
 // 스토리는 네트워크 없이 렌더 — 알림 목 목록을 쿼리 캐시에 시드하고 refetch 를 끈다.
 function seededClient() {

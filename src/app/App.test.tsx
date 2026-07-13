@@ -54,6 +54,7 @@ describe('App', () => {
     )
     renderApp()
     // 대시보드(GET /api/v1/dashboard) 목이 로드되면 헤더에 내 상권 위치가 뜬다 = 홈 렌더 성공
-    expect(await screen.findByText('강남구 가로수길')).toBeInTheDocument()
+    // (위치 폴백 = dashboard.store.address 에서 "서울" 접두를 뗀 값)
+    expect(await screen.findByText('강남구 신사동')).toBeInTheDocument()
   })
 })

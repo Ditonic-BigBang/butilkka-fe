@@ -13,7 +13,7 @@ describe('온보딩 저장 가게 반영', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         storeName: '민수네 국밥',
-        address: '서울 마포구 월드컵로 123',
+        storeAddress: '서울 마포구 월드컵로 123',
         regionCode: '3110021',
         categoryCode: 'CS100003',
         lat: 37.556,
@@ -22,9 +22,9 @@ describe('온보딩 저장 가게 반영', () => {
     })
     expect(put.ok).toBe(true)
 
-    // 홈 헤더 = dashboard.store.district + regionName
+    // 홈 헤더 위치 폴백 = dashboard.store.address (실서버 계약 — district 없음)
     const dashboard = (await (await fetch(`${API}/api/v1/dashboard`)).json()).data
-    expect(dashboard.store.district).toBe('마포구')
+    expect(dashboard.store.address).toBe('서울 마포구 월드컵로 123')
     expect(dashboard.store.regionName).toBe('가로수길')
 
     // 리포트 헤더 = regionName · categoryName (업종도 입력값 반영)

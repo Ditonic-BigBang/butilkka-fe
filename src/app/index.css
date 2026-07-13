@@ -32,6 +32,8 @@
   --color-status-red-soft: #fff6f6;
   --color-info-blue: #4193ff;
   --color-info-blue-soft: #f3fafe;
+  --color-kakao-yellow: #fee500;
+  --color-subscription-warm: #ffd6ad;
 
   /* ===================== Home Card (쇠퇴 등급 스케일 01~05, Figma Home Card) ===================== */
   --color-home-card-1: #ff9d47;
@@ -143,8 +145,12 @@
   /* 보간을 oklch로 → 중간색이 칙칙해지는 sRGB 데드존 회피 (색 stop은 hex 유지) */
   --gradient-1: linear-gradient(in oklch to right, #ffe9df 0%, #f8f8f8 100%);
   --gradient-2: linear-gradient(in oklch to right, #ffc78a 0%, #ff9058 100%);
-  /* Gradation/3: 상단 웜 페이드(구독 헤더 등) — #ffd6ad → 흰 투명(세로). 투명 페이드라 sRGB 보간. */
-  --gradient-3: linear-gradient(to bottom, #ffd6ad 0%, rgb(255 255 255 / 0) 100%);
+  /* Gradation/3: 상단 웜 페이드(구독 헤더 등) — 웜 배경 → 흰 투명(세로). 투명 페이드라 sRGB 보간. */
+  --gradient-3: linear-gradient(
+    to bottom,
+    var(--color-subscription-warm) 0%,
+    rgb(255 255 255 / 0) 100%
+  );
 
   /* ===================== Safe-area (기존 유지) ===================== */
   /* iOS safe-area 인셋 → pt-safe-top / pb-safe-bottom / px-safe-* 등으로 사용
@@ -160,9 +166,28 @@
 }
 
 @layer base {
+  :root {
+    --app-height: 100dvh;
+  }
+
+  @supports (height: 100lvh) {
+    @media (display-mode: standalone) {
+      :root {
+        --app-height: 100lvh;
+      }
+    }
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   /* macOS/Retina 에서 기본 subpixel AA 로 텍스트가 디자인보다 두껍게 렌더되는 것 방지.
      grayscale AA 로 맞춰 Figma(동일 방식)와 글자 굵기를 일치시킨다. */
   body {
+    background: #fff;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

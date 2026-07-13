@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchLatestReport, fetchReportHistory, reportKeys } from '@/entities/report'
+import {
+  fetchLatestReport,
+  fetchReportHistory,
+  reportKeys,
+  type ReportHistoryResponse,
+} from '@/entities/report'
 import { toReportView } from '@/widgets/report-overview'
-import type { ReportHistoryResponse } from '@/shared/api/types'
 
 /**
  * 최신 분기 리포트 데이터 소스.

@@ -81,7 +81,7 @@ export function GradeGauge({ grade, status, level, className }: GradeGaugeProps)
             key={g}
             d={segmentPath(i)}
             fill="none"
-            stroke={i < lv ? 'url(#grade-gauge)' : '#e4e4e4'}
+            stroke={i < lv ? 'url(#grade-gauge)' : 'var(--color-gray-100)'}
             strokeWidth={T}
             strokeLinecap="butt"
           />
@@ -92,7 +92,7 @@ export function GradeGauge({ grade, status, level, className }: GradeGaugeProps)
         {/* 현재 등급 마커 (밴드 밖, 세그먼트 향해) */}
         <polygon
           points="-6.5,-7 6.5,-7 0,8"
-          fill="#ffc7a8"
+          fill="var(--color-orange-100)"
           transform={`translate(${mark.x} ${mark.y}) rotate(${markRot})`}
         />
       </svg>

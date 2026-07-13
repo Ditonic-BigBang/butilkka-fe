@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { apiJson } from '@/shared/api/api'
 import { useAuthStore } from '@/entities/session'
-import type { SubscriptionPlan, SubscriptionResponse } from '@/shared/api/types'
+import { subscribe, type SubscriptionPlan } from '@/entities/subscription'
 
 /** 화면의 플랜 선택값 → API plan (명세 미반영 선규격) */
 const PLAN_CODES = { annual: 'ANNUAL', monthly: 'MONTHLY' } as const satisfies Record<
@@ -10,14 +9,6 @@ const PLAN_CODES = { annual: 'ANNUAL', monthly: 'MONTHLY' } as const satisfies R
 >
 
 export type PlanKey = keyof typeof PLAN_CODES
-
-/** POST /api/v1/users/me/subscription — 구독 확정 (명세 미반영 선규격, 백엔드 전달 예정) */
-function subscribe(plan: PlanKey): Promise<SubscriptionResponse> {
-  return apiJson<SubscriptionResponse>('/api/v1/users/me/subscription', {
-    method: 'POST',
-    body: JSON.stringify({ plan: PLAN_CODES[plan] }),
-  })
-}
 
 /**
  * 구독 확정 뮤테이션.
@@ -28,7 +19,7 @@ export function useSubscribe() {
   const refreshUser = useAuthStore((s) => s.refreshUser)
 
   return useMutation({
-    mutationFn: subscribe,
+    mutationFn: (plan: PlanKey) => subscribe(PLAN_CODES[plan]),
     onSuccess: () => {
       void refreshUser()
     },

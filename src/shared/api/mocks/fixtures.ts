@@ -1,24 +1,24 @@
 // MSW 핸들러·Storybook 스토리가 공유하는 목 픽스처 — API명세서 V3 응답(data) 형태.
-// shared 는 상위 레이어를 import 하지 않으므로 DTO 타입은 같은 shared/api 에서 가져온다(FSD).
+// MSW/Storybook 전용 fixture 는 앱 계층과 분리되어 있어 도메인 DTO 타입을 직접 참조한다.
 import type {
-  DashboardResponse,
-  NotificationListResponse,
   ReportCasesResponse,
   ReportGrade,
   ReportHistoryItem,
   ReportHistoryResponse,
   ReportRecommendation,
   ReportResponse,
-} from '@/shared/api/types'
+} from '@/entities/report'
+import type { DashboardResponse } from '@/entities/dashboard'
+import type { NotificationListResponse } from '@/entities/notification'
 
 /** GET /api/v1/dashboard 데모 데이터 (명세 예시 기반) */
 export const dashboardMock: DashboardResponse = {
   store: {
     regionCode: '3110001',
-    // 가로수길(신사동)의 실제 자치구 — regions/lookup 목 주소(서울 강남구 신사동)와 일치
-    district: '강남구',
     regionName: '가로수길',
     categoryName: '한식음식점',
+    // regions/lookup 목 주소와 일치 — 홈 위치 pill 폴백이 "서울" 접두를 떼고 표시
+    address: '서울 강남구 신사동',
   },
   grade: { current: 'C', previous: 'B', gaugeValue: 52 },
   briefing: '전년 대비 유동인구가 줄고 공실이 늘고 있어,\n주의가 필요한 구간이에요.',

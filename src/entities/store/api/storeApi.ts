@@ -13,7 +13,7 @@ export function getMyStores(): Promise<MyStore[]> {
   return apiJson<MyStore[]>('/api/v1/users/me/stores')
 }
 
-/** 가게 추가 요청 (POST /api/v1/users/me/stores, 선규격) */
+/** 가게 추가 요청 (POST /api/v1/users/me/stores) */
 export interface CreateStorePayload {
   regionCode: string
   categoryCode: string
@@ -22,8 +22,8 @@ export interface CreateStorePayload {
   storeName: string
   /** YYYY-MM-DD */
   storeOpenDate: string
-  /** 도로명 주소 */
-  address: string
+  /** 도로명 주소 — 요청은 storeAddress, 응답(store.address)과 필드명이 다름(스웨거 계약) */
+  storeAddress: string
 }
 
 /** 가게 추가 (POST /api/v1/users/me/stores) — 목록에 새 가게로 추가(대표 아님) */
@@ -34,13 +34,13 @@ export function createStore(payload: CreateStorePayload): Promise<MyStore> {
   })
 }
 
-/** 가게 수정 요청 (PATCH /api/v1/users/me/stores/{storeId} — 변경 필드만 부분 전송, 선규격) */
+/** 가게 수정 요청 (PATCH /api/v1/users/me/stores/{storeId} — 변경 필드만 부분 전송) */
 export interface UpdateStorePayload {
   storeName?: string
   /** YYYY-MM-DD */
   storeOpenDate?: string
-  /** 도로명 주소 */
-  address?: string
+  /** 도로명 주소 — 요청은 storeAddress, 응답(store.address)과 필드명이 다름(스웨거 계약) */
+  storeAddress?: string
   regionCode?: string
   categoryCode?: string
   lat?: number
@@ -91,8 +91,8 @@ export interface PutMyStorePayload {
   storeName: string
   /** YYYY-MM-DD */
   storeOpenDate: string
-  /** 도로명 주소 (선택한 위치의 표시용 — 서버 store 에 저장, 선규격) */
-  address: string
+  /** 도로명 주소 — 요청은 storeAddress, 응답(store.address)과 필드명이 다름(스웨거 계약) */
+  storeAddress: string
 }
 
 export function putMyStore(payload: PutMyStorePayload): Promise<Store> {

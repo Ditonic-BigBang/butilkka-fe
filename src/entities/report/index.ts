@@ -16,3 +16,13 @@ export {
   fetchReportCases,
   fetchReportHistory,
 } from './model/reportQueries'
+export type {
+  ReportAlternativeRegion,
+  ReportCaseDto,
+  ReportCasesResponse,
+  ReportGrade,
+  ReportHistoryItem,
+  ReportHistoryResponse,
+  ReportRecommendation,
+  ReportResponse,
+} from './model/types'

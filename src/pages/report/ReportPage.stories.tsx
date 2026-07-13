@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReportRecommendation } from '@/shared/api/types'
+import type { ReportRecommendation } from '@/entities/report'
 import { makeReportMock, reportHistoryMock } from '@/shared/api/mocks/fixtures'
 import { reportKeys } from '@/entities/report'
 import { useAuthStore } from '@/entities/session'

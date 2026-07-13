@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '@/entities/session'
+import { notificationSettingsKeys } from '@/entities/notification'
 import MyPage from './MyPage'
-import { notificationSettingsKeys } from './model/notificationSettingsApi'
 
 // 스토리는 네트워크 없이 렌더 — 알림 설정을 쿼리 캐시에 시드하고 refetch 를 끈다.
 function seededClient() {

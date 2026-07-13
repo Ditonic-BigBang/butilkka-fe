@@ -157,7 +157,7 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
           payload: {
             storeName: name.trim(),
             storeOpenDate: foundedDate,
-            address: location.roadAddress,
+            storeAddress: location.roadAddress,
             regionCode,
             categoryCode,
             lat: location.lat,
@@ -175,7 +175,7 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
           lng: location.lng,
           storeName: name.trim(),
           storeOpenDate: foundedDate,
-          address: location.roadAddress,
+          storeAddress: location.roadAddress,
         },
         // 내 가게 설정에서 하단 토스트로 표시할 메시지
         {
