@@ -159,22 +159,27 @@ export default function MapPage() {
           className="absolute inset-x-0 top-0 z-10"
         />
 
-        <MyLocation onClick={handleMyLocation} className="absolute right-5 bottom-[118px] z-10" />
-
-        <RankingSheet
-          title={categoryView.title}
-          tabs={categoryView.tabs}
-          order={order}
-          onOrderChange={setOrder}
-          rows={ranking.data ?? []}
-          onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
-          detail={detailRegionCode !== null ? detail.data : null}
-          onClearDetail={clearSelection}
-          isPending={ranking.isPending}
-          isError={ranking.isError}
-          onRetry={() => void ranking.refetch()}
-          className="absolute inset-x-0 bottom-0 z-10"
-        />
+        {/* 내 위치 버튼은 시트 바로 위에 붙어 시트 높이 변화를 따라간다 — 래퍼는 지도 조작을 막지 않게 클릭 통과 */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col">
+          <MyLocation
+            onClick={handleMyLocation}
+            className="pointer-events-auto mr-5 mb-3 self-end"
+          />
+          <RankingSheet
+            title={categoryView.title}
+            tabs={categoryView.tabs}
+            order={order}
+            onOrderChange={setOrder}
+            rows={ranking.data ?? []}
+            onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
+            detail={detailRegionCode !== null ? detail.data : null}
+            onClearDetail={clearSelection}
+            isPending={ranking.isPending}
+            isError={ranking.isError}
+            onRetry={() => void ranking.refetch()}
+            className="pointer-events-auto"
+          />
+        </div>
 
         <QuarterSheet
           open={quarterSheetOpen}
