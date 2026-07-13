@@ -514,6 +514,23 @@ const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
     '3110013': { value: 78_150, direction: 'UP' }, // 잠실(송파구)
     '3110014': { value: 68_930, direction: 'FLAT' }, // 서초역
   },
+  // 공실률(%) — 서대문구 대표 13%
+  vacancyRate: {
+    '3110001': { value: 12.4, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 13, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 12.7, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 12.2, direction: 'UP' }, // 노원역
+    '3110005': { value: 11.8, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 11.3, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 8.9, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 6.4, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 7.2, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 8.1, direction: 'UP' }, // 종로3가
+    '3110011': { value: 9.6, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 8.5, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 6.8, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 5.9, direction: 'FLAT' }, // 서초역
+  },
   // 점포수(개) — 서대문구 대표 567개
   storeCount: {
     '3110001': { value: 521, direction: 'DOWN' }, // 신촌
@@ -537,6 +554,7 @@ const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
 const METRIC_SEED_FALLBACK: Record<string, MetricSeed> = {
   rentRatio: { value: 5_000_000, direction: 'UP' },
   footTraffic: { value: 100_000, direction: 'UP' },
+  vacancyRate: { value: 8, direction: 'UP' },
   storeCount: { value: 400, direction: 'UP' },
 }
 
@@ -657,6 +675,8 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
   const rentTrend = seedTrend(rent, 10_000) // 만원 단위 스텝
   const foot = metricSeed('footTraffic', region.regionCode)
   const footTrend = seedTrend(foot, 10)
+  const vacancy = metricSeed('vacancyRate', region.regionCode)
+  const vacancyTrend = seedTrend(vacancy, 0.1)
   const store = metricSeed('storeCount', region.regionCode)
   const storeTrend = seedTrend(store, 1)
 
@@ -683,10 +703,10 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
       trend: footTrend,
     },
     vacancyRate: {
-      value: 8.6,
-      changeRate: 2.1,
-      direction: 'UP',
-      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 5.2 + i * 0.3 })),
+      value: vacancy.value,
+      changeRate: trendChangeRate(vacancyTrend),
+      direction: vacancy.direction,
+      trend: vacancyTrend,
     },
     closureRate: {
       value: 3.9,
