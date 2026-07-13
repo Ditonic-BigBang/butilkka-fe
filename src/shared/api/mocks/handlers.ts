@@ -1,11 +1,12 @@
 import { http, HttpResponse } from 'msw'
 import {
   dashboardMock,
-  declineRankingMock,
   getMetricMapMock,
+  makeDeclineRankingMock,
   makeMetricRankingMock,
   makeNotificationsMock,
   makeRegionDetailMock,
+  makeRegionMapMock,
   makeReportDetailMock,
   makeReportMock,
   reportCasesMock,
@@ -152,41 +153,37 @@ export const handlers = [
 
   // ── 지도/상권 (지도 홈) ──
   // 지도 색상 데이터 — 상권 단위 쇠퇴등급 (FE 가 구 단위로 묶어 마커 표시).
-  // quarter 미지정 = 최신(2026Q1). 지정 시 응답 quarter 에 에코(목은 등급 데이터 동일).
+  // quarter 미지정 = 최신(2025Q4). 과거 분기는 추이 패턴만큼 등급을 되돌려 응답.
   http.get(`${API}/api/v1/regions/map`, ({ request }) => {
     const quarter = new URL(request.url).searchParams.get('quarter')
-    return ok('지도 데이터 조회 성공', quarter ? { ...regionMapMock, quarter } : regionMapMock)
+    return ok('지도 데이터 조회 성공', makeRegionMapMock(quarter))
   }),
 
   // 쇠퇴 등급 Top5 — order: top(위험 높은 순) / bottom(안전한 순)
   http.get(`${API}/api/v1/regions/declineRanking`, ({ request }) => {
     const params = new URL(request.url).searchParams
     const order = params.get('order') === 'bottom' ? 'bottom' : 'top'
-    const quarter = params.get('quarter')
-    const data = declineRankingMock[order]
-    return ok('순위 조회 성공', quarter ? { ...data, quarter } : data)
+    return ok('순위 조회 성공', makeDeclineRankingMock(order, params.get('quarter')))
   }),
 
   // (선규격) 지표별 지도 값 — 백엔드 미구현, FE 제안 계약. metric 은 상세 응답 필드명(rentRatio 등).
   http.get(`${API}/api/v1/regions/metricMap`, ({ request }) => {
     const params = new URL(request.url).searchParams
-    const quarter = params.get('quarter')
-    const data = getMetricMapMock(params.get('metric'))
+    const data = getMetricMapMock(params.get('metric'), params.get('quarter'))
     if (!data) {
       return HttpResponse.json(
         { code: 400, status: 'BAD_REQUEST', message: '지원하지 않는 지표입니다.', data: null },
         { status: 400 },
       )
     }
-    return ok('지표 지도 조회 성공', quarter ? { ...data, quarter } : data)
+    return ok('지표 지도 조회 성공', data)
   }),
 
   // (선규격) 지표별 Top5 — order: top(상위) / bottom(하위)
   http.get(`${API}/api/v1/regions/metricRanking`, ({ request }) => {
     const params = new URL(request.url).searchParams
     const order = params.get('order') === 'bottom' ? 'bottom' : 'top'
-    const quarter = params.get('quarter')
-    const data = makeMetricRankingMock(params.get('metric'), order)
+    const data = makeMetricRankingMock(params.get('metric'), order, params.get('quarter'))
     if (!data) {
       return HttpResponse.json(
         {
@@ -198,7 +195,7 @@ export const handlers = [
         { status: 400 },
       )
     }
-    return ok('지표 순위 조회 성공', quarter ? { ...data, quarter } : data)
+    return ok('지표 순위 조회 성공', data)
   }),
 
   // 상권 검색 자동완성 — 지도 목 데이터에서 상권명/자치구 부분일치
@@ -216,8 +213,9 @@ export const handlers = [
     return ok('상권 검색 성공', matches)
   }),
 
-  // 특정 상권 상세 — path 는 상권코드 (URI 명칭 districts 와 달리 regionCode)
-  http.get(`${API}/api/v1/districts/:regionCode`, ({ params }) => {
+  // 특정 상권 상세 — path 는 상권코드 (URI 명칭 districts 와 달리 regionCode).
+  // quarter 는 FE 선규격 파라미터 — 조회 분기 기준 상세 (미지정 시 최신).
+  http.get(`${API}/api/v1/districts/:regionCode`, ({ request, params }) => {
     const region = regionMapMock.regions.find((r) => r.regionCode === params.regionCode)
     if (!region) {
       return HttpResponse.json(
@@ -225,7 +223,8 @@ export const handlers = [
         { status: 404 },
       )
     }
-    return ok('상권 상세 조회 성공', makeRegionDetailMock(region))
+    const quarter = new URL(request.url).searchParams.get('quarter')
+    return ok('상권 상세 조회 성공', makeRegionDetailMock(region, quarter))
   }),
 
   // 즐겨찾는 상권 조회/등록/해제

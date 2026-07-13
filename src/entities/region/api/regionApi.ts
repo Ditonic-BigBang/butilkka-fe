@@ -20,7 +20,8 @@ export const regionKeys = {
   metricRanking: (metric: MetricKey, order: RankingOrder, quarter?: string) =>
     [...regionKeys.all, 'metricRanking', metric, order, quarter ?? 'latest'] as const,
   search: (keyword: string) => [...regionKeys.all, 'search', keyword] as const,
-  detail: (regionCode: string) => [...regionKeys.all, 'detail', regionCode] as const,
+  detail: (regionCode: string, quarter?: string) =>
+    [...regionKeys.all, 'detail', regionCode, quarter ?? 'latest'] as const,
 }
 
 /** GET /api/v1/regions/map — 상권별 쇠퇴등급 (quarter 미지정 시 최신) */
@@ -73,7 +74,14 @@ export function searchRegions(keyword: string): Promise<RegionSearchItem[]> {
   )
 }
 
-/** GET /api/v1/districts/{regionCode} — 특정 상권 상세 (URI 명칭과 달리 path 는 상권코드) */
-export function fetchRegionDetail(regionCode: string): Promise<RegionDetailResponse> {
-  return apiJson<RegionDetailResponse>(`/api/v1/districts/${encodeURIComponent(regionCode)}`)
+/**
+ * GET /api/v1/districts/{regionCode} — 특정 상권 상세 (URI 명칭과 달리 path 는 상권코드).
+ * quarter 는 FE 선규격 파라미터(스웨거 미정의) — 조회 분기 기준 상세, 미지정 시 최신.
+ */
+export function fetchRegionDetail(
+  regionCode: string,
+  quarter?: string,
+): Promise<RegionDetailResponse> {
+  const qs = quarter ? `?quarter=${encodeURIComponent(quarter)}` : ''
+  return apiJson<RegionDetailResponse>(`/api/v1/districts/${encodeURIComponent(regionCode)}${qs}`)
 }

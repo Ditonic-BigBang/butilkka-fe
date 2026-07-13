@@ -386,8 +386,8 @@ export const regionMapMock: RegionMapResponse = {
   ],
 }
 
-/** GET /api/v1/regions/declineRanking 데모 데이터 — 디자인(지도 홈) Top5 와 동일 */
-export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
+/** GET /api/v1/regions/declineRanking 최신 분기 기준 데이터 — 디자인(지도 홈) Top5 와 동일 */
+const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
   top: {
     order: 'top',
     quarter: '2025Q4',
@@ -586,6 +586,97 @@ function metricSeed(metric: MetricKey, regionCode: string): MetricSeed {
   )
 }
 
+// ── 분기 이동 — 목은 최신 분기(2025Q4) 값 기준, 과거 분기 요청 시 추이 패턴만큼 결정적으로 되돌린다 ──
+
+const LATEST_QUARTER = '2025Q4'
+
+function quarterIndex(quarter: string): number | null {
+  const match = /^(\d{4})Q([1-4])$/.exec(quarter)
+  if (!match) return null
+  return Number(match[1]) * 4 + Number(match[2]) - 1
+}
+
+/** 요청 분기가 최신(2025Q4)보다 몇 분기 과거인지 — 미지정·형식 오류·미래는 0(최신) */
+function quartersBack(quarter?: string | null): number {
+  const index = quarter ? quarterIndex(quarter) : null
+  if (index === null) return 0
+  return Math.max(0, (quarterIndex(LATEST_QUARTER) as number) - index)
+}
+
+/** 응답에 실을 조회 분기 — 유효한 과거 분기만 그대로, 나머지는 최신 */
+function anchorQuarter(quarter?: string | null): string {
+  return quartersBack(quarter) > 0 ? (quarter as string) : LATEST_QUARTER
+}
+
+/** 기준 분기로 끝나는 count 개 분기 목록 (오름차순) */
+function quartersEnding(quarter: string, count: number): string[] {
+  const end = quarterIndex(quarter) ?? (quarterIndex(LATEST_QUARTER) as number)
+  return Array.from({ length: count }, (_, i) => {
+    const index = end - (count - 1 - i)
+    return `${Math.floor(index / 4)}Q${(index % 4) + 1}`
+  })
+}
+
+// 지표별 값 단위(반올림 스텝) — 추이·분기 이동 계산 공용
+const METRIC_ROUND_TO: Record<MetricKey, number> = {
+  rentRatio: 10_000,
+  footTraffic: 10,
+  vacancyRate: 0.1,
+  closureRate: 0.1,
+  storeCount: 1,
+}
+
+// direction 방향으로 분기당 값의 1.2%씩 변화 — k 분기 과거의 시드 값
+function seedValueAt(seed: MetricSeed, roundTo: number, k: number): number {
+  const sign = seed.direction === 'DOWN' ? -1 : seed.direction === 'UP' ? 1 : 0
+  const step = Math.max(roundTo, Math.round((seed.value * 0.012) / roundTo) * roundTo)
+  return Math.round((seed.value - sign * step * k) * 1000) / 1000
+}
+
+/**
+ * 최신 분기 등급 기준 k 분기 전 등급 — 상세 추이 패턴(TREND_OFFSETS)과 같은 소스를 쓰므로
+ * 지도 마커·랭킹·상세의 분기별 등급이 서로 일치한다.
+ */
+function gradeAtQuartersBack(latestGrade: RegionGrade, k: number): RegionGrade {
+  const offset = k <= 11 ? TREND_OFFSETS[11 - k] : TREND_OFFSETS[0]
+  const index = GRADE_ORDER.indexOf(latestGrade) + offset
+  return GRADE_ORDER[Math.min(4, Math.max(0, index))]
+}
+
+/** GET /api/v1/regions/map 데모 데이터 — 분기별 등급 이동 반영 */
+export function makeRegionMapMock(quarter?: string | null): RegionMapResponse {
+  const back = quartersBack(quarter)
+  return {
+    quarter: anchorQuarter(quarter),
+    regions: regionMapMock.regions.map((region) => ({
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      district: region.district,
+      grade: gradeAtQuartersBack(region.grade, back),
+    })),
+  }
+}
+
+/** GET /api/v1/regions/declineRanking 데모 데이터 — 분기별 등급 이동 반영 */
+export function makeDeclineRankingMock(
+  order: RankingOrder,
+  quarter?: string | null,
+): RegionRankingResponse {
+  const base = declineRankingMock[order]
+  const back = quartersBack(quarter)
+  return {
+    ...base,
+    quarter: anchorQuarter(quarter),
+    regions: base.regions.map((region) => ({
+      rank: region.rank,
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      decline_grade: gradeAtQuartersBack(region.decline_grade, back),
+      direction: region.direction,
+    })),
+  }
+}
+
 const metricMapMocks = Object.fromEntries(
   Object.entries(METRIC_SEEDS).map(([metric, seeds]) => [
     metric,
@@ -603,12 +694,31 @@ const metricMapMocks = Object.fromEntries(
 ) as Partial<Record<MetricKey, RegionMetricMapResponse>>
 
 /**
- * GET /api/v1/regions/metricMap 데모 데이터 (선규격) — 지원 지표만 등록.
+ * GET /api/v1/regions/metricMap 데모 데이터 (선규격) — 지원 지표만 등록, 분기별 값 이동 반영.
  * 핸들러는 도메인 타입을 모른 채 문자열 metric 을 넘기고, 미지원이면 null(→400).
  */
-export function getMetricMapMock(metric: string | null): RegionMetricMapResponse | null {
+export function getMetricMapMock(
+  metric: string | null,
+  quarter?: string | null,
+): RegionMetricMapResponse | null {
   if (!metric) return null
-  return metricMapMocks[metric as MetricKey] ?? null
+  const base = metricMapMocks[metric as MetricKey]
+  if (!base) return null
+  const back = quartersBack(quarter)
+  return {
+    ...base,
+    quarter: anchorQuarter(quarter),
+    regions: base.regions.map((region) => ({
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      district: region.district,
+      value: seedValueAt(
+        metricSeed(base.metric, region.regionCode),
+        METRIC_ROUND_TO[base.metric],
+        back,
+      ),
+    })),
+  }
 }
 
 /**
@@ -618,8 +728,9 @@ export function getMetricMapMock(metric: string | null): RegionMetricMapResponse
 export function makeMetricRankingMock(
   metric: string | null,
   order: RankingOrder,
+  quarter?: string | null,
 ): RegionMetricRankingResponse | null {
-  const map = getMetricMapMock(metric)
+  const map = getMetricMapMock(metric, quarter)
   if (!map) return null
 
   const topByDistrict = new Map<string, (typeof map.regions)[number]>()
@@ -649,35 +760,9 @@ export function makeMetricRankingMock(
   }
 }
 
-// 상세 추이 12분기 (regions/map 최신 분기 2025Q4 기준 최근 3년 — 2026년 데이터 없음)
-const DETAIL_QUARTERS = [
-  '2023Q1',
-  '2023Q2',
-  '2023Q3',
-  '2023Q4',
-  '2024Q1',
-  '2024Q2',
-  '2024Q3',
-  '2024Q4',
-  '2025Q1',
-  '2025Q2',
-  '2025Q3',
-  '2025Q4',
-]
-
 const GRADE_ORDER: RegionGrade[] = ['A', 'B', 'C', 'D', 'E']
-// 현재 등급으로 수렴하는 결정적 오프셋 패턴 (마지막 = 현재, 직전 = 한 단계 양호 → 지난 분기 pill)
+// 최신 등급으로 수렴하는 결정적 오프셋 패턴 (마지막 = 최신, 직전 = 한 단계 양호 → 지난 분기 pill)
 const TREND_OFFSETS = [-2, -2, -1, -2, -1, -1, 0, -1, -1, 0, -1, 0]
-
-// 시드 값으로 수렴하는 12분기 추이 — direction 방향으로 분기당 값의 1.2%씩(roundTo 단위 반올림) 변화
-function seedTrend(seed: MetricSeed, roundTo: number) {
-  const sign = seed.direction === 'DOWN' ? -1 : seed.direction === 'UP' ? 1 : 0
-  const step = Math.max(roundTo, Math.round((seed.value * 0.012) / roundTo) * roundTo)
-  return DETAIL_QUARTERS.map((quarter, i) => ({
-    quarter,
-    value: seed.value - sign * (DETAIL_QUARTERS.length - 1 - i) * step,
-  }))
-}
 
 // 추이 마지막 두 분기의 증감률(%) — 상세 changeRate 를 추이와 일치시키는 용도
 function trendChangeRate(trend: { value: number }[]): number {
@@ -687,71 +772,66 @@ function trendChangeRate(trend: { value: number }[]): number {
 }
 
 /**
- * GET /api/v1/districts/{regionCode} 데모 데이터 — 지도 목(regionMapMock)의 상권 등급과
- * 일치하는 상세 응답을 만든다. 등급 추이는 현재 등급으로 수렴하는 고정 패턴,
- * 수치 지표는 명세 예시 값 기반.
+ * GET /api/v1/districts/{regionCode} 데모 데이터 — 조회 분기 기준 12분기 추이를 만든다.
+ * 등급·지표 값 모두 분기 이동 헬퍼(gradeAtQuartersBack·seedValueAt)에서 파생되어
+ * 같은 분기의 지도 마커·랭킹 값과 항상 일치한다.
  */
-export function makeRegionDetailMock(region: RegionMapItem): RegionDetailResponse {
-  const currentIndex = GRADE_ORDER.indexOf(region.grade)
-  const trend = DETAIL_QUARTERS.map((quarter, i) => ({
-    quarter,
-    grade: GRADE_ORDER[Math.min(4, Math.max(0, currentIndex + TREND_OFFSETS[i]))],
+export function makeRegionDetailMock(
+  region: RegionMapItem,
+  quarter?: string | null,
+): RegionDetailResponse {
+  const back = quartersBack(quarter)
+  const quarters = quartersEnding(anchorQuarter(quarter), 12)
+  const last = quarters.length - 1
+
+  const gradeTrend = quarters.map((q, i) => ({
+    quarter: q,
+    grade: gradeAtQuartersBack(region.grade, back + (last - i)),
   }))
 
-  // 지표 카테고리 대상 지표는 시드 값으로 수렴하는 추이 — 마커/랭킹 값과 상세가 일치
-  const rent = metricSeed('rentRatio', region.regionCode)
-  const rentTrend = seedTrend(rent, 10_000) // 만원 단위 스텝
-  const foot = metricSeed('footTraffic', region.regionCode)
-  const footTrend = seedTrend(foot, 10)
-  const vacancy = metricSeed('vacancyRate', region.regionCode)
-  const vacancyTrend = seedTrend(vacancy, 0.1)
-  const closure = metricSeed('closureRate', region.regionCode)
-  const closureTrend = seedTrend(closure, 0.1)
-  const store = metricSeed('storeCount', region.regionCode)
-  const storeTrend = seedTrend(store, 1)
+  // 지표 요약 — 조회 분기 값 + 그 분기로 끝나는 추이 (마커/랭킹 값과 일치)
+  const summaryAt = (metric: MetricKey) => {
+    const seed = metricSeed(metric, region.regionCode)
+    const roundTo = METRIC_ROUND_TO[metric]
+    const trend = quarters.map((q, i) => ({
+      quarter: q,
+      value: seedValueAt(seed, roundTo, back + (last - i)),
+    }))
+    return {
+      value: seedValueAt(seed, roundTo, back),
+      changeRate: trendChangeRate(trend),
+      direction: seed.direction,
+      trend,
+    }
+  }
+
+  const closureSummary = summaryAt('closureRate')
+  const storeSummary = summaryAt('storeCount')
 
   return {
     regionCode: region.regionCode,
     district: region.district,
     regionName: region.regionName,
-    quarter: '2025Q4',
+    quarter: anchorQuarter(quarter),
     declineGrade: {
-      current: region.grade,
-      previous: trend[trend.length - 2].grade,
-      trend,
+      current: gradeAtQuartersBack(region.grade, back),
+      previous: gradeAtQuartersBack(region.grade, back + 1),
+      trend: gradeTrend,
     },
-    rentRatio: {
-      value: rent.value,
-      changeRate: trendChangeRate(rentTrend),
-      direction: rent.direction,
-      trend: rentTrend,
-    },
-    footTraffic: {
-      value: foot.value,
-      changeRate: trendChangeRate(footTrend),
-      direction: foot.direction,
-      trend: footTrend,
-    },
-    vacancyRate: {
-      value: vacancy.value,
-      changeRate: trendChangeRate(vacancyTrend),
-      direction: vacancy.direction,
-      trend: vacancyTrend,
-    },
+    rentRatio: summaryAt('rentRatio'),
+    footTraffic: summaryAt('footTraffic'),
+    vacancyRate: summaryAt('vacancyRate'),
     closureRate: {
-      value: closure.value,
-      changeRate: trendChangeRate(closureTrend),
-      direction: closure.direction,
-      trend: closureTrend,
+      ...closureSummary,
       // 폐업률이 높을수록 평균 영업 기간이 짧다 — 시드에서 결정적으로 파생
-      avgOperatingYears: Math.round((8 - closure.value) * 10) / 10,
+      avgOperatingYears: Math.round((8 - closureSummary.value) * 10) / 10,
       seoulAvgOperatingYears: SEOUL_AVG_OPERATING_YEARS,
     },
     storeCount: {
-      value: store.value,
-      changeCount: store.value - storeTrend[storeTrend.length - 2].value,
-      direction: store.direction,
-      trend: storeTrend,
+      value: storeSummary.value,
+      changeCount: storeSummary.value - storeSummary.trend[last - 1].value,
+      direction: storeSummary.direction,
+      trend: storeSummary.trend,
       categoryDistribution: [
         { category: '한식음식점', count: 92 },
         { category: '커피-음료', count: 74 },

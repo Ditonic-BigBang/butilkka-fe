@@ -127,14 +127,18 @@ export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): M
 }
 
 /**
- * 특정 상권(구 대표) 상세 — `GET /districts/{regionCode}`.
+ * 특정 상권(구 대표) 상세 — `GET /districts/{regionCode}` (quarter 미지정 시 최신 분기).
  * 응답 하나에 등급·수치 지표가 모두 담겨 있어 카테고리는 select 에서 뷰모델만 갈아끼운다.
- * regionCode 가 없으면 조회하지 않는다. 구 전환 시 이전 데이터를 유지해 시트 깜빡임을 막는다.
+ * regionCode 가 없으면 조회하지 않는다. 구/분기 전환 시 이전 데이터를 유지해 시트 깜빡임을 막는다.
  */
-export function useRegionDetail(regionCode: string | null, category: MapCategory = 'grade') {
+export function useRegionDetail(
+  regionCode: string | null,
+  category: MapCategory = 'grade',
+  quarter?: string,
+) {
   return useQuery({
-    queryKey: regionKeys.detail(regionCode ?? ''),
-    queryFn: () => fetchRegionDetail(regionCode as string),
+    queryKey: regionKeys.detail(regionCode ?? '', quarter),
+    queryFn: () => fetchRegionDetail(regionCode as string, quarter),
     enabled: regionCode !== null,
     select: (d: RegionDetailResponse): SheetDetailView =>
       category === 'grade' ? toGradeSheetView(d) : toMetricSheetView(d, category),

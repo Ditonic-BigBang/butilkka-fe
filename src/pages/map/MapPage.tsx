@@ -55,7 +55,7 @@ export default function MapPage() {
     quarter: dataQuarter,
   } = useRegionMarkers(category, quarter ?? undefined)
   const ranking = useRanking(category, order, quarter ?? undefined)
-  const detail = useRegionDetail(detailRegionCode, category)
+  const detail = useRegionDetail(detailRegionCode, category, quarter ?? undefined)
   const { data: guBoundaries } = useGuBoundaries()
 
   // 구 경계 폴리곤 — 선택한 구만 강조 표시
