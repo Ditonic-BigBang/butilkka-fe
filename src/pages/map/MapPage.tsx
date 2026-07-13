@@ -1,14 +1,16 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MobileLayout } from '@/widgets/mobile-layout'
 import { KakaoMap, type KakaoMapHandle } from '@/widgets/district-map'
 import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation } from '@/shared/ui'
+import { formatQuarter } from '@/shared/lib/quarter'
 import type { RankingOrder } from '@/entities/region'
 import { useRegionMarkers } from './model/useRegionMarkers'
 import { useDeclineRanking } from './model/useDeclineRanking'
 import { useRegionSearch } from './model/useRegionSearch'
 import { useFavorites } from './model/useFavorites'
 import { RankingSheet } from './ui/RankingSheet'
+import { QuarterSheet } from './ui/QuarterSheet'
 
 // 검색/마커 선택 시 구 확대 레벨
 const GU_ZOOM_LEVEL = 7
@@ -19,9 +21,33 @@ export default function MapPage() {
   const [order, setOrder] = useState<RankingOrder>('top')
   const [registerMode, setRegisterMode] = useState(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
+  // 조회 분기 — null 이면 최신 분기(기본)
+  const [quarter, setQuarter] = useState<string | null>(null)
+  const [quarterSheetOpen, setQuarterSheetOpen] = useState(false)
+  const [latestQuarter, setLatestQuarter] = useState<string>()
 
-  const { markers, centroids } = useRegionMarkers()
-  const ranking = useDeclineRanking(order)
+  const { markers, centroids, quarter: dataQuarter } = useRegionMarkers(quarter ?? undefined)
+  const ranking = useDeclineRanking(order, quarter ?? undefined)
+
+  // 기간 시트의 옵션 기준은 "데이터의 최신 분기" — 최초(미선택) 응답의 quarter 를 고정해둔다
+  useEffect(() => {
+    if (!latestQuarter && dataQuarter) setLatestQuarter(dataQuarter)
+  }, [latestQuarter, dataQuarter])
+
+  // 기간 칩 — 선택 시 라벨을 "2025년 3분기"로 바꾸고 선택 스타일 (쇠퇴등급 칩과 동시 선택)
+  const filters = useMemo(
+    () =>
+      MAP_FILTERS.map((f) => {
+        if (f.key !== 'period') return f
+        return {
+          key: f.key,
+          caret: f.caret,
+          label: quarter ? formatQuarter(quarter) : f.label,
+          selected: quarter !== null,
+        }
+      }),
+    [quarter],
+  )
   const search = useRegionSearch(query)
   const { favorites, add: addFavorite } = useFavorites()
 
@@ -67,9 +93,12 @@ export default function MapPage() {
         <SearchOverlay
           query={query}
           onQueryChange={setQuery}
-          filters={MAP_FILTERS}
+          filters={filters}
           // 백엔드가 쇠퇴등급 지도만 지원 — 다른 지표 칩은 표시만 (API 확장 시 상태로 전환)
           selectedFilter="grade"
+          onFilterSelect={(key) => {
+            if (key === 'period') setQuarterSheetOpen(true)
+          }}
           results={search.results}
           onResultSelect={handleResultSelect}
           savedPlaces={favorites.map((f) => f.regionName)}
@@ -88,6 +117,14 @@ export default function MapPage() {
           isError={ranking.isError}
           onRetry={() => void ranking.refetch()}
           className="absolute inset-x-0 bottom-0 z-10"
+        />
+
+        <QuarterSheet
+          open={quarterSheetOpen}
+          onClose={() => setQuarterSheetOpen(false)}
+          latestQuarter={latestQuarter}
+          value={quarter}
+          onApply={setQuarter}
         />
       </div>
     </MobileLayout>

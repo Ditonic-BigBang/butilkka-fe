@@ -148,13 +148,20 @@ export const handlers = [
   }),
 
   // ── 지도/상권 (지도 홈) ──
-  // 지도 색상 데이터 — 상권 단위 쇠퇴등급 (FE 가 구 단위로 묶어 마커 표시)
-  http.get(`${API}/api/v1/regions/map`, () => ok('지도 데이터 조회 성공', regionMapMock)),
+  // 지도 색상 데이터 — 상권 단위 쇠퇴등급 (FE 가 구 단위로 묶어 마커 표시).
+  // quarter 미지정 = 최신(2026Q1). 지정 시 응답 quarter 에 에코(목은 등급 데이터 동일).
+  http.get(`${API}/api/v1/regions/map`, ({ request }) => {
+    const quarter = new URL(request.url).searchParams.get('quarter')
+    return ok('지도 데이터 조회 성공', quarter ? { ...regionMapMock, quarter } : regionMapMock)
+  }),
 
   // 쇠퇴 등급 Top5 — order: top(위험 높은 순) / bottom(안전한 순)
   http.get(`${API}/api/v1/regions/declineRanking`, ({ request }) => {
-    const order = new URL(request.url).searchParams.get('order') === 'bottom' ? 'bottom' : 'top'
-    return ok('순위 조회 성공', declineRankingMock[order])
+    const params = new URL(request.url).searchParams
+    const order = params.get('order') === 'bottom' ? 'bottom' : 'top'
+    const quarter = params.get('quarter')
+    const data = declineRankingMock[order]
+    return ok('순위 조회 성공', quarter ? { ...data, quarter } : data)
   }),
 
   // 상권 검색 자동완성 — 지도 목 데이터에서 상권명/자치구 부분일치

@@ -82,7 +82,7 @@ export function SearchOverlay({
             <FilterChip
               key={f.key}
               caret={f.caret}
-              selected={selectedFilter === f.key}
+              selected={f.selected ?? selectedFilter === f.key}
               onClick={() => onFilterSelect?.(f.key)}
               className="shrink-0"
             >

@@ -33,10 +33,10 @@ function toRows(data: RegionRankingResponse): RankingRow[] {
  * 쇠퇴 등급 Top5 — `GET /regions/declineRanking`.
  * 탭 전환(order 변경) 시 `keepPreviousData` 로 이전 목록을 유지해 깜빡임을 막는다.
  */
-export function useDeclineRanking(order: RankingOrder) {
+export function useDeclineRanking(order: RankingOrder, quarter?: string) {
   return useQuery({
-    queryKey: regionKeys.ranking(order),
-    queryFn: () => fetchDeclineRanking(order),
+    queryKey: regionKeys.ranking(order, quarter),
+    queryFn: () => fetchDeclineRanking(order, quarter),
     select: toRows,
     placeholderData: keepPreviousData,
   })
