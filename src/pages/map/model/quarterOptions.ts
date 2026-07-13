@@ -23,6 +23,14 @@ export function buildQuarterOptions(latestQuarter: string, count = 12): YearQuar
     }
   }
 
+  // 가장 이른 연도는 1분기부터 채운다 — 연도 단위 UI 에서 중간 분기부터 시작하면 어색
+  const earliestYear = Math.min(...byYear.keys())
+  const earliestList = byYear.get(earliestYear) as string[]
+  const firstQuarter = Number(earliestList[0].slice(-1))
+  for (let missing = firstQuarter - 1; missing >= 1; missing--) {
+    earliestList.unshift(`${earliestYear}Q${missing}`)
+  }
+
   return [...byYear.entries()]
     .toSorted(([a], [b]) => b - a)
     .map(([y, quarters]) => ({ year: y, quarters }))
