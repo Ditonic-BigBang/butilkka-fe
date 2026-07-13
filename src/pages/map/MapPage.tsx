@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react'
 import { MobileLayout } from '@/widgets/mobile-layout'
 import { KakaoMap, type KakaoMapHandle, type MapOutline } from '@/widgets/district-map'
 import { useGuBoundaries } from '@/entities/district'
@@ -17,6 +25,8 @@ import { QuarterSheet } from './ui/QuarterSheet'
 
 // 검색/마커 선택 시 구 확대 레벨
 const GU_ZOOM_LEVEL = 7
+// 지도 위 포인터가 이만큼(px) 넘게 움직이면 탭이 아닌 패닝으로 판정
+const MAP_TAP_THRESHOLD = 10
 
 export default function MapPage() {
   const mapRef = useRef<KakaoMapHandle>(null)
@@ -34,6 +44,8 @@ export default function MapPage() {
   // 선택한 구 — 상세 조회는 구 대표 상권 코드로, 경계 강조는 구 이름으로
   const [detailRegionCode, setDetailRegionCode] = useState<string | null>(null)
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null)
+  // 랭킹 시트 펼침 — 지도 탭으로도 접을 수 있게 페이지가 소유
+  const [sheetExpanded, setSheetExpanded] = useState(false)
 
   const categoryView = getCategoryView(category)
   const {
@@ -116,6 +128,18 @@ export default function MapPage() {
     else panToDistrict(district)
   }
 
+  // 지도 빈 곳 탭 → 펼쳐진 시트 접기 (패닝은 이동 거리로 걸러냄, 마커 탭은 전파가 끊겨 안 옴)
+  const mapPressStart = useRef<{ x: number; y: number } | null>(null)
+  const handleMapPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    mapPressStart.current = { x: e.clientX, y: e.clientY }
+  }
+  const handleMapClick = (e: MouseEvent<HTMLDivElement>) => {
+    const start = mapPressStart.current
+    mapPressStart.current = null
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > MAP_TAP_THRESHOLD) return
+    setSheetExpanded(false)
+  }
+
   const handleMyLocation = () => {
     navigator.geolocation?.getCurrentPosition((pos) => {
       const point = { lat: pos.coords.latitude, lng: pos.coords.longitude }
@@ -128,14 +152,22 @@ export default function MapPage() {
   return (
     <MobileLayout>
       <div className="relative h-full overflow-hidden">
-        <KakaoMap
-          ref={mapRef}
-          markers={markers}
-          onMarkerClick={handleMarkerClick}
-          outlines={outlines}
-          myLocation={myLocation}
+        {/* 시트 접기용 탭 감지 래퍼 — 지도 자체가 인터랙션을 소유하므로 시맨틱 없음 */}
+        <div
+          role="presentation"
           className="absolute inset-0"
-        />
+          onPointerDown={handleMapPointerDown}
+          onClick={handleMapClick}
+        >
+          <KakaoMap
+            ref={mapRef}
+            markers={markers}
+            onMarkerClick={handleMarkerClick}
+            outlines={outlines}
+            myLocation={myLocation}
+            className="size-full"
+          />
+        </div>
 
         <SearchOverlay
           query={query}
@@ -175,6 +207,8 @@ export default function MapPage() {
             onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
             detail={detailRegionCode !== null ? detail.data : null}
             onClearDetail={clearSelection}
+            expanded={sheetExpanded}
+            onExpandedChange={setSheetExpanded}
             isPending={ranking.isPending}
             isError={ranking.isError}
             onRetry={() => void ranking.refetch()}

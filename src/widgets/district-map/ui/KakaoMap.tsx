@@ -182,12 +182,15 @@ export default function KakaoMap({
         const marker = markerById.get(id)
         if (!marker) return null
         return createPortal(
-          <LocationMarker
-            title={marker.title}
-            caption={marker.caption}
-            onClick={onMarkerClick ? () => onMarkerClick(id) : undefined}
-            className={onMarkerClick ? 'cursor-pointer' : undefined}
-          />,
+          // 마커 탭은 상세 진입 — 지도 빈 곳 탭(시트 접기 등)과 구분되게 전파를 끊는다
+          <div role="presentation" onClick={(e) => e.stopPropagation()}>
+            <LocationMarker
+              title={marker.title}
+              caption={marker.caption}
+              onClick={onMarkerClick ? () => onMarkerClick(id) : undefined}
+              className={onMarkerClick ? 'cursor-pointer' : undefined}
+            />
+          </div>,
           el,
           id,
         )

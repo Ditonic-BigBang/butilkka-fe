@@ -135,4 +135,25 @@ describe('RankingSheet', () => {
     await user.click(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
   })
+
+  it('expanded 를 지정하면 controlled — 핸들 탭은 onExpandedChange 만 호출한다', async () => {
+    const user = userEvent.setup()
+    const onExpandedChange = vi.fn()
+    render(
+      <RankingSheet
+        {...GRADE_PROPS}
+        order="top"
+        onOrderChange={() => {}}
+        rows={ROWS}
+        expanded
+        onExpandedChange={onExpandedChange}
+      />,
+    )
+
+    const toggle = screen.getByRole('button', { expanded: true })
+    await user.click(toggle)
+    expect(onExpandedChange).toHaveBeenCalledWith(false)
+    // 부모가 반영하기 전까진 그대로 펼침 (controlled)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  })
 })

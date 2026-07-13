@@ -62,6 +62,9 @@ type RankingSheetProps = {
   /** 선택한 구 상세 — 있으면 랭킹 대신 카테고리별 상세 본문을 그 자리에서 보여준다 */
   detail?: SheetDetailView | null
   onClearDetail?: () => void
+  /** 펼침 상태 제어 — 지정 시 controlled (지도 탭으로 접기 등 외부 전환용) */
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
   isPending?: boolean
   isError?: boolean
   onRetry?: () => void
@@ -83,12 +86,19 @@ export function RankingSheet({
   onRowClick,
   detail,
   onClearDetail,
+  expanded: controlledExpanded,
+  onExpandedChange,
   isPending = false,
   isError = false,
   onRetry,
   className,
 }: RankingSheetProps) {
-  const [expanded, setExpanded] = useState(false)
+  const [internalExpanded, setInternalExpanded] = useState(false)
+  const expanded = controlledExpanded ?? internalExpanded
+  const setExpanded = (next: boolean) => {
+    if (controlledExpanded === undefined) setInternalExpanded(next)
+    onExpandedChange?.(next)
+  }
   const dragStartY = useRef<number | null>(null)
   const dragged = useRef(false)
 
@@ -119,7 +129,7 @@ export function RankingSheet({
       dragged.current = false
       return
     }
-    setExpanded((v) => !v)
+    setExpanded(!expanded)
   }
 
   const renderRankingList = () => {
