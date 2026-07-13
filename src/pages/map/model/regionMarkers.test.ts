@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import type { RegionMapItem } from '@/entities/region'
-import { buildGuMarkers } from './regionMarkers'
+import type { RegionMapItem, RegionMetricMapItem } from '@/entities/region'
+import { METRIC_CONFIG } from './mapCategory'
+import { buildGuMarkers, buildMetricGuMarkers, topValueRegionByDistrict } from './regionMarkers'
 
 const centroids = new Map([
   ['서대문구', { lat: 37.57, lng: 126.94 }],
@@ -32,5 +33,27 @@ describe('buildGuMarkers', () => {
       centroids,
     )
     expect(markers).toHaveLength(0)
+  })
+})
+
+describe('buildMetricGuMarkers', () => {
+  const regions: RegionMetricMapItem[] = [
+    { regionCode: '1', regionName: '신촌', district: '서대문구', value: 6_120_000 },
+    { regionCode: '2', regionName: '이대역', district: '서대문구', value: 7_890_000 },
+    { regionCode: '3', regionName: '홍대입구', district: '마포구', value: 4_310_000 },
+  ]
+
+  it('구 단위로 묶고 값이 가장 큰 상권으로 대표한다 — 캡션은 표시 단위 값', () => {
+    const markers = buildMetricGuMarkers(regions, centroids, METRIC_CONFIG.rentRatio)
+
+    expect(markers).toHaveLength(2)
+    const seodaemun = markers.find((m) => m.id === '서대문구')
+    expect(seodaemun?.caption).toBe('789만원')
+    expect(markers.find((m) => m.id === '마포구')?.caption).toBe('431만원')
+  })
+
+  it('대표 상권 맵은 구 선택 상세 조회용 regionCode 를 준다', () => {
+    const top = topValueRegionByDistrict(regions)
+    expect(top.get('서대문구')?.regionCode).toBe('2')
   })
 })

@@ -1,6 +1,7 @@
-import type { RegionGrade, RegionMapItem } from '@/entities/region'
+import type { RegionGrade, RegionMapItem, RegionMetricMapItem } from '@/entities/region'
 import type { LatLngPoint } from '@/entities/district'
 import type { MapMarker } from '@/widgets/district-map'
+import type { MetricConfig } from './mapCategory'
 
 // 등급 심각도 — 뒤로 갈수록 위험(E 최악)
 const GRADE_SEVERITY: Record<RegionGrade, number> = { A: 0, B: 1, C: 2, D: 3, E: 4 }
@@ -39,6 +40,42 @@ export function buildGuMarkers(
       lng: point.lng,
       title: district,
       caption: `${region.grade}등급`,
+    })
+  })
+  return markers
+}
+
+/**
+ * 구별 대표(값이 가장 큰) 상권 — 지표 카테고리용.
+ * 등급의 "최악 대표"와 같은 의미(값이 클수록 부담/위험) — 마커 값과 구 선택 상세가 같은 상권을 가리킨다.
+ */
+export function topValueRegionByDistrict(
+  regions: RegionMetricMapItem[],
+): Map<string, RegionMetricMapItem> {
+  const top = new Map<string, RegionMetricMapItem>()
+  regions.forEach((region) => {
+    const prev = top.get(region.district)
+    if (!prev || region.value > prev.value) top.set(region.district, region)
+  })
+  return top
+}
+
+/** metricMap 응답(상권 단위) → 구 단위 지도 마커 — 캡션은 표시 단위 값 (예: "789만원") */
+export function buildMetricGuMarkers(
+  regions: RegionMetricMapItem[],
+  centroids: Map<string, LatLngPoint>,
+  config: MetricConfig,
+): MapMarker[] {
+  const markers: MapMarker[] = []
+  topValueRegionByDistrict(regions).forEach((region, district) => {
+    const point = centroids.get(district)
+    if (!point) return
+    markers.push({
+      id: district,
+      lat: point.lat,
+      lng: point.lng,
+      title: district,
+      caption: `${config.toDisplayValue(region.value).toLocaleString()}${config.unit}`,
     })
   })
   return markers

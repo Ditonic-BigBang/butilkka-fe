@@ -6,8 +6,9 @@ import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation } from '@/shared/ui'
 import { formatQuarter } from '@/shared/lib/quarter'
 import type { RankingOrder } from '@/entities/region'
+import { CATEGORY_BY_FILTER, getCategoryView, type MapCategory } from './model/mapCategory'
 import { useRegionMarkers } from './model/useRegionMarkers'
-import { useDeclineRanking } from './model/useDeclineRanking'
+import { useRanking } from './model/useRanking'
 import { useRegionSearch } from './model/useRegionSearch'
 import { useRegionDetail } from './model/useRegionDetail'
 import { useFavorites } from './model/useFavorites'
@@ -20,6 +21,8 @@ const GU_ZOOM_LEVEL = 7
 export default function MapPage() {
   const mapRef = useRef<KakaoMapHandle>(null)
   const [query, setQuery] = useState('')
+  // 카테고리 칩 — 마커·시트 내용이 함께 바뀐다 (기본: 쇠퇴등급)
+  const [category, setCategory] = useState<MapCategory>('grade')
   const [order, setOrder] = useState<RankingOrder>('top')
   const [registerMode, setRegisterMode] = useState(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -32,14 +35,15 @@ export default function MapPage() {
   const [detailRegionCode, setDetailRegionCode] = useState<string | null>(null)
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null)
 
+  const categoryView = getCategoryView(category)
   const {
     markers,
     centroids,
     regionByDistrict,
     quarter: dataQuarter,
-  } = useRegionMarkers(quarter ?? undefined)
-  const ranking = useDeclineRanking(order, quarter ?? undefined)
-  const detail = useRegionDetail(detailRegionCode)
+  } = useRegionMarkers(category, quarter ?? undefined)
+  const ranking = useRanking(category, order, quarter ?? undefined)
+  const detail = useRegionDetail(detailRegionCode, category)
   const { data: guBoundaries } = useGuBoundaries()
 
   // 구 경계 폴리곤 — 선택한 구만 강조 표시
@@ -137,10 +141,15 @@ export default function MapPage() {
           query={query}
           onQueryChange={setQuery}
           filters={filters}
-          // 백엔드가 쇠퇴등급 지도만 지원 — 다른 지표 칩은 표시만 (API 확장 시 상태로 전환)
-          selectedFilter="grade"
+          selectedFilter={categoryView.filterKey}
           onFilterSelect={(key) => {
-            if (key === 'period') setQuarterSheetOpen(true)
+            if (key === 'period') {
+              setQuarterSheetOpen(true)
+              return
+            }
+            // 디자인 확정된 카테고리 칩만 전환 (CATEGORY_BY_FILTER) — 나머지는 표시만
+            const next = CATEGORY_BY_FILTER[key]
+            if (next) setCategory(next)
           }}
           results={search.results}
           onResultSelect={handleResultSelect}
@@ -153,6 +162,8 @@ export default function MapPage() {
         <MyLocation onClick={handleMyLocation} className="absolute right-5 bottom-[118px] z-10" />
 
         <RankingSheet
+          title={categoryView.title}
+          tabs={categoryView.tabs}
           order={order}
           onOrderChange={setOrder}
           rows={ranking.data ?? []}

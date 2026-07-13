@@ -49,6 +49,43 @@ export interface RegionSearchItem {
   district: string
 }
 
+// ── 지표별 지도/랭킹 (선규격 — 백엔드 미구현, MSW 목 전용. 상세 응답 필드명을 지표 키로 재사용) ──
+
+/** 지표 키 — RegionDetailResponse 의 수치 지표 필드명과 동일 */
+export type MetricKey = 'rentRatio' | 'footTraffic' | 'vacancyRate' | 'closureRate' | 'storeCount'
+
+/** GET /regions/metricMap 의 regions[] 항목 — 원시 단위 값(원·명·% 등) */
+export interface RegionMetricMapItem {
+  regionCode: string
+  regionName: string
+  district: string
+  value: number
+}
+
+/** GET /regions/metricMap — 지표별 지도 값 데이터 */
+export interface RegionMetricMapResponse {
+  metric: MetricKey
+  quarter: string
+  regions: RegionMetricMapItem[]
+}
+
+/** GET /regions/metricRanking 의 regions[] 항목 */
+export interface RegionMetricRankingItem {
+  rank: number
+  regionCode: string
+  regionName: string
+  value: number
+  direction: RegionDirection
+}
+
+/** GET /regions/metricRanking — 지표별 Top5 순위 (order: top 상위 · bottom 하위) */
+export interface RegionMetricRankingResponse {
+  metric: MetricKey
+  order: RankingOrder
+  quarter: string
+  regions: RegionMetricRankingItem[]
+}
+
 // ── 상권 상세 (GET /districts/{regionCode} — URI 명칭과 달리 path 는 상권코드) ──
 
 /** 분기별 등급 추이 포인트 */

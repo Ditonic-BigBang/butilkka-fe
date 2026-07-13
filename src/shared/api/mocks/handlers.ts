@@ -2,6 +2,8 @@ import { http, HttpResponse } from 'msw'
 import {
   dashboardMock,
   declineRankingMock,
+  getMetricMapMock,
+  makeMetricRankingMock,
   makeNotificationsMock,
   makeRegionDetailMock,
   makeReportDetailMock,
@@ -163,6 +165,40 @@ export const handlers = [
     const quarter = params.get('quarter')
     const data = declineRankingMock[order]
     return ok('순위 조회 성공', quarter ? { ...data, quarter } : data)
+  }),
+
+  // (선규격) 지표별 지도 값 — 백엔드 미구현, FE 제안 계약. metric 은 상세 응답 필드명(rentRatio 등).
+  http.get(`${API}/api/v1/regions/metricMap`, ({ request }) => {
+    const params = new URL(request.url).searchParams
+    const quarter = params.get('quarter')
+    const data = getMetricMapMock(params.get('metric'))
+    if (!data) {
+      return HttpResponse.json(
+        { code: 400, status: 'BAD_REQUEST', message: '지원하지 않는 지표입니다.', data: null },
+        { status: 400 },
+      )
+    }
+    return ok('지표 지도 조회 성공', quarter ? { ...data, quarter } : data)
+  }),
+
+  // (선규격) 지표별 Top5 — order: top(상위) / bottom(하위)
+  http.get(`${API}/api/v1/regions/metricRanking`, ({ request }) => {
+    const params = new URL(request.url).searchParams
+    const order = params.get('order') === 'bottom' ? 'bottom' : 'top'
+    const quarter = params.get('quarter')
+    const data = makeMetricRankingMock(params.get('metric'), order)
+    if (!data) {
+      return HttpResponse.json(
+        {
+          code: 400,
+          status: 'BAD_REQUEST',
+          message: '지원하지 않는 지표 또는 정렬 기준입니다.',
+          data: null,
+        },
+        { status: 400 },
+      )
+    }
+    return ok('지표 순위 조회 성공', quarter ? { ...data, quarter } : data)
   }),
 
   // 상권 검색 자동완성 — 지도 목 데이터에서 상권명/자치구 부분일치

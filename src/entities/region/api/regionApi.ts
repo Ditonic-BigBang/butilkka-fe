@@ -1,8 +1,11 @@
 import { apiJson } from '@/shared/api/api'
 import type {
+  MetricKey,
   RankingOrder,
   RegionDetailResponse,
   RegionMapResponse,
+  RegionMetricMapResponse,
+  RegionMetricRankingResponse,
   RegionRankingResponse,
   RegionSearchItem,
 } from '../model/types'
@@ -12,6 +15,10 @@ export const regionKeys = {
   map: (quarter?: string) => [...regionKeys.all, 'map', quarter ?? 'latest'] as const,
   ranking: (order: RankingOrder, quarter?: string) =>
     [...regionKeys.all, 'ranking', order, quarter ?? 'latest'] as const,
+  metricMap: (metric: MetricKey, quarter?: string) =>
+    [...regionKeys.all, 'metricMap', metric, quarter ?? 'latest'] as const,
+  metricRanking: (metric: MetricKey, order: RankingOrder, quarter?: string) =>
+    [...regionKeys.all, 'metricRanking', metric, order, quarter ?? 'latest'] as const,
   search: (keyword: string) => [...regionKeys.all, 'search', keyword] as const,
   detail: (regionCode: string) => [...regionKeys.all, 'detail', regionCode] as const,
 }
@@ -30,6 +37,33 @@ export function fetchDeclineRanking(
   const params = new URLSearchParams({ order })
   if (quarter) params.set('quarter', quarter)
   return apiJson<RegionRankingResponse>(`/api/v1/regions/declineRanking?${params}`)
+}
+
+/**
+ * GET /api/v1/regions/metricMap — 지표별 지도 값 (quarter 미지정 시 최신).
+ * 선규격: 백엔드 미구현이라 MSW 목 전용 — 서버 반영 시 계약 재확인.
+ */
+export function fetchMetricMap(
+  metric: MetricKey,
+  quarter?: string,
+): Promise<RegionMetricMapResponse> {
+  const params = new URLSearchParams({ metric })
+  if (quarter) params.set('quarter', quarter)
+  return apiJson<RegionMetricMapResponse>(`/api/v1/regions/metricMap?${params}`)
+}
+
+/**
+ * GET /api/v1/regions/metricRanking — 지표별 Top5 (order: top 상위 · bottom 하위).
+ * 선규격: 백엔드 미구현이라 MSW 목 전용 — 서버 반영 시 계약 재확인.
+ */
+export function fetchMetricRanking(
+  metric: MetricKey,
+  order: RankingOrder,
+  quarter?: string,
+): Promise<RegionMetricRankingResponse> {
+  const params = new URLSearchParams({ metric, order })
+  if (quarter) params.set('quarter', quarter)
+  return apiJson<RegionMetricRankingResponse>(`/api/v1/regions/metricRanking?${params}`)
 }
 
 /** GET /api/v1/regions/search — 상권 검색 자동완성 */

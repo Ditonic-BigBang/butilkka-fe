@@ -2,10 +2,12 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
   regionKeys,
   fetchRegionDetail,
+  type MetricKey,
   type RegionDetailResponse,
   type RegionGrade,
 } from '@/entities/region'
 import type { TrendPoint } from '@/shared/ui'
+import { DIRECTION_UI, METRIC_CONFIG, type MapCategory } from './mapCategory'
 
 // TrendGraph grade 변형 값 축 (A=5 … E=1)
 const GRADE_VALUE: Record<RegionGrade, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 }
@@ -25,8 +27,14 @@ function shortQuarter(quarter: string): string {
   return `${match[1]}년 ${match[2]}분기`
 }
 
-/** 쇠퇴등급 상세 시트(DistrictSheet grade) 뷰모델 */
+// 그래프 라벨: 1분기 포인트만 연도 라벨(x축 tick 과 매칭), 나머지는 고유 라벨
+const trendLabel = (quarter: string) => (quarter.endsWith('Q1') ? quarter.slice(0, 4) : quarter)
+const yearTicks = (quarters: string[]) =>
+  quarters.filter((q) => q.endsWith('Q1')).map((q) => q.slice(0, 4))
+
+/** 쇠퇴등급 상세 시트(GradeBody) 뷰모델 */
 export type GradeSheetView = {
+  kind: 'grade'
   /** 시트 부제 (예: "서울 서대문구") */
   subtitle: string
   /** 지도 이동용 자치구명 */
@@ -39,17 +47,32 @@ export type GradeSheetView = {
   trendTicks: string[]
 }
 
+/** 수치 지표 상세 시트(MetricBody) 뷰모델 — trend 값은 표시 단위로 변환됨 */
+export type MetricSheetView = {
+  kind: 'metric'
+  subtitle: string
+  district: string
+  quarterLabel: string
+  /** 표시 값 (예: "789") */
+  value: string
+  /** 단위 (예: "만원") */
+  unit: string
+  comparison: { label: string; percent: string; direction: 'up' | 'down' | 'same' }
+  trend: TrendPoint[]
+  trendTicks: string[]
+  trendUnit: string
+}
+
+export type SheetDetailView = GradeSheetView | MetricSheetView
+
 export function toGradeSheetView(d: RegionDetailResponse): GradeSheetView {
-  // 그래프 라벨: 1분기 포인트만 연도 라벨(x축 tick 과 매칭), 나머지는 고유 라벨
   const trend = d.declineGrade.trend.map((p) => ({
-    label: p.quarter.endsWith('Q1') ? p.quarter.slice(0, 4) : p.quarter,
+    label: trendLabel(p.quarter),
     value: GRADE_VALUE[p.grade] ?? 3,
   }))
-  const trendTicks = d.declineGrade.trend
-    .filter((p) => p.quarter.endsWith('Q1'))
-    .map((p) => p.quarter.slice(0, 4))
 
   return {
+    kind: 'grade',
     subtitle: `서울 ${d.district}`,
     district: d.district,
     quarterLabel: shortQuarter(d.quarter),
@@ -57,20 +80,52 @@ export function toGradeSheetView(d: RegionDetailResponse): GradeSheetView {
     status: GRADE_STATUS[d.declineGrade.current] ?? '주의',
     lastGrade: `${d.declineGrade.previous}등급`,
     trend,
-    trendTicks,
+    trendTicks: yearTicks(d.declineGrade.trend.map((p) => p.quarter)),
+  }
+}
+
+export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): MetricSheetView {
+  const config = METRIC_CONFIG[metric]
+  const summary = d[metric]
+  // 점포 수만 증감이 비율(changeRate)이 아닌 개수(changeCount)
+  const percent =
+    'changeRate' in summary
+      ? `${Math.abs(summary.changeRate)}%`
+      : `${Math.abs(summary.changeCount)}개`
+
+  return {
+    kind: 'metric',
+    subtitle: `서울 ${d.district}`,
+    district: d.district,
+    quarterLabel: shortQuarter(d.quarter),
+    value: config.toDisplayValue(summary.value).toLocaleString(),
+    unit: config.unit,
+    comparison: {
+      label: '이전 분기 대비',
+      percent,
+      direction: DIRECTION_UI[summary.direction] ?? 'same',
+    },
+    trend: summary.trend.map((p) => ({
+      label: trendLabel(p.quarter),
+      value: config.toDisplayValue(p.value),
+    })),
+    trendTicks: yearTicks(summary.trend.map((p) => p.quarter)),
+    trendUnit: `(${config.unit})`,
   }
 }
 
 /**
- * 특정 상권(구 대표) 쇠퇴등급 상세 — `GET /districts/{regionCode}`.
+ * 특정 상권(구 대표) 상세 — `GET /districts/{regionCode}`.
+ * 응답 하나에 등급·수치 지표가 모두 담겨 있어 카테고리는 select 에서 뷰모델만 갈아끼운다.
  * regionCode 가 없으면 조회하지 않는다. 구 전환 시 이전 데이터를 유지해 시트 깜빡임을 막는다.
  */
-export function useRegionDetail(regionCode: string | null) {
+export function useRegionDetail(regionCode: string | null, category: MapCategory = 'grade') {
   return useQuery({
     queryKey: regionKeys.detail(regionCode ?? ''),
     queryFn: () => fetchRegionDetail(regionCode as string),
     enabled: regionCode !== null,
-    select: toGradeSheetView,
+    select: (d: RegionDetailResponse): SheetDetailView =>
+      category === 'grade' ? toGradeSheetView(d) : toMetricSheetView(d, category),
     placeholderData: keepPreviousData,
   })
 }

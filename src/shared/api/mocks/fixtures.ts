@@ -11,11 +11,15 @@ import type {
 import type { DashboardResponse } from '@/entities/dashboard'
 import type { NotificationListResponse } from '@/entities/notification'
 import type {
+  MetricKey,
   RankingOrder,
   RegionDetailResponse,
+  RegionDirection,
   RegionGrade,
   RegionMapItem,
   RegionMapResponse,
+  RegionMetricMapResponse,
+  RegionMetricRankingResponse,
   RegionRankingResponse,
 } from '@/entities/region'
 
@@ -468,6 +472,81 @@ export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
   },
 }
 
+/**
+ * 상권별 매출 대비 임대료(원) — 지표 카테고리(metricMap·metricRanking·상세 rentRatio)가
+ * 모두 이 테이블에서 파생돼 마커·랭킹·구 선택 상세 값이 서로 일치한다.
+ * 구 대표(최댓값) 기준 상위 5위: 서대문(이대역 789만) > 광진 > 노원 > 용산 > 강서 — 디자인 Top5 순서.
+ */
+const RENT_RATIO_BY_REGION: Record<string, { value: number; direction: RegionDirection }> = {
+  '3110001': { value: 6_120_000, direction: 'DOWN' }, // 신촌
+  '3110002': { value: 7_890_000, direction: 'UP' }, // 이대역 → 서대문구 대표 789만원
+  '3110003': { value: 7_420_000, direction: 'DOWN' }, // 건대입구(광진구)
+  '3110004': { value: 7_180_000, direction: 'UP' }, // 노원역
+  '3110005': { value: 6_950_000, direction: 'FLAT' }, // 이태원(용산구)
+  '3110006': { value: 6_600_000, direction: 'DOWN' }, // 화곡역(강서구)
+  '3110007': { value: 4_310_000, direction: 'DOWN' }, // 홍대입구(마포구)
+  '3110008': { value: 3_950_000, direction: 'FLAT' }, // 가로수길(강남구)
+  '3110009': { value: 4_480_000, direction: 'UP' }, // 명동(중구)
+  '3110010': { value: 5_240_000, direction: 'UP' }, // 종로3가
+  '3110011': { value: 5_760_000, direction: 'UP' }, // 서울대입구(관악구)
+  '3110012': { value: 5_020_000, direction: 'DOWN' }, // 왕십리(성동구)
+  '3110013': { value: 3_620_000, direction: 'UP' }, // 잠실(송파구)
+  '3110014': { value: 3_140_000, direction: 'FLAT' }, // 서초역
+}
+
+const metricMapMocks: Partial<Record<MetricKey, RegionMetricMapResponse>> = {
+  rentRatio: {
+    metric: 'rentRatio',
+    quarter: '2026Q1',
+    regions: regionMapMock.regions.map(({ regionCode, regionName, district }) => ({
+      regionCode,
+      regionName,
+      district,
+      value: RENT_RATIO_BY_REGION[regionCode]?.value ?? 5_000_000,
+    })),
+  },
+}
+
+/**
+ * GET /api/v1/regions/metricMap 데모 데이터 (선규격) — 지원 지표만 등록.
+ * 핸들러는 도메인 타입을 모른 채 문자열 metric 을 넘기고, 미지원이면 null(→400).
+ */
+export function getMetricMapMock(metric: string | null): RegionMetricMapResponse | null {
+  if (!metric) return null
+  return metricMapMocks[metric as MetricKey] ?? null
+}
+
+/**
+ * GET /api/v1/regions/metricRanking 데모 데이터 (선규격) — metricMap 목에서 구 대표(최댓값)를
+ * 뽑아 정렬한 Top5. 순위명은 declineRanking 과 같은 구 단위("서울 서대문구") 표기.
+ */
+export function makeMetricRankingMock(
+  metric: string | null,
+  order: RankingOrder,
+): RegionMetricRankingResponse | null {
+  const map = getMetricMapMock(metric)
+  if (!map) return null
+
+  const topByDistrict = new Map<string, (typeof map.regions)[number]>()
+  map.regions.forEach((region) => {
+    const prev = topByDistrict.get(region.district)
+    if (!prev || region.value > prev.value) topByDistrict.set(region.district, region)
+  })
+
+  const regions = [...topByDistrict.values()]
+    .toSorted((a, b) => (order === 'top' ? b.value - a.value : a.value - b.value))
+    .slice(0, 5)
+    .map((region, i) => ({
+      rank: i + 1,
+      regionCode: region.regionCode,
+      regionName: `서울 ${region.district}`,
+      value: region.value,
+      direction: RENT_RATIO_BY_REGION[region.regionCode]?.direction ?? 'FLAT',
+    }))
+
+  return { metric: map.metric, order, quarter: map.quarter, regions }
+}
+
 // 상세 추이 12분기 (regions/map 최신 분기 2026Q1 기준 최근 3년)
 const DETAIL_QUARTERS = [
   '2023Q2',
@@ -500,6 +579,17 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
     grade: GRADE_ORDER[Math.min(4, Math.max(0, currentIndex + TREND_OFFSETS[i]))],
   }))
 
+  // 매출 대비 임대료 — 지표 목 테이블 값으로 수렴하는 추이 (마커/랭킹 값과 상세가 일치)
+  const rent = RENT_RATIO_BY_REGION[region.regionCode] ?? { value: 5_000_000, direction: 'UP' }
+  const rentSign = rent.direction === 'DOWN' ? -1 : rent.direction === 'UP' ? 1 : 0
+  const rentStep = Math.round((rent.value * 0.012) / 10_000) * 10_000 // 만원 단위 스텝
+  const rentTrend = DETAIL_QUARTERS.map((quarter, i) => ({
+    quarter,
+    value: rent.value - rentSign * (DETAIL_QUARTERS.length - 1 - i) * rentStep,
+  }))
+  const rentPrev = rentTrend[rentTrend.length - 2].value
+  const rentChangeRate = Math.round((Math.abs(rent.value - rentPrev) / rentPrev) * 1000) / 10
+
   return {
     regionCode: region.regionCode,
     district: region.district,
@@ -511,10 +601,10 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
       trend,
     },
     rentRatio: {
-      value: 1850000,
-      changeRate: 4.2,
-      direction: 'UP',
-      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 1620000 + i * 21000 })),
+      value: rent.value,
+      changeRate: rentChangeRate,
+      direction: rent.direction,
+      trend: rentTrend,
     },
     footTraffic: {
       value: 121940,
