@@ -8,6 +8,8 @@ declare namespace kakao {
       getCenter(): LatLng
       setLevel(level: number, options?: { animate?: boolean }): void
       getLevel(): number
+      /** 부드럽게 중심 이동 (픽셀 거리가 크면 즉시 이동) */
+      panTo(latlng: LatLng): void
       /** 드래그 이동 허용 여부 (프리뷰 지도는 false) */
       setDraggable(draggable: boolean): void
       /** 스크롤 줌 허용 여부 (프리뷰 지도는 false) */
@@ -62,6 +64,8 @@ declare namespace kakao {
       xAnchor?: number
       yAnchor?: number
       zIndex?: number
+      /** true 면 오버레이 클릭 시 지도 클릭 이벤트가 발생하지 않음 */
+      clickable?: boolean
     }
 
     namespace event {

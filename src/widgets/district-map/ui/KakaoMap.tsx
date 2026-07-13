@@ -1,144 +1,130 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { createPortal } from 'react-dom'
 import { useKakaoMapsSDK } from '@/shared/lib/useKakaoMapsSDK'
-import { useSeoulGeoJson, ringToLatLng, ringCentroid, type SeoulFeature } from '@/entities/district'
-import { SEOUL_DISTRICTS, type DistrictInfo } from '@/entities/district'
-import { GROUPS } from '@/entities/district'
+import { LocationMarker, Spinner } from '@/shared/ui'
+import { cn } from '@/shared/lib/cn'
+
+/** 지도 위 등급 마커 데이터 (좌표 + LocationMarker 내용) */
+export type MapMarker = {
+  id: string
+  lat: number
+  lng: number
+  /** 마커 제목 (예: "서대문구") */
+  title: string
+  /** 보조 텍스트 (예: "C등급") */
+  caption?: string
+}
+
+export type KakaoMapHandle = {
+  /** 좌표로 부드럽게 이동, level 지정 시 줌도 변경 */
+  panTo: (lat: number, lng: number, level?: number) => void
+}
+
+type KakaoMapProps = {
+  markers?: MapMarker[]
+  onMarkerClick?: (id: string) => void
+  className?: string
+  ref?: Ref<KakaoMapHandle>
+}
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 }
-const MAP_LEVEL = 10
+const DEFAULT_LEVEL = 9
 
-// 구 이름 → 구 데이터 맵
-const districtMap = new Map(SEOUL_DISTRICTS.map((d) => [d.name, d]))
+const NO_MARKERS: MapMarker[] = []
 
-function getOuterRings(feature: SeoulFeature): number[][][] {
-  const { geometry } = feature
-  if (geometry.type === 'Polygon') {
-    return [(geometry.coordinates as number[][][])[0]]
-  }
-  return (geometry.coordinates as number[][][][]).map((poly) => poly[0])
-}
+/**
+ * 상권 지도 (Figma: 지도 홈 596:23173).
+ * 카카오맵 + 구 단위 쇠퇴등급 마커(LocationMarker)를 CustomOverlay 로 표시.
+ * 마커 클릭은 portal 로 React 이벤트를 그대로 사용 — kakao 이벤트를 거치지 않는다.
+ */
+export default function KakaoMap({
+  markers = NO_MARKERS,
+  onMarkerClick,
+  className,
+  ref,
+}: KakaoMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [map, setMap] = useState<kakao.maps.Map | null>(null)
+  // 마커별 portal 컨테이너 — CustomOverlay content 로 붙인 DOM 노드
+  const [overlayEls, setOverlayEls] = useState<{ id: string; el: HTMLDivElement }[]>([])
 
-interface Props {
-  onDistrictClick: (district: DistrictInfo) => void
-}
+  const { isLoaded, error } = useKakaoMapsSDK()
 
-export default function KakaoMap({ onDistrictClick }: Props) {
-  const mapRef = useRef<HTMLDivElement>(null)
-  const polygonsRef = useRef<kakao.maps.Polygon[]>([])
-  const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([])
-  const hoverOverlayRef = useRef<kakao.maps.CustomOverlay | null>(null)
+  useImperativeHandle(ref, () => ({
+    panTo: (lat, lng, level) => {
+      if (!map) return
+      if (level !== undefined) map.setLevel(level)
+      map.panTo(new kakao.maps.LatLng(lat, lng))
+    },
+  }))
 
-  const { isLoaded, error: sdkError } = useKakaoMapsSDK()
-  const { data: geoJson, loading: geoLoading, error: geoError } = useSeoulGeoJson()
-
+  // 지도 생성 (SDK 로드 후 1회)
   useEffect(() => {
-    if (!isLoaded || !geoJson || !mapRef.current) return
-
-    const map = new kakao.maps.Map(mapRef.current, {
+    if (!isLoaded || !containerRef.current) return
+    const instance = new kakao.maps.Map(containerRef.current, {
       center: new kakao.maps.LatLng(SEOUL_CENTER.lat, SEOUL_CENTER.lng),
-      level: MAP_LEVEL,
+      level: DEFAULT_LEVEL,
     })
+    setMap(instance)
+  }, [isLoaded])
 
-    // hover 툴팁
-    const hoverEl = document.createElement('div')
-    hoverEl.className = 'district-tooltip'
-    const hoverOverlay = new kakao.maps.CustomOverlay({
-      content: hoverEl,
-      position: new kakao.maps.LatLng(SEOUL_CENTER.lat, SEOUL_CENTER.lng),
-      yAnchor: 2.2,
-      zIndex: 200,
-    })
-    hoverOverlayRef.current = hoverOverlay
+  // 마커 오버레이 생성/갱신
+  useEffect(() => {
+    if (!map || markers.length === 0) return
 
-    // 구별 라벨 중심 누적
-    const guAccum = new Map<string, { latSum: number; lngSum: number; count: number }>()
-
-    geoJson.features.forEach((feature) => {
-      const guName = feature.properties.sggnm
-      const districtInfo = districtMap.get(guName)
-      if (!districtInfo) return
-
-      const group = GROUPS[districtInfo.group]
-      const outerRings = getOuterRings(feature)
-
-      outerRings.forEach((ring) => {
-        const path = ringToLatLng(ring)
-        const polygon = new kakao.maps.Polygon({
-          map,
-          path,
-          strokeWeight: 1,
-          strokeColor: '#ffffff',
-          strokeOpacity: 0.6,
-          fillColor: group.color,
-          fillOpacity: 0.65,
-          zIndex: 1,
-        })
-        polygonsRef.current.push(polygon)
-
-        const [cLat, cLng] = ringCentroid(ring)
-
-        kakao.maps.event.addListener(polygon, 'mouseover', () => {
-          polygon.setOptions({ fillOpacity: 0.88, strokeWeight: 2 })
-          hoverEl.textContent = guName
-          hoverOverlay.setPosition(new kakao.maps.LatLng(cLat, cLng))
-          hoverOverlay.setMap(map)
-        })
-        kakao.maps.event.addListener(polygon, 'mouseout', () => {
-          polygon.setOptions({ fillOpacity: 0.65, strokeWeight: 1 })
-          hoverOverlay.setMap(null)
-        })
-        kakao.maps.event.addListener(polygon, 'click', () => {
-          onDistrictClick(districtInfo)
-        })
-
-        const acc = guAccum.get(guName) ?? { latSum: 0, lngSum: 0, count: 0 }
-        acc.latSum += cLat
-        acc.lngSum += cLng
-        acc.count += 1
-        guAccum.set(guName, acc)
-      })
-    })
-
-    // 구 이름 라벨 (구당 1개)
-    guAccum.forEach((acc, guName) => {
-      const labelEl = document.createElement('div')
-      labelEl.className = 'district-label'
-      labelEl.innerHTML = `<span class="dl-name">${guName}</span>`
+    const created = markers.map((marker) => {
+      const el = document.createElement('div')
       const overlay = new kakao.maps.CustomOverlay({
-        content: labelEl,
-        position: new kakao.maps.LatLng(acc.latSum / acc.count, acc.lngSum / acc.count),
+        content: el,
+        position: new kakao.maps.LatLng(marker.lat, marker.lng),
+        xAnchor: 0.5,
         yAnchor: 0.5,
         zIndex: 10,
+        clickable: true,
       })
       overlay.setMap(map)
-      overlaysRef.current.push(overlay)
+      return { id: marker.id, el, overlay }
     })
+    setOverlayEls(created.map(({ id, el }) => ({ id, el })))
 
     return () => {
-      polygonsRef.current.forEach((p) => p.setMap(null))
-      overlaysRef.current.forEach((o) => o.setMap(null))
-      polygonsRef.current = []
-      overlaysRef.current = []
-      hoverOverlay.setMap(null)
+      created.forEach(({ overlay }) => overlay.setMap(null))
+      setOverlayEls([])
     }
-  }, [isLoaded, geoJson, onDistrictClick])
+  }, [map, markers])
 
-  const error = sdkError ?? geoError
-  const loading = !isLoaded || geoLoading
-
-  if (error)
+  if (error) {
     return (
-      <div className="map-status error">
-        <p>⚠️ {error}</p>
+      <div className={cn('flex items-center justify-center bg-gray-70 px-5', className)}>
+        <p className="text-center text-body-m-medium text-gray-500">{error}</p>
       </div>
     )
-  if (loading)
-    return (
-      <div className="map-status loading">
-        <div className="spinner" />
-        <p>지도 데이터를 불러오는 중...</p>
-      </div>
-    )
+  }
 
-  return <div ref={mapRef} className="kakao-map" />
+  const markerById = new Map(markers.map((m) => [m.id, m]))
+
+  return (
+    <div className={className}>
+      {!isLoaded && (
+        <div className="flex size-full items-center justify-center bg-gray-70">
+          <Spinner />
+        </div>
+      )}
+      <div ref={containerRef} className={cn('size-full', !isLoaded && 'hidden')} />
+      {overlayEls.map(({ id, el }) => {
+        const marker = markerById.get(id)
+        if (!marker) return null
+        return createPortal(
+          <LocationMarker
+            title={marker.title}
+            caption={marker.caption}
+            onClick={onMarkerClick ? () => onMarkerClick(id) : undefined}
+            className={onMarkerClick ? 'cursor-pointer' : undefined}
+          />,
+          el,
+          id,
+        )
+      })}
+    </div>
+  )
 }

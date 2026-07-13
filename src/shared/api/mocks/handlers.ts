@@ -1,10 +1,12 @@
 import { http, HttpResponse } from 'msw'
 import {
   dashboardMock,
+  declineRankingMock,
   makeNotificationsMock,
   makeReportDetailMock,
   makeReportMock,
   reportCasesMock,
+  regionMapMock,
   reportHistoryMock,
 } from './fixtures'
 
@@ -55,6 +57,11 @@ let mockStores: {
   lng: number
   isPrimary: boolean
 }[] = []
+
+// 즐겨찾는 상권 — 세션 동안 유지 (등록이 새로고침 전까지 반영). 시작은 빈 목록이라
+// 지도 검색 오버레이의 "즐겨찾는 지역 등록" 안내 → 등록 플로우를 데모로 볼 수 있다.
+const mockFavorites: { regionCode: string; regionName: string; district: string; grade: string }[] =
+  []
 
 // 알림 설정 — 세션 동안 유지. 초깃값은 Figma 마이페이지 기본 상태(연동·리포트 ON, 비상 OFF).
 const mockNotificationSettings = { smsAlert: true, autoReport: true, urgentAlert: false }
@@ -138,6 +145,59 @@ export const handlers = [
         lng: Number(params.get('lng') ?? 127.0229),
       },
     ])
+  }),
+
+  // ── 지도/상권 (지도 홈) ──
+  // 지도 색상 데이터 — 상권 단위 쇠퇴등급 (FE 가 구 단위로 묶어 마커 표시)
+  http.get(`${API}/api/v1/regions/map`, () => ok('지도 데이터 조회 성공', regionMapMock)),
+
+  // 쇠퇴 등급 Top5 — order: top(위험 높은 순) / bottom(안전한 순)
+  http.get(`${API}/api/v1/regions/declineRanking`, ({ request }) => {
+    const order = new URL(request.url).searchParams.get('order') === 'bottom' ? 'bottom' : 'top'
+    return ok('순위 조회 성공', declineRankingMock[order])
+  }),
+
+  // 상권 검색 자동완성 — 지도 목 데이터에서 상권명/자치구 부분일치
+  http.get(`${API}/api/v1/regions/search`, ({ request }) => {
+    const keyword = (new URL(request.url).searchParams.get('keyword') ?? '').trim()
+    if (!keyword) {
+      return HttpResponse.json(
+        { code: 400, status: 'BAD_REQUEST', message: '검색어를 입력해주세요.', data: null },
+        { status: 400 },
+      )
+    }
+    const matches = regionMapMock.regions
+      .filter((r) => r.regionName.includes(keyword) || r.district.includes(keyword))
+      .map(({ regionCode, regionName, district }) => ({ regionCode, regionName, district }))
+    return ok('상권 검색 성공', matches)
+  }),
+
+  // 즐겨찾는 상권 조회/등록/해제
+  http.get(`${API}/api/v1/favorites`, () => ok('즐겨찾기 조회 성공', mockFavorites)),
+
+  http.post(`${API}/api/v1/favorites`, async ({ request }) => {
+    const { regionCode } = (await request.json()) as { regionCode: string }
+    const region = regionMapMock.regions.find((r) => r.regionCode === regionCode)
+    if (!region) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '매칭되는 상권이 없습니다.', data: null },
+        { status: 404 },
+      )
+    }
+    const item = {
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      district: region.district,
+      grade: region.grade,
+    }
+    if (!mockFavorites.some((f) => f.regionCode === regionCode)) mockFavorites.push(item)
+    return ok('즐겨찾기 등록 성공', item)
+  }),
+
+  http.delete(`${API}/api/v1/favorites/:regionCode`, ({ params }) => {
+    const index = mockFavorites.findIndex((f) => f.regionCode === params.regionCode)
+    if (index >= 0) mockFavorites.splice(index, 1)
+    return ok('즐겨찾기 해제 성공', null)
   }),
 
   // 가게 위치·업종 설정/수정 (온보딩 완료 저장)

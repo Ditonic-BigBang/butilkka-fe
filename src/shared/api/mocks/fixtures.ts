@@ -10,6 +10,7 @@ import type {
 } from '@/entities/report'
 import type { DashboardResponse } from '@/entities/dashboard'
 import type { NotificationListResponse } from '@/entities/notification'
+import type { RankingOrder, RegionMapResponse, RegionRankingResponse } from '@/entities/region'
 
 /** GET /api/v1/dashboard 데모 데이터 (명세 예시 기반) */
 export const dashboardMock: DashboardResponse = {
@@ -345,4 +346,117 @@ export function makeNotificationsMock(): NotificationListResponse {
       },
     ],
   }
+}
+
+// ── 지도/상권 ────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/regions/map 데모 데이터 — 상권 단위 쇠퇴등급.
+ * 서대문구는 상권 2개(C·E)로 구 단위 마커의 최악 등급 대표 로직을 태운다.
+ * 등급 분포는 declineRankingMock(top: 서대문E→광진E→노원D→용산D→강서C)과 일치.
+ */
+export const regionMapMock: RegionMapResponse = {
+  quarter: '2026Q1',
+  regions: [
+    { regionCode: '3110001', regionName: '신촌', district: '서대문구', grade: 'C' },
+    { regionCode: '3110002', regionName: '이대역', district: '서대문구', grade: 'E' },
+    { regionCode: '3110003', regionName: '건대입구', district: '광진구', grade: 'E' },
+    { regionCode: '3110004', regionName: '노원역', district: '노원구', grade: 'D' },
+    { regionCode: '3110005', regionName: '이태원', district: '용산구', grade: 'D' },
+    { regionCode: '3110006', regionName: '화곡역', district: '강서구', grade: 'C' },
+    { regionCode: '3110007', regionName: '홍대입구', district: '마포구', grade: 'B' },
+    { regionCode: '3110008', regionName: '가로수길', district: '강남구', grade: 'A' },
+    { regionCode: '3110009', regionName: '명동', district: '중구', grade: 'B' },
+    { regionCode: '3110010', regionName: '종로3가', district: '종로구', grade: 'B' },
+    { regionCode: '3110011', regionName: '서울대입구', district: '관악구', grade: 'C' },
+    { regionCode: '3110012', regionName: '왕십리', district: '성동구', grade: 'B' },
+    { regionCode: '3110013', regionName: '잠실', district: '송파구', grade: 'A' },
+    { regionCode: '3110014', regionName: '서초역', district: '서초구', grade: 'A' },
+  ],
+}
+
+/** GET /api/v1/regions/declineRanking 데모 데이터 — 디자인(지도 홈) Top5 와 동일 */
+export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
+  top: {
+    order: 'top',
+    quarter: '2026Q1',
+    regions: [
+      {
+        rank: 1,
+        regionCode: '3110002',
+        regionName: '서울 서대문구',
+        decline_grade: 'E',
+        direction: 'UP',
+      },
+      {
+        rank: 2,
+        regionCode: '3110003',
+        regionName: '서울 광진구',
+        decline_grade: 'E',
+        direction: 'DOWN',
+      },
+      {
+        rank: 3,
+        regionCode: '3110004',
+        regionName: '서울 노원구',
+        decline_grade: 'D',
+        direction: 'UP',
+      },
+      {
+        rank: 4,
+        regionCode: '3110005',
+        regionName: '서울 용산구',
+        decline_grade: 'D',
+        direction: 'FLAT',
+      },
+      {
+        rank: 5,
+        regionCode: '3110006',
+        regionName: '서울 강서구',
+        decline_grade: 'C',
+        direction: 'DOWN',
+      },
+    ],
+  },
+  bottom: {
+    order: 'bottom',
+    quarter: '2026Q1',
+    regions: [
+      {
+        rank: 1,
+        regionCode: '3110008',
+        regionName: '서울 강남구',
+        decline_grade: 'A',
+        direction: 'FLAT',
+      },
+      {
+        rank: 2,
+        regionCode: '3110013',
+        regionName: '서울 송파구',
+        decline_grade: 'A',
+        direction: 'UP',
+      },
+      {
+        rank: 3,
+        regionCode: '3110014',
+        regionName: '서울 서초구',
+        decline_grade: 'A',
+        direction: 'FLAT',
+      },
+      {
+        rank: 4,
+        regionCode: '3110007',
+        regionName: '서울 마포구',
+        decline_grade: 'B',
+        direction: 'DOWN',
+      },
+      {
+        rank: 5,
+        regionCode: '3110009',
+        regionName: '서울 중구',
+        decline_grade: 'B',
+        direction: 'UP',
+      },
+    ],
+  },
 }
