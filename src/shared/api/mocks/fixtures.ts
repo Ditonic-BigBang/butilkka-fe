@@ -531,6 +531,23 @@ const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
     '3110013': { value: 6.8, direction: 'UP' }, // 잠실(송파구)
     '3110014': { value: 5.9, direction: 'FLAT' }, // 서초역
   },
+  // 폐업률(%) — 서대문구 대표 4.9%
+  closureRate: {
+    '3110001': { value: 4.6, direction: 'UP' }, // 신촌
+    '3110002': { value: 4.9, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 4.7, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 4.4, direction: 'UP' }, // 노원역
+    '3110005': { value: 4.2, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 3.9, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 3.1, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 2.3, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 2.6, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 2.9, direction: 'UP' }, // 종로3가
+    '3110011': { value: 3.4, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 2.7, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 2.4, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 2.1, direction: 'FLAT' }, // 서초역
+  },
   // 점포수(개) — 서대문구 대표 567개
   storeCount: {
     '3110001': { value: 521, direction: 'DOWN' }, // 신촌
@@ -555,8 +572,12 @@ const METRIC_SEED_FALLBACK: Record<string, MetricSeed> = {
   rentRatio: { value: 5_000_000, direction: 'UP' },
   footTraffic: { value: 100_000, direction: 'UP' },
   vacancyRate: { value: 8, direction: 'UP' },
+  closureRate: { value: 3, direction: 'UP' },
   storeCount: { value: 400, direction: 'UP' },
 }
+
+/** 서울 전체 평균 영업 기간(년) — 폐업률 랭킹 하단·상세 비교 기준 (디자인 5.9년) */
+const SEOUL_AVG_OPERATING_YEARS = 5.9
 
 function metricSeed(metric: MetricKey, regionCode: string): MetricSeed {
   return (
@@ -618,7 +639,14 @@ export function makeMetricRankingMock(
       direction: metricSeed(map.metric, region.regionCode).direction,
     }))
 
-  return { metric: map.metric, order, quarter: map.quarter, regions }
+  return {
+    metric: map.metric,
+    order,
+    quarter: map.quarter,
+    regions,
+    // 폐업률만 랭킹 하단 "평균 영업 기간 — 서울 전체" 섹션용 값 포함
+    ...(map.metric === 'closureRate' && { avgOperatingYears: SEOUL_AVG_OPERATING_YEARS }),
+  }
 }
 
 // 상세 추이 12분기 (regions/map 최신 분기 2026Q1 기준 최근 3년)
@@ -677,6 +705,8 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
   const footTrend = seedTrend(foot, 10)
   const vacancy = metricSeed('vacancyRate', region.regionCode)
   const vacancyTrend = seedTrend(vacancy, 0.1)
+  const closure = metricSeed('closureRate', region.regionCode)
+  const closureTrend = seedTrend(closure, 0.1)
   const store = metricSeed('storeCount', region.regionCode)
   const storeTrend = seedTrend(store, 1)
 
@@ -709,12 +739,13 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
       trend: vacancyTrend,
     },
     closureRate: {
-      value: 3.9,
-      changeRate: 0.5,
-      direction: 'UP',
-      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 2.4 + i * 0.13 })),
-      avgOperatingYears: 3.2,
-      seoulAvgOperatingYears: 4.1,
+      value: closure.value,
+      changeRate: trendChangeRate(closureTrend),
+      direction: closure.direction,
+      trend: closureTrend,
+      // 폐업률이 높을수록 평균 영업 기간이 짧다 — 시드에서 결정적으로 파생
+      avgOperatingYears: Math.round((8 - closure.value) * 10) / 10,
+      seoulAvgOperatingYears: SEOUL_AVG_OPERATING_YEARS,
     },
     storeCount: {
       value: store.value,

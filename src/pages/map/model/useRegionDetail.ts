@@ -63,6 +63,8 @@ export type MetricSheetView = {
   trendUnit: string
   /** y축 눈금 축약 라벨 (예: 13.4만) — 없으면 기본 포맷 */
   trendAxisLabel?: (value: number) => string
+  /** 평균 영업 기간 — 폐업률(closureRate)만 */
+  averagePeriod?: { label: string; years: string }
 }
 
 export type SheetDetailView = GradeSheetView | MetricSheetView
@@ -117,6 +119,10 @@ export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): M
     trendTicks: yearTicks(summary.trend.map((p) => p.quarter)),
     trendUnit: `(${config.unit})`,
     trendAxisLabel: config.toAxisLabel,
+    averagePeriod:
+      'avgOperatingYears' in summary
+        ? { label: `서울 ${d.district}`, years: String(summary.avgOperatingYears) }
+        : undefined,
   }
 }
 

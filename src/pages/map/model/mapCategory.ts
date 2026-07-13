@@ -48,6 +48,7 @@ export const CATEGORY_BY_FILTER: Partial<Record<string, MapCategory>> = {
   stores: 'storeCount',
   population: 'footTraffic',
   vacancy: 'vacancyRate',
+  closure: 'closureRate',
 }
 
 const FILTER_BY_CATEGORY = Object.fromEntries(

@@ -21,26 +21,40 @@ export type RankingRow = {
   direction: 'up' | 'down' | 'same'
 }
 
-function toGradeRows(data: RegionRankingResponse): RankingRow[] {
-  return data.regions.map((r) => ({
-    rank: r.rank,
-    regionCode: r.regionCode,
-    name: r.regionName,
-    value: r.decline_grade,
-    unit: '등급',
-    direction: DIRECTION_UI[r.direction] ?? 'same',
-  }))
+/** 랭킹 시트 뷰모델 — 행 목록 + (폐업률) 서울 전체 평균 영업 기간 */
+export type RankingView = {
+  rows: RankingRow[]
+  averagePeriod?: { label: string; years: string }
 }
 
-function toMetricRows(data: RegionMetricRankingResponse, config: MetricConfig): RankingRow[] {
-  return data.regions.map((r) => ({
-    rank: r.rank,
-    regionCode: r.regionCode,
-    name: r.regionName,
-    value: config.toDisplayValue(r.value).toLocaleString(),
-    unit: config.unit,
-    direction: DIRECTION_UI[r.direction] ?? 'same',
-  }))
+function toGradeView(data: RegionRankingResponse): RankingView {
+  return {
+    rows: data.regions.map((r) => ({
+      rank: r.rank,
+      regionCode: r.regionCode,
+      name: r.regionName,
+      value: r.decline_grade,
+      unit: '등급',
+      direction: DIRECTION_UI[r.direction] ?? 'same',
+    })),
+  }
+}
+
+function toMetricView(data: RegionMetricRankingResponse, config: MetricConfig): RankingView {
+  return {
+    rows: data.regions.map((r) => ({
+      rank: r.rank,
+      regionCode: r.regionCode,
+      name: r.regionName,
+      value: config.toDisplayValue(r.value).toLocaleString(),
+      unit: config.unit,
+      direction: DIRECTION_UI[r.direction] ?? 'same',
+    })),
+    averagePeriod:
+      data.avgOperatingYears !== undefined
+        ? { label: '서울 전체', years: String(data.avgOperatingYears) }
+        : undefined,
+  }
 }
 
 /**
@@ -53,7 +67,7 @@ export function useRanking(category: MapCategory, order: RankingOrder, quarter?:
   const gradeQuery = useQuery({
     queryKey: regionKeys.ranking(order, quarter),
     queryFn: () => fetchDeclineRanking(order, quarter),
-    select: toGradeRows,
+    select: toGradeView,
     placeholderData: keepPreviousData,
     enabled: metric === null,
   })
@@ -61,7 +75,7 @@ export function useRanking(category: MapCategory, order: RankingOrder, quarter?:
     queryKey: regionKeys.metricRanking(metric ?? 'rentRatio', order, quarter),
     queryFn: () => fetchMetricRanking(metric ?? 'rentRatio', order, quarter),
     select: (data: RegionMetricRankingResponse) =>
-      toMetricRows(data, METRIC_CONFIG[metric ?? 'rentRatio']),
+      toMetricView(data, METRIC_CONFIG[metric ?? 'rentRatio']),
     placeholderData: keepPreviousData,
     enabled: metric !== null,
   })

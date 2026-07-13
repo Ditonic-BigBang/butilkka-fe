@@ -68,7 +68,8 @@ function SectionDivider() {
   return <div className="h-2 w-full bg-gray-70" />
 }
 
-function PeriodSection({ label, years }: AveragePeriod) {
+/** 평균 영업 기간 섹션 — 시트 셸 없이 재사용 (지도 상시 시트의 폐업률 랭킹 하단) */
+export function PeriodSection({ label, years }: AveragePeriod) {
   return (
     <div className="flex flex-col gap-4 p-5">
       <p className="text-body-l-semibold text-gray-800">평균 영업 기간</p>

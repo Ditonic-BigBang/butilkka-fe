@@ -170,7 +170,8 @@ export default function MapPage() {
             tabs={categoryView.tabs}
             order={order}
             onOrderChange={setOrder}
-            rows={ranking.data ?? []}
+            rows={ranking.data?.rows ?? []}
+            averagePeriod={ranking.data?.averagePeriod}
             onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
             detail={detailRegionCode !== null ? detail.data : null}
             onClearDetail={clearSelection}

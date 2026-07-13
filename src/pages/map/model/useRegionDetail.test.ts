@@ -112,4 +112,16 @@ describe('toMetricSheetView', () => {
 
     expect(view.comparison.percent).toBe('7개')
   })
+
+  it('폐업률은 평균 영업 기간 섹션 데이터를 포함한다', () => {
+    const view = toMetricSheetView(detail, 'closureRate')
+
+    expect(view.averagePeriod).toEqual({ label: '서울 서대문구', years: '3.2' })
+  })
+
+  it('평균 영업 기간이 없는 지표는 averagePeriod 를 만들지 않는다', () => {
+    const view = toMetricSheetView(detail, 'rentRatio')
+
+    expect(view.averagePeriod).toBeUndefined()
+  })
 })

@@ -100,6 +100,22 @@ describe('RankingSheet', () => {
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
   })
 
+  it('averagePeriod 가 있으면 랭킹 아래 평균 영업 기간 섹션을 보여준다', () => {
+    render(
+      <RankingSheet
+        title="폐업률"
+        tabs={['상위 5위', '하위 5위']}
+        order="top"
+        onOrderChange={() => {}}
+        rows={METRIC_ROWS}
+        averagePeriod={{ label: '서울 전체', years: '5.9' }}
+      />,
+    )
+
+    expect(screen.getByText('평균 영업 기간')).toBeInTheDocument()
+    expect(screen.getByText('5.9')).toBeInTheDocument()
+  })
+
   it('정렬 탭 클릭 시 onOrderChange 를 호출한다', async () => {
     const user = userEvent.setup()
     const onOrderChange = vi.fn()

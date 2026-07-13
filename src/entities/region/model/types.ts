@@ -84,6 +84,8 @@ export interface RegionMetricRankingResponse {
   order: RankingOrder
   quarter: string
   regions: RegionMetricRankingItem[]
+  /** 서울 전체 평균 영업 기간(년) — 폐업률(closureRate)일 때만 내려온다 */
+  avgOperatingYears?: number
 }
 
 // ── 상권 상세 (GET /districts/{regionCode} — URI 명칭과 달리 path 는 상권코드) ──

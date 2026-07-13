@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { Tabs, Spinner, ErrorRetry } from '@/shared/ui'
 import { DistrictRankRow } from '@/entities/district'
-import { GradeBody, MetricBody } from '@/widgets/district-sheet'
+import { GradeBody, MetricBody, PeriodSection } from '@/widgets/district-sheet'
 import { cn } from '@/shared/lib/cn'
 import type { RankingOrder } from '@/entities/region'
 import type { RankingRow } from '../model/useRanking'
@@ -42,6 +42,7 @@ function renderDetail(view: SheetDetailView) {
         ((v) =>
           view.unit === '%' ? String(Math.round(v * 10) / 10) : Math.round(v).toLocaleString())
       }
+      averagePeriod={view.averagePeriod}
     />
   )
 }
@@ -54,6 +55,8 @@ type RankingSheetProps = {
   order: RankingOrder
   onOrderChange: (order: RankingOrder) => void
   rows: RankingRow[]
+  /** 랭킹 아래 평균 영업 기간 섹션 (폐업률 — "서울 전체 N년") */
+  averagePeriod?: { label: string; years: string }
   /** 순위 행 탭 — 해당 구 상세로 진입 */
   onRowClick?: (row: RankingRow) => void
   /** 선택한 구 상세 — 있으면 랭킹 대신 카테고리별 상세 본문을 그 자리에서 보여준다 */
@@ -76,6 +79,7 @@ export function RankingSheet({
   order,
   onOrderChange,
   rows,
+  averagePeriod,
   onRowClick,
   detail,
   onClearDetail,
@@ -206,7 +210,15 @@ export function RankingSheet({
           {detail ? (
             renderDetail(detail)
           ) : (
-            <div className="flex flex-col p-5 pt-2">{renderRankingList()}</div>
+            <>
+              <div className="flex flex-col p-5 pt-2">{renderRankingList()}</div>
+              {averagePeriod && (
+                <>
+                  <div className="h-2 w-full bg-gray-70" />
+                  <PeriodSection {...averagePeriod} />
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
