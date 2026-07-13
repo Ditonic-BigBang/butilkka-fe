@@ -87,11 +87,14 @@ export function toGradeSheetView(d: RegionDetailResponse): GradeSheetView {
 export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): MetricSheetView {
   const config = METRIC_CONFIG[metric]
   const summary = d[metric]
-  // 점포 수만 증감이 비율(changeRate)이 아닌 개수(changeCount)
+  // 디자인은 증감칩이 전부 % 표기 — 점포수만 changeRate 가 없어(changeCount) 추이 마지막 두 분기로 계산
+  const prev = summary.trend.at(-2)?.value
   const percent =
     'changeRate' in summary
       ? `${Math.abs(summary.changeRate)}%`
-      : `${Math.abs(summary.changeCount)}개`
+      : prev
+        ? `${Math.round((Math.abs(summary.value - prev) / prev) * 1000) / 10}%`
+        : `${Math.abs(summary.changeCount)}${config.unit}`
 
   return {
     kind: 'metric',

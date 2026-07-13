@@ -81,14 +81,35 @@ describe('toMetricSheetView', () => {
     expect(view.trendUnit).toBe('(만원)')
   })
 
-  it('점포 수는 증감을 개수(changeCount)로 표기한다', () => {
+  it('점포수는 changeRate 가 없어 추이 마지막 두 분기로 증감률(%)을 계산한다', () => {
+    const view = toMetricSheetView(
+      {
+        ...detail,
+        storeCount: {
+          value: 380,
+          changeCount: -20,
+          direction: 'DOWN',
+          trend: [
+            { quarter: '2025Q4', value: 400 },
+            { quarter: '2026Q1', value: 380 },
+          ],
+          categoryDistribution: [],
+        },
+      },
+      'storeCount',
+    )
+
+    expect(view.value).toBe('380')
+    expect(view.unit).toBe('개')
+    expect(view.comparison).toEqual({ label: '이전 분기 대비', percent: '5%', direction: 'down' })
+  })
+
+  it('점포수 추이가 없으면 증감 개수로 폴백한다', () => {
     const view = toMetricSheetView(
       { ...detail, storeCount: { ...detail.storeCount, changeCount: -7, direction: 'DOWN' } },
       'storeCount',
     )
 
     expect(view.comparison.percent).toBe('7개')
-    expect(view.comparison.direction).toBe('down')
-    expect(view.unit).toBe('개')
   })
 })

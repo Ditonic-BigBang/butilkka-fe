@@ -28,7 +28,7 @@ export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
   footTraffic: { title: '유동인구', unit: '명', toDisplayValue: (v) => Math.round(v) },
   vacancyRate: { title: '공실률', unit: '%', toDisplayValue: (v) => Math.round(v * 10) / 10 },
   closureRate: { title: '폐업률', unit: '%', toDisplayValue: (v) => Math.round(v * 10) / 10 },
-  storeCount: { title: '점포 수', unit: '개', toDisplayValue: (v) => Math.round(v) },
+  storeCount: { title: '점포수', unit: '개', toDisplayValue: (v) => Math.round(v) },
 }
 
 /**
@@ -38,6 +38,7 @@ export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
 export const CATEGORY_BY_FILTER: Partial<Record<string, MapCategory>> = {
   grade: 'grade',
   sales: 'rentRatio',
+  stores: 'storeCount',
 }
 
 const FILTER_BY_CATEGORY = Object.fromEntries(

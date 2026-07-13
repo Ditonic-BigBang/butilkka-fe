@@ -472,40 +472,78 @@ export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
   },
 }
 
-/**
- * 상권별 매출 대비 임대료(원) — 지표 카테고리(metricMap·metricRanking·상세 rentRatio)가
- * 모두 이 테이블에서 파생돼 마커·랭킹·구 선택 상세 값이 서로 일치한다.
- * 구 대표(최댓값) 기준 상위 5위: 서대문(이대역 789만) > 광진 > 노원 > 용산 > 강서 — 디자인 Top5 순서.
- */
-const RENT_RATIO_BY_REGION: Record<string, { value: number; direction: RegionDirection }> = {
-  '3110001': { value: 6_120_000, direction: 'DOWN' }, // 신촌
-  '3110002': { value: 7_890_000, direction: 'UP' }, // 이대역 → 서대문구 대표 789만원
-  '3110003': { value: 7_420_000, direction: 'DOWN' }, // 건대입구(광진구)
-  '3110004': { value: 7_180_000, direction: 'UP' }, // 노원역
-  '3110005': { value: 6_950_000, direction: 'FLAT' }, // 이태원(용산구)
-  '3110006': { value: 6_600_000, direction: 'DOWN' }, // 화곡역(강서구)
-  '3110007': { value: 4_310_000, direction: 'DOWN' }, // 홍대입구(마포구)
-  '3110008': { value: 3_950_000, direction: 'FLAT' }, // 가로수길(강남구)
-  '3110009': { value: 4_480_000, direction: 'UP' }, // 명동(중구)
-  '3110010': { value: 5_240_000, direction: 'UP' }, // 종로3가
-  '3110011': { value: 5_760_000, direction: 'UP' }, // 서울대입구(관악구)
-  '3110012': { value: 5_020_000, direction: 'DOWN' }, // 왕십리(성동구)
-  '3110013': { value: 3_620_000, direction: 'UP' }, // 잠실(송파구)
-  '3110014': { value: 3_140_000, direction: 'FLAT' }, // 서초역
-}
+type MetricSeed = { value: number; direction: RegionDirection }
 
-const metricMapMocks: Partial<Record<MetricKey, RegionMetricMapResponse>> = {
+/**
+ * 상권별 지표 값 시드 — 지표 카테고리(metricMap·metricRanking·상세 요약)가 모두 이 테이블에서
+ * 파생돼 마커·랭킹·구 선택 상세 값이 서로 일치한다. 여기 등록된 지표만 카테고리로 동작(나머지 400).
+ * 구 대표(최댓값) 기준 상위 5위가 디자인 Top5 순서(서대문 > 광진 > 노원 > 용산 > 강서)가 되게 배치.
+ */
+const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
+  // 매출 대비 임대료(원) — 서대문구 대표 789만원
   rentRatio: {
-    metric: 'rentRatio',
-    quarter: '2026Q1',
-    regions: regionMapMock.regions.map(({ regionCode, regionName, district }) => ({
-      regionCode,
-      regionName,
-      district,
-      value: RENT_RATIO_BY_REGION[regionCode]?.value ?? 5_000_000,
-    })),
+    '3110001': { value: 6_120_000, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 7_890_000, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 7_420_000, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 7_180_000, direction: 'UP' }, // 노원역
+    '3110005': { value: 6_950_000, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 6_600_000, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 4_310_000, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 3_950_000, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 4_480_000, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 5_240_000, direction: 'UP' }, // 종로3가
+    '3110011': { value: 5_760_000, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 5_020_000, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 3_620_000, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 3_140_000, direction: 'FLAT' }, // 서초역
+  },
+  // 점포수(개) — 서대문구 대표 567개
+  storeCount: {
+    '3110001': { value: 521, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 567, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 552, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 538, direction: 'UP' }, // 노원역
+    '3110005': { value: 512, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 498, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 431, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 289, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 342, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 405, direction: 'UP' }, // 종로3가
+    '3110011': { value: 463, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 377, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 318, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 265, direction: 'FLAT' }, // 서초역
   },
 }
+
+// 시드 미등록 상권 폴백 값 (regionMapMock 에 상권을 추가해도 목이 깨지지 않게)
+const METRIC_SEED_FALLBACK: Record<string, MetricSeed> = {
+  rentRatio: { value: 5_000_000, direction: 'UP' },
+  storeCount: { value: 400, direction: 'UP' },
+}
+
+function metricSeed(metric: MetricKey, regionCode: string): MetricSeed {
+  return (
+    METRIC_SEEDS[metric]?.[regionCode] ??
+    METRIC_SEED_FALLBACK[metric] ?? { value: 100, direction: 'FLAT' }
+  )
+}
+
+const metricMapMocks = Object.fromEntries(
+  Object.entries(METRIC_SEEDS).map(([metric, seeds]) => [
+    metric,
+    {
+      metric: metric as MetricKey,
+      quarter: '2026Q1',
+      regions: regionMapMock.regions.map(({ regionCode, regionName, district }) => ({
+        regionCode,
+        regionName,
+        district,
+        value: seeds[regionCode]?.value ?? metricSeed(metric as MetricKey, regionCode).value,
+      })),
+    },
+  ]),
+) as Partial<Record<MetricKey, RegionMetricMapResponse>>
 
 /**
  * GET /api/v1/regions/metricMap 데모 데이터 (선규격) — 지원 지표만 등록.
@@ -541,7 +579,7 @@ export function makeMetricRankingMock(
       regionCode: region.regionCode,
       regionName: `서울 ${region.district}`,
       value: region.value,
-      direction: RENT_RATIO_BY_REGION[region.regionCode]?.direction ?? 'FLAT',
+      direction: metricSeed(map.metric, region.regionCode).direction,
     }))
 
   return { metric: map.metric, order, quarter: map.quarter, regions }
@@ -567,6 +605,23 @@ const GRADE_ORDER: RegionGrade[] = ['A', 'B', 'C', 'D', 'E']
 // 현재 등급으로 수렴하는 결정적 오프셋 패턴 (마지막 = 현재, 직전 = 한 단계 양호 → 지난 분기 pill)
 const TREND_OFFSETS = [-2, -2, -1, -2, -1, -1, 0, -1, -1, 0, -1, 0]
 
+// 시드 값으로 수렴하는 12분기 추이 — direction 방향으로 분기당 값의 1.2%씩(roundTo 단위 반올림) 변화
+function seedTrend(seed: MetricSeed, roundTo: number) {
+  const sign = seed.direction === 'DOWN' ? -1 : seed.direction === 'UP' ? 1 : 0
+  const step = Math.max(roundTo, Math.round((seed.value * 0.012) / roundTo) * roundTo)
+  return DETAIL_QUARTERS.map((quarter, i) => ({
+    quarter,
+    value: seed.value - sign * (DETAIL_QUARTERS.length - 1 - i) * step,
+  }))
+}
+
+// 추이 마지막 두 분기의 증감률(%) — 상세 changeRate 를 추이와 일치시키는 용도
+function trendChangeRate(trend: { value: number }[]): number {
+  const prev = trend[trend.length - 2].value
+  const current = trend[trend.length - 1].value
+  return Math.round((Math.abs(current - prev) / prev) * 1000) / 10
+}
+
 /**
  * GET /api/v1/districts/{regionCode} 데모 데이터 — 지도 목(regionMapMock)의 상권 등급과
  * 일치하는 상세 응답을 만든다. 등급 추이는 현재 등급으로 수렴하는 고정 패턴,
@@ -579,16 +634,11 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
     grade: GRADE_ORDER[Math.min(4, Math.max(0, currentIndex + TREND_OFFSETS[i]))],
   }))
 
-  // 매출 대비 임대료 — 지표 목 테이블 값으로 수렴하는 추이 (마커/랭킹 값과 상세가 일치)
-  const rent = RENT_RATIO_BY_REGION[region.regionCode] ?? { value: 5_000_000, direction: 'UP' }
-  const rentSign = rent.direction === 'DOWN' ? -1 : rent.direction === 'UP' ? 1 : 0
-  const rentStep = Math.round((rent.value * 0.012) / 10_000) * 10_000 // 만원 단위 스텝
-  const rentTrend = DETAIL_QUARTERS.map((quarter, i) => ({
-    quarter,
-    value: rent.value - rentSign * (DETAIL_QUARTERS.length - 1 - i) * rentStep,
-  }))
-  const rentPrev = rentTrend[rentTrend.length - 2].value
-  const rentChangeRate = Math.round((Math.abs(rent.value - rentPrev) / rentPrev) * 1000) / 10
+  // 지표 카테고리 대상 지표는 시드 값으로 수렴하는 추이 — 마커/랭킹 값과 상세가 일치
+  const rent = metricSeed('rentRatio', region.regionCode)
+  const rentTrend = seedTrend(rent, 10_000) // 만원 단위 스텝
+  const store = metricSeed('storeCount', region.regionCode)
+  const storeTrend = seedTrend(store, 1)
 
   return {
     regionCode: region.regionCode,
@@ -602,7 +652,7 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
     },
     rentRatio: {
       value: rent.value,
-      changeRate: rentChangeRate,
+      changeRate: trendChangeRate(rentTrend),
       direction: rent.direction,
       trend: rentTrend,
     },
@@ -627,10 +677,10 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
       seoulAvgOperatingYears: 4.1,
     },
     storeCount: {
-      value: 398,
-      changeCount: -7,
-      direction: 'DOWN',
-      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 430 - i * 3 })),
+      value: store.value,
+      changeCount: store.value - storeTrend[storeTrend.length - 2].value,
+      direction: store.direction,
+      trend: storeTrend,
       categoryDistribution: [
         { category: '한식음식점', count: 92 },
         { category: '커피-음료', count: 74 },
