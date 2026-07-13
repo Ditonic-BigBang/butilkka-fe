@@ -147,6 +147,7 @@ export default function MapPage() {
           <DistrictSheet
             open={detailRegionCode !== null}
             onClose={() => setDetailRegionCode(null)}
+            className="absolute inset-x-0 bottom-0 z-20"
             title="쇠퇴 등급"
             subtitle={detail.data.subtitle}
             content={{
