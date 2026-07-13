@@ -6,7 +6,6 @@ import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation } from '@/shared/ui'
 import { formatQuarter } from '@/shared/lib/quarter'
 import type { RankingOrder } from '@/entities/region'
-import { DistrictSheet } from '@/widgets/district-sheet'
 import { useRegionMarkers } from './model/useRegionMarkers'
 import { useDeclineRanking } from './model/useDeclineRanking'
 import { useRegionSearch } from './model/useRegionSearch'
@@ -29,8 +28,9 @@ export default function MapPage() {
   const [quarterSheetOpen, setQuarterSheetOpen] = useState(false)
   const [latestQuarter, setLatestQuarter] = useState<string>()
 
-  // 선택한 구의 대표 상권 상세 (쇠퇴등급 시트) — null 이면 시트 닫힘
+  // 선택한 구 — 상세 조회는 구 대표 상권 코드로, 경계 강조는 구 이름으로
   const [detailRegionCode, setDetailRegionCode] = useState<string | null>(null)
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null)
 
   const {
     markers,
@@ -42,10 +42,13 @@ export default function MapPage() {
   const detail = useRegionDetail(detailRegionCode)
   const { data: guBoundaries } = useGuBoundaries()
 
-  // 구 경계 폴리곤 — 위젯 outline 형태로 변환
+  // 구 경계 폴리곤 — 선택한 구만 강조 표시
   const outlines = useMemo<MapOutline[]>(
-    () => guBoundaries?.map((b) => ({ id: b.district, rings: b.rings })) ?? [],
-    [guBoundaries],
+    () =>
+      guBoundaries
+        ?.filter((b) => b.district === selectedDistrict)
+        .map((b) => ({ id: b.district, rings: b.rings })) ?? [],
+    [guBoundaries, selectedDistrict],
   )
 
   // 기간 시트의 옵션 기준은 "데이터의 최신 분기" — 최초(미선택) 응답의 quarter 를 고정해둔다
@@ -78,24 +81,35 @@ export default function MapPage() {
     [centroids],
   )
 
+  // 구 선택 — 경계 강조 + 시트 내용을 해당 구 상세로 전환 (시트 높이는 그대로)
+  const selectDistrict = (district: string, regionCode: string) => {
+    setSelectedDistrict(district)
+    setDetailRegionCode(regionCode)
+    panToDistrict(district)
+  }
+  const clearSelection = () => {
+    setSelectedDistrict(null)
+    setDetailRegionCode(null)
+  }
+
   const handleResultSelect = (regionCode: string) => {
     const item = search.byId?.get(regionCode)
     if (!item) return
     setQuery('')
-    panToDistrict(item.district)
     if (registerMode) {
       addFavorite(regionCode)
       setRegisterMode(false)
+      panToDistrict(item.district)
       return
     }
-    setDetailRegionCode(regionCode)
+    selectDistrict(item.district, regionCode)
   }
 
-  // 마커 탭 → 해당 구로 이동 + 구 대표 상권의 쇠퇴등급 상세 시트
+  // 마커 탭 → 구 대표 상권 기준 선택
   const handleMarkerClick = (district: string) => {
-    panToDistrict(district)
     const region = regionByDistrict?.get(district)
-    if (region) setDetailRegionCode(region.regionCode)
+    if (region) selectDistrict(district, region.regionCode)
+    else panToDistrict(district)
   }
 
   const handleMyLocation = () => {
@@ -142,34 +156,14 @@ export default function MapPage() {
           order={order}
           onOrderChange={setOrder}
           rows={ranking.data ?? []}
-          onRowClick={(row) => {
-            panToDistrict(row.name.replace(/^서울\s*/, ''))
-            setDetailRegionCode(row.regionCode)
-          }}
+          onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
+          detail={detailRegionCode !== null ? detail.data : null}
+          onClearDetail={clearSelection}
           isPending={ranking.isPending}
           isError={ranking.isError}
           onRetry={() => void ranking.refetch()}
           className="absolute inset-x-0 bottom-0 z-10"
         />
-
-        {detail.data && (
-          <DistrictSheet
-            open={detailRegionCode !== null}
-            onClose={() => setDetailRegionCode(null)}
-            className="absolute inset-x-0 bottom-0 z-20"
-            title="쇠퇴 등급"
-            subtitle={detail.data.subtitle}
-            content={{
-              type: 'grade',
-              quarter: detail.data.quarterLabel,
-              grade: detail.data.grade,
-              status: detail.data.status,
-              lastGrade: detail.data.lastGrade,
-              trend: detail.data.trend,
-              trendTicks: detail.data.trendTicks,
-            }}
-          />
-        )}
 
         <QuarterSheet
           open={quarterSheetOpen}

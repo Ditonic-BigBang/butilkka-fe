@@ -125,7 +125,8 @@ function RankingBody({ tabs, ranking, averagePeriod }: RankingContent) {
   )
 }
 
-function GradeBody({ quarter, grade, status, lastGrade, trend, trendTicks }: GradeContent) {
+/** 쇠퇴등급 상세 본문 — 시트 셸 없이 재사용 (지도 상시 시트의 구 선택 상태) */
+export function GradeBody({ quarter, grade, status, lastGrade, trend, trendTicks }: GradeContent) {
   return (
     <>
       <div className="flex flex-col items-center gap-2 px-5 py-6">

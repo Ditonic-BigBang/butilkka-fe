@@ -1,1 +1,1 @@
-export { DistrictSheet } from './ui/DistrictSheet'
+export { DistrictSheet, GradeBody } from './ui/DistrictSheet'
