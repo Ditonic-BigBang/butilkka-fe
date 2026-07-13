@@ -5,9 +5,11 @@ import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation } from '@/shared/ui'
 import { formatQuarter } from '@/shared/lib/quarter'
 import type { RankingOrder } from '@/entities/region'
+import { DistrictSheet } from '@/widgets/district-sheet'
 import { useRegionMarkers } from './model/useRegionMarkers'
 import { useDeclineRanking } from './model/useDeclineRanking'
 import { useRegionSearch } from './model/useRegionSearch'
+import { useRegionDetail } from './model/useRegionDetail'
 import { useFavorites } from './model/useFavorites'
 import { RankingSheet } from './ui/RankingSheet'
 import { QuarterSheet } from './ui/QuarterSheet'
@@ -26,8 +28,17 @@ export default function MapPage() {
   const [quarterSheetOpen, setQuarterSheetOpen] = useState(false)
   const [latestQuarter, setLatestQuarter] = useState<string>()
 
-  const { markers, centroids, quarter: dataQuarter } = useRegionMarkers(quarter ?? undefined)
+  // 선택한 구의 대표 상권 상세 (쇠퇴등급 시트) — null 이면 시트 닫힘
+  const [detailRegionCode, setDetailRegionCode] = useState<string | null>(null)
+
+  const {
+    markers,
+    centroids,
+    regionByDistrict,
+    quarter: dataQuarter,
+  } = useRegionMarkers(quarter ?? undefined)
   const ranking = useDeclineRanking(order, quarter ?? undefined)
+  const detail = useRegionDetail(detailRegionCode)
 
   // 기간 시트의 옵션 기준은 "데이터의 최신 분기" — 최초(미선택) 응답의 quarter 를 고정해둔다
   useEffect(() => {
@@ -62,12 +73,21 @@ export default function MapPage() {
   const handleResultSelect = (regionCode: string) => {
     const item = search.byId?.get(regionCode)
     if (!item) return
+    setQuery('')
+    panToDistrict(item.district)
     if (registerMode) {
       addFavorite(regionCode)
       setRegisterMode(false)
+      return
     }
-    setQuery('')
-    panToDistrict(item.district)
+    setDetailRegionCode(regionCode)
+  }
+
+  // 마커 탭 → 해당 구로 이동 + 구 대표 상권의 쇠퇴등급 상세 시트
+  const handleMarkerClick = (district: string) => {
+    panToDistrict(district)
+    const region = regionByDistrict?.get(district)
+    if (region) setDetailRegionCode(region.regionCode)
   }
 
   const handleMyLocation = () => {
@@ -85,7 +105,7 @@ export default function MapPage() {
         <KakaoMap
           ref={mapRef}
           markers={markers}
-          onMarkerClick={panToDistrict}
+          onMarkerClick={handleMarkerClick}
           myLocation={myLocation}
           className="absolute inset-0"
         />
@@ -113,11 +133,33 @@ export default function MapPage() {
           order={order}
           onOrderChange={setOrder}
           rows={ranking.data ?? []}
+          onRowClick={(row) => {
+            panToDistrict(row.name.replace(/^서울\s*/, ''))
+            setDetailRegionCode(row.regionCode)
+          }}
           isPending={ranking.isPending}
           isError={ranking.isError}
           onRetry={() => void ranking.refetch()}
           className="absolute inset-x-0 bottom-0 z-10"
         />
+
+        {detail.data && (
+          <DistrictSheet
+            open={detailRegionCode !== null}
+            onClose={() => setDetailRegionCode(null)}
+            title="쇠퇴 등급"
+            subtitle={detail.data.subtitle}
+            content={{
+              type: 'grade',
+              quarter: detail.data.quarterLabel,
+              grade: detail.data.grade,
+              status: detail.data.status,
+              lastGrade: detail.data.lastGrade,
+              trend: detail.data.trend,
+              trendTicks: detail.data.trendTicks,
+            }}
+          />
+        )}
 
         <QuarterSheet
           open={quarterSheetOpen}

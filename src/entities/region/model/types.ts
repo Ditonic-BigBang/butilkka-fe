@@ -48,3 +48,66 @@ export interface RegionSearchItem {
   regionName: string
   district: string
 }
+
+// ── 상권 상세 (GET /districts/{regionCode} — URI 명칭과 달리 path 는 상권코드) ──
+
+/** 분기별 등급 추이 포인트 */
+export interface GradeTrendPoint {
+  quarter: string
+  grade: RegionGrade
+}
+
+/** 분기별 값 추이 포인트 */
+export interface MetricTrendPoint {
+  quarter: string
+  value: number
+}
+
+/** 쇠퇴등급 요약 — current/previous + 12분기 추이 */
+export interface DeclineGradeSummary {
+  current: RegionGrade
+  previous: RegionGrade
+  trend: GradeTrendPoint[]
+}
+
+/** 수치 지표 요약 (매출 대비 임대료·유동인구·공실률) */
+export interface MetricSummary {
+  value: number
+  changeRate: number
+  direction: RegionDirection
+  trend: MetricTrendPoint[]
+}
+
+/** 폐업률 — 공통 구조 + 평균 영업 기간 */
+export interface ClosureRateSummary extends MetricSummary {
+  avgOperatingYears: number
+  seoulAvgOperatingYears: number
+}
+
+export interface CategoryCount {
+  category: string
+  count: number
+}
+
+/** 점포 수 — 증감 개수 + 업종 분포 */
+export interface StoreCountSummary {
+  value: number
+  changeCount: number
+  direction: RegionDirection
+  trend: MetricTrendPoint[]
+  categoryDistribution: CategoryCount[]
+}
+
+/** GET /districts/{regionCode} — 특정 상권 상세 */
+export interface RegionDetailResponse {
+  regionCode: string
+  district: string
+  regionName: string
+  quarter: string
+  declineGrade: DeclineGradeSummary
+  rentRatio: MetricSummary
+  footTraffic: MetricSummary
+  vacancyRate: MetricSummary
+  closureRate: ClosureRateSummary
+  storeCount: StoreCountSummary
+}

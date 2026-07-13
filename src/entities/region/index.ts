@@ -1,4 +1,10 @@
-export { regionKeys, fetchRegionMap, fetchDeclineRanking, searchRegions } from './api/regionApi'
+export {
+  regionKeys,
+  fetchRegionMap,
+  fetchDeclineRanking,
+  searchRegions,
+  fetchRegionDetail,
+} from './api/regionApi'
 export type {
   RegionGrade,
   RegionDirection,
@@ -8,4 +14,12 @@ export type {
   RegionRankingItem,
   RegionRankingResponse,
   RegionSearchItem,
+  GradeTrendPoint,
+  MetricTrendPoint,
+  DeclineGradeSummary,
+  MetricSummary,
+  ClosureRateSummary,
+  CategoryCount,
+  StoreCountSummary,
+  RegionDetailResponse,
 } from './model/types'

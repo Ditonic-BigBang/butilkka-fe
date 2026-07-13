@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { regionKeys, fetchRegionMap } from '@/entities/region'
 import { useSeoulGeoJson, computeGuCentroids } from '@/entities/district'
 import type { MapMarker } from '@/widgets/district-map'
-import { buildGuMarkers } from './regionMarkers'
+import { buildGuMarkers, worstRegionByDistrict } from './regionMarkers'
 
 const NO_MARKERS: MapMarker[] = []
 
@@ -25,6 +25,11 @@ export function useRegionMarkers(quarter?: string) {
     () => (query.data && centroids ? buildGuMarkers(query.data.regions, centroids) : NO_MARKERS),
     [query.data, centroids],
   )
+  // 구 → 대표(최악 등급) 상권 — 마커/랭킹에서 구 선택 시 상세 조회할 regionCode
+  const regionByDistrict = useMemo(
+    () => (query.data ? worstRegionByDistrict(query.data.regions) : null),
+    [query.data],
+  )
 
-  return { markers, centroids, quarter: query.data?.quarter }
+  return { markers, centroids, regionByDistrict, quarter: query.data?.quarter }
 }

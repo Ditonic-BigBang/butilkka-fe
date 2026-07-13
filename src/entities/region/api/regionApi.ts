@@ -1,6 +1,7 @@
 import { apiJson } from '@/shared/api/api'
 import type {
   RankingOrder,
+  RegionDetailResponse,
   RegionMapResponse,
   RegionRankingResponse,
   RegionSearchItem,
@@ -12,6 +13,7 @@ export const regionKeys = {
   ranking: (order: RankingOrder, quarter?: string) =>
     [...regionKeys.all, 'ranking', order, quarter ?? 'latest'] as const,
   search: (keyword: string) => [...regionKeys.all, 'search', keyword] as const,
+  detail: (regionCode: string) => [...regionKeys.all, 'detail', regionCode] as const,
 }
 
 /** GET /api/v1/regions/map — 상권별 쇠퇴등급 (quarter 미지정 시 최신) */
@@ -35,4 +37,9 @@ export function searchRegions(keyword: string): Promise<RegionSearchItem[]> {
   return apiJson<RegionSearchItem[]>(
     `/api/v1/regions/search?keyword=${encodeURIComponent(keyword)}`,
   )
+}
+
+/** GET /api/v1/districts/{regionCode} — 특정 상권 상세 (URI 명칭과 달리 path 는 상권코드) */
+export function fetchRegionDetail(regionCode: string): Promise<RegionDetailResponse> {
+  return apiJson<RegionDetailResponse>(`/api/v1/districts/${encodeURIComponent(regionCode)}`)
 }

@@ -10,7 +10,14 @@ import type {
 } from '@/entities/report'
 import type { DashboardResponse } from '@/entities/dashboard'
 import type { NotificationListResponse } from '@/entities/notification'
-import type { RankingOrder, RegionMapResponse, RegionRankingResponse } from '@/entities/region'
+import type {
+  RankingOrder,
+  RegionDetailResponse,
+  RegionGrade,
+  RegionMapItem,
+  RegionMapResponse,
+  RegionRankingResponse,
+} from '@/entities/region'
 
 /** GET /api/v1/dashboard 데모 데이터 (명세 예시 기반) */
 export const dashboardMock: DashboardResponse = {
@@ -459,4 +466,85 @@ export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
       },
     ],
   },
+}
+
+// 상세 추이 12분기 (regions/map 최신 분기 2026Q1 기준 최근 3년)
+const DETAIL_QUARTERS = [
+  '2023Q2',
+  '2023Q3',
+  '2023Q4',
+  '2024Q1',
+  '2024Q2',
+  '2024Q3',
+  '2024Q4',
+  '2025Q1',
+  '2025Q2',
+  '2025Q3',
+  '2025Q4',
+  '2026Q1',
+]
+
+const GRADE_ORDER: RegionGrade[] = ['A', 'B', 'C', 'D', 'E']
+// 현재 등급으로 수렴하는 결정적 오프셋 패턴 (마지막 = 현재, 직전 = 한 단계 양호 → 지난 분기 pill)
+const TREND_OFFSETS = [-2, -2, -1, -2, -1, -1, 0, -1, -1, 0, -1, 0]
+
+/**
+ * GET /api/v1/districts/{regionCode} 데모 데이터 — 지도 목(regionMapMock)의 상권 등급과
+ * 일치하는 상세 응답을 만든다. 등급 추이는 현재 등급으로 수렴하는 고정 패턴,
+ * 수치 지표는 명세 예시 값 기반.
+ */
+export function makeRegionDetailMock(region: RegionMapItem): RegionDetailResponse {
+  const currentIndex = GRADE_ORDER.indexOf(region.grade)
+  const trend = DETAIL_QUARTERS.map((quarter, i) => ({
+    quarter,
+    grade: GRADE_ORDER[Math.min(4, Math.max(0, currentIndex + TREND_OFFSETS[i]))],
+  }))
+
+  return {
+    regionCode: region.regionCode,
+    district: region.district,
+    regionName: region.regionName,
+    quarter: '2026Q1',
+    declineGrade: {
+      current: region.grade,
+      previous: trend[trend.length - 2].grade,
+      trend,
+    },
+    rentRatio: {
+      value: 1850000,
+      changeRate: 4.2,
+      direction: 'UP',
+      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 1620000 + i * 21000 })),
+    },
+    footTraffic: {
+      value: 121940,
+      changeRate: -4.8,
+      direction: 'DOWN',
+      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 140210 - i * 1660 })),
+    },
+    vacancyRate: {
+      value: 8.6,
+      changeRate: 2.1,
+      direction: 'UP',
+      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 5.2 + i * 0.3 })),
+    },
+    closureRate: {
+      value: 3.9,
+      changeRate: 0.5,
+      direction: 'UP',
+      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 2.4 + i * 0.13 })),
+      avgOperatingYears: 3.2,
+      seoulAvgOperatingYears: 4.1,
+    },
+    storeCount: {
+      value: 398,
+      changeCount: -7,
+      direction: 'DOWN',
+      trend: DETAIL_QUARTERS.map((quarter, i) => ({ quarter, value: 430 - i * 3 })),
+      categoryDistribution: [
+        { category: '한식음식점', count: 92 },
+        { category: '커피-음료', count: 74 },
+      ],
+    },
+  }
 }

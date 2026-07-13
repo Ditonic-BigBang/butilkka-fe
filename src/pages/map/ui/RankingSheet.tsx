@@ -17,6 +17,8 @@ type RankingSheetProps = {
   order: RankingOrder
   onOrderChange: (order: RankingOrder) => void
   rows: RankingRow[]
+  /** 순위 행 탭 — 해당 구 쇠퇴등급 상세로 진입 */
+  onRowClick?: (row: RankingRow) => void
   isPending?: boolean
   isError?: boolean
   onRetry?: () => void
@@ -32,6 +34,7 @@ export function RankingSheet({
   order,
   onOrderChange,
   rows,
+  onRowClick,
   isPending = false,
   isError = false,
   onRetry,
@@ -86,6 +89,7 @@ export function RankingSheet({
             name={row.name}
             grade={row.grade}
             direction={row.direction}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
           />
         ))}
       </div>

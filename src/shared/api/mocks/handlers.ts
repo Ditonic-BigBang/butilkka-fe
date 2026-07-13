@@ -3,6 +3,7 @@ import {
   dashboardMock,
   declineRankingMock,
   makeNotificationsMock,
+  makeRegionDetailMock,
   makeReportDetailMock,
   makeReportMock,
   reportCasesMock,
@@ -177,6 +178,18 @@ export const handlers = [
       .filter((r) => r.regionName.includes(keyword) || r.district.includes(keyword))
       .map(({ regionCode, regionName, district }) => ({ regionCode, regionName, district }))
     return ok('상권 검색 성공', matches)
+  }),
+
+  // 특정 상권 상세 — path 는 상권코드 (URI 명칭 districts 와 달리 regionCode)
+  http.get(`${API}/api/v1/districts/:regionCode`, ({ params }) => {
+    const region = regionMapMock.regions.find((r) => r.regionCode === params.regionCode)
+    if (!region) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 상권코드입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    return ok('상권 상세 조회 성공', makeRegionDetailMock(region))
   }),
 
   // 즐겨찾는 상권 조회/등록/해제
