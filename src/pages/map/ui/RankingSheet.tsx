@@ -198,18 +198,8 @@ export function RankingSheet({
       </div>
       <div className="h-px w-full bg-gray-90" />
 
-      {/* 랭킹 모드는 접힘 상태에서도 정렬 탭까지 노출 */}
-      {!detail && (
-        <div className="w-full px-5 pt-3 pb-1">
-          <Tabs
-            options={orderTabs}
-            value={order}
-            onChange={(value) => onOrderChange(value as RankingOrder)}
-          />
-        </div>
-      )}
-
-      {/* 본문 — 접힘 상태에서도 상단 일부(순위 몇 줄)가 보이게 max-height 로 전환 */}
+      {/* 본문 — 접힘 상태에서도 상단 일부가 보이게 max-height 로 전환.
+          랭킹 정렬 탭도 이 안에 두어 전체/구 선택 모드의 접힘 높이가 같다. */}
       <div
         className={cn(
           'overflow-hidden transition-[max-height] duration-300 ease-out',
@@ -221,6 +211,13 @@ export function RankingSheet({
             renderDetail(detail)
           ) : (
             <>
+              <div className="w-full px-5 pt-3 pb-1">
+                <Tabs
+                  options={orderTabs}
+                  value={order}
+                  onChange={(value) => onOrderChange(value as RankingOrder)}
+                />
+              </div>
               <div className="flex flex-col p-5 pt-2">{renderRankingList()}</div>
               {averagePeriod && (
                 <>
