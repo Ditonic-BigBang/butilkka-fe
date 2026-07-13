@@ -367,7 +367,7 @@ export function makeNotificationsMock(): NotificationListResponse {
  * 등급 분포는 declineRankingMock(top: 서대문E→광진E→노원D→용산D→강서C)과 일치.
  */
 export const regionMapMock: RegionMapResponse = {
-  quarter: '2026Q1',
+  quarter: '2025Q4',
   regions: [
     { regionCode: '3110001', regionName: '신촌', district: '서대문구', grade: 'C' },
     { regionCode: '3110002', regionName: '이대역', district: '서대문구', grade: 'E' },
@@ -390,7 +390,7 @@ export const regionMapMock: RegionMapResponse = {
 export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
   top: {
     order: 'top',
-    quarter: '2026Q1',
+    quarter: '2025Q4',
     regions: [
       {
         rank: 1,
@@ -431,7 +431,7 @@ export const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
   },
   bottom: {
     order: 'bottom',
-    quarter: '2026Q1',
+    quarter: '2025Q4',
     regions: [
       {
         rank: 1,
@@ -591,7 +591,7 @@ const metricMapMocks = Object.fromEntries(
     metric,
     {
       metric: metric as MetricKey,
-      quarter: '2026Q1',
+      quarter: '2025Q4',
       regions: regionMapMock.regions.map(({ regionCode, regionName, district }) => ({
         regionCode,
         regionName,
@@ -649,8 +649,9 @@ export function makeMetricRankingMock(
   }
 }
 
-// 상세 추이 12분기 (regions/map 최신 분기 2026Q1 기준 최근 3년)
+// 상세 추이 12분기 (regions/map 최신 분기 2025Q4 기준 최근 3년 — 2026년 데이터 없음)
 const DETAIL_QUARTERS = [
+  '2023Q1',
   '2023Q2',
   '2023Q3',
   '2023Q4',
@@ -662,7 +663,6 @@ const DETAIL_QUARTERS = [
   '2025Q2',
   '2025Q3',
   '2025Q4',
-  '2026Q1',
 ]
 
 const GRADE_ORDER: RegionGrade[] = ['A', 'B', 'C', 'D', 'E']
@@ -714,7 +714,7 @@ export function makeRegionDetailMock(region: RegionMapItem): RegionDetailRespons
     regionCode: region.regionCode,
     district: region.district,
     regionName: region.regionName,
-    quarter: '2026Q1',
+    quarter: '2025Q4',
     declineGrade: {
       current: region.grade,
       previous: trend[trend.length - 2].grade,
