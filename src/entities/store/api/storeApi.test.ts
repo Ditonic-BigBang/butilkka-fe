@@ -12,7 +12,7 @@ describe('putMyStore — 저장한 주소 반영', () => {
       lng: 126.9857,
       storeName: '명동 쌀국수',
       storeOpenDate: '2022-08-15',
-      address: '서울 중구 명동10길 52',
+      storeAddress: '서울 중구 명동10길 52',
     })
 
     // 내 가게 목록 — 하드코딩(강남 신사동) 아닌 전송값이 저장돼야 한다
@@ -36,7 +36,7 @@ describe('createStore — 새 가게 추가', () => {
       lng: 127,
       storeName: '대표 가게',
       storeOpenDate: '2020-01-01',
-      address: '서울 강남구 신사동',
+      storeAddress: '서울 강남구 신사동',
     })
     await createStore({
       regionCode: '3110001',
@@ -45,7 +45,7 @@ describe('createStore — 새 가게 추가', () => {
       lng: 126.9857,
       storeName: '명동 신규점',
       storeOpenDate: '2023-05-05',
-      address: '서울 중구 명동10길 52',
+      storeAddress: '서울 중구 명동10길 52',
     })
 
     const stores = await getMyStores()

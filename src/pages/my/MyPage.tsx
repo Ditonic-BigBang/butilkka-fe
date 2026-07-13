@@ -5,7 +5,7 @@ import { MobileLayout } from '@/widgets/mobile-layout'
 import { SettingRow, Tag, Toggle, ToastHost } from '@/shared/ui'
 import { ReportProUpgradeCard, ReportProActiveCard } from '@/entities/report'
 import { useAuthStore, useIsAuthenticated } from '@/entities/session'
-import type { NotificationSettings } from '@/shared/api/types'
+import type { NotificationSettings } from '@/entities/notification'
 import {
   useNotificationSettings,
   useUpdateNotificationSettings,

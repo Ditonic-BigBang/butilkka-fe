@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { NotificationCategory } from '@/shared/api/types'
-import { getNotifications, markNotificationRead, notificationKeys } from './notificationApi'
+import {
+  getNotifications,
+  markNotificationRead,
+  notificationKeys,
+  type NotificationCategory,
+} from '@/entities/notification'
 import { categoryLabel, formatSentAt } from '../lib/notificationFormat'
 
 /** 화면에서 쓰는 알림 뷰모델 (NotificationItem props 로 바로 매핑) */

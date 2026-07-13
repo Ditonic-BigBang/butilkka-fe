@@ -38,9 +38,9 @@ type TrendGraphProps = {
 const GRADE_TICKS = [1, 2, 3, 4, 5]
 const GRADE_LABEL: Record<number, string> = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' }
 
-const KEY = '#ff621b'
-const GRID = '#e4e4e4'
-const AXIS_TEXT = '#acacac'
+const KEY = 'var(--color-key)'
+const GRID = 'var(--color-gray-100)'
+const AXIS_TEXT = 'var(--color-gray-300)'
 const Y_AXIS_WIDTH = 30
 const RIGHT_MARGIN = 8
 const PERCENT_TICK_COUNT = 4 // 3칸
@@ -89,7 +89,7 @@ function PillLabel(props: {
   const rectY = Math.max(2, y - 36) // 점 위 12px 간격 (pill 높이 24)
   return (
     <g>
-      <rect x={rectX} y={rectY} width={w} height={24} rx={8} fill="#474747" />
+      <rect x={rectX} y={rectY} width={w} height={24} rx={8} fill="var(--color-gray-700)" />
       <text
         x={rectX + w / 2}
         y={rectY + 13}
@@ -97,7 +97,7 @@ function PillLabel(props: {
         dominantBaseline="middle"
         fontSize={12}
         fontWeight={500}
-        fill="#fff"
+        fill="white"
       >
         {text}
       </text>
@@ -220,7 +220,7 @@ export function TrendGraph({
                   x={active.label}
                   y={active.value}
                   r={4}
-                  fill="#fff"
+                  fill="white"
                   stroke={KEY}
                   strokeWidth={2}
                   label={<PillLabel text={pillText} align={pillAlign} />}

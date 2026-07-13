@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
+import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
@@ -48,8 +49,8 @@ export default function SubscriptionPage() {
   const navigate = useNavigate()
   const [plan, setPlan] = useState<PlanKey>('annual')
   const subscription = useSubscribe()
-  // 상단 그라데이션 시작색(#ffd6ad)을 노치·상태바까지 이어 보이게 (Android 상태바 색)
-  useThemeColor('#ffd6ad')
+  // 상단 그라데이션 시작색을 노치·상태바까지 이어 보이게 (Android 상태바 색)
+  useThemeColor(THEME_COLORS.subscriptionWarm)
 
   const handleSubscribe = () => {
     subscription.mutate(plan, {
@@ -59,7 +60,7 @@ export default function SubscriptionPage() {
 
   return (
     // className: 프레임(노치 영역 포함) 배경을 그라데이션 시작색으로 → iOS 노치가 헤더와 이어짐
-    <MobileLayout showBottomTab={false} className="bg-[#ffd6ad]">
+    <MobileLayout showBottomTab={false} className="bg-subscription-warm">
       <div className="relative flex min-h-full flex-col bg-white">
         {/* 상단 웜 그라데이션 (헤더 배경) — Gradation/3 */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[442px] bg-gradation-3" />

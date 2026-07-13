@@ -72,6 +72,10 @@ const reportHistoryState = structuredClone(reportHistoryMock)
 // 온보딩에서 저장한 대표 가게 요약 — 대시보드·리포트 목이 이걸 반영해
 // 홈/리포트 헤더에 사용자가 입력한 가게 기준 상권이 뜬다(실서버 동작과 동일).
 // 자치구는 도로명 주소("서울 강남구 …")에서 추출, 없으면 목 기본값 유지.
+// 주소에서 자치구 토큰("~구") 추출 — 목 리포트 헤더(districtName)용
+const districtFromAddress = (address?: string) =>
+  address?.split(' ').find((token) => token.endsWith('구'))
+
 function primaryStoreSummary() {
   const primary = mockStores.find((s) => s.isPrimary)
   if (!primary) return null
@@ -79,9 +83,12 @@ function primaryStoreSummary() {
     regionCode: primary.regionCode || dashboardMock.store.regionCode,
     regionName: primary.regionName ?? dashboardMock.store.regionName,
     categoryName: primary.categoryName ?? dashboardMock.store.categoryName,
+    // 실서버 dashboard store 계약(address) — 홈 위치 pill 폴백이 이걸 쓴다
+    address: primary.address ?? dashboardMock.store.address,
     district:
-      primary.address?.split(' ').find((token) => token.endsWith('구')) ??
-      dashboardMock.store.district,
+      districtFromAddress(primary.address) ??
+      districtFromAddress(dashboardMock.store.address) ??
+      '',
   }
 }
 
@@ -145,8 +152,8 @@ export const handlers = [
       {
         storeId: 1,
         storeName: typeof body.storeName === 'string' ? body.storeName : '내 가게',
-        // 온보딩에서 선택한 도로명 주소를 그대로 저장(실서버 store.address 와 동일 계약)
-        address: typeof body.address === 'string' ? body.address : undefined,
+        // 요청은 storeAddress, 저장·응답은 address (실서버 스웨거와 동일 계약)
+        address: typeof body.storeAddress === 'string' ? body.storeAddress : undefined,
         storeOpenDate: typeof body.storeOpenDate === 'string' ? body.storeOpenDate : undefined,
         regionCode: String(body.regionCode ?? ''),
         regionName: '가로수길',
@@ -171,7 +178,7 @@ export const handlers = [
     const store = {
       storeId: nextId,
       storeName: typeof body.storeName === 'string' ? body.storeName : '내 가게',
-      address: typeof body.address === 'string' ? body.address : undefined,
+      address: typeof body.storeAddress === 'string' ? body.storeAddress : undefined,
       storeOpenDate: typeof body.storeOpenDate === 'string' ? body.storeOpenDate : undefined,
       regionCode: String(body.regionCode ?? ''),
       regionName: '가로수길', // 목: 실서버는 regionCode 로 조회해 채운다
@@ -195,13 +202,14 @@ export const handlers = [
         { status: 404 },
       )
     }
-    const { isPrimary, ...rest } = (await request.json()) as Record<string, unknown>
+    const { isPrimary, storeAddress, ...rest } = (await request.json()) as Record<string, unknown>
     // isPrimary: true 면 기존 대표를 해제하고 이 가게로 교체
     if (isPrimary === true) {
       for (const s of mockStores) s.isPrimary = s.storeId === id
     }
-    // 나머지 필드(이름·주소·창업일·좌표 등)는 부분 갱신
+    // 나머지 필드(이름·창업일·좌표 등)는 부분 갱신 — 요청 storeAddress 는 저장 필드 address 로 매핑
     Object.assign(target, rest)
+    if (typeof storeAddress === 'string') target.address = storeAddress
     return ok('가게 정보 수정 성공', target)
   }),
 

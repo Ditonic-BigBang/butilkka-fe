@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { NotificationItem } from '@/shared/ui'
+import { EmptyState, ErrorRetry, NotificationItem } from '@/shared/ui'
 import { useNotifications, useMarkNotificationRead } from './model/useNotifications'
 
 /**
@@ -24,23 +24,14 @@ export default function NotificationsPage() {
     content = <NotificationSkeleton />
   } else if (notifications.isError) {
     content = (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-        <p className="text-body-l-medium text-gray-500">알림을 불러오지 못했어요</p>
-        <button
-          type="button"
-          onClick={() => notifications.refetch()}
-          className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-        >
-          다시 시도
-        </button>
-      </div>
+      <ErrorRetry
+        message="알림을 불러오지 못했어요"
+        onRetry={() => notifications.refetch()}
+        className="flex-1 justify-center"
+      />
     )
   } else if (notifications.data.length === 0) {
-    content = (
-      <p className="flex flex-1 items-center justify-center py-20 text-body-l-medium text-gray-400">
-        도착한 알림이 없어요
-      </p>
-    )
+    content = <EmptyState message="도착한 알림이 없어요" className="flex-1" />
   } else {
     content = (
       <ul className="flex flex-col pt-3">

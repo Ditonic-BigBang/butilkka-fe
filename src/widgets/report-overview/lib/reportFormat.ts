@@ -1,4 +1,4 @@
-import type { ReportGrade, ReportRecommendation } from '@/shared/api/types'
+import type { ReportGrade, ReportRecommendation } from '@/entities/report'
 
 /** 쇠퇴 등급 → 상태 칩 라벨 (CurrentDistrictCard 와 동일 스케일) */
 export const GRADE_STATUS: Record<ReportGrade, string> = {

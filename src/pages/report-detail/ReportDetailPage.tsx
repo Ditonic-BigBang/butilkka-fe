@@ -2,7 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Undo from '~icons/ci/undo'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { ReportOverview, ReportOverviewSkeleton } from '@/widgets/report-overview'
+import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
+import { ErrorRetry } from '@/shared/ui'
 import { useReportDetail } from './model/useReportDetail'
 
 /**
@@ -16,24 +18,13 @@ export default function ReportDetailPage() {
   const { reportId } = useParams()
   const report = useReportDetail(Number(reportId))
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
-  useThemeColor('#f7f7f7')
+  useThemeColor(THEME_COLORS.surfaceGray)
 
   let content
   if (report.isPending) {
     content = <ReportOverviewSkeleton />
   } else if (report.isError) {
-    content = (
-      <div className="flex flex-col items-center gap-3 py-20 text-center">
-        <p className="text-body-l-medium text-gray-500">리포트를 불러오지 못했어요</p>
-        <button
-          type="button"
-          onClick={() => report.refetch()}
-          className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-        >
-          다시 시도
-        </button>
-      </div>
-    )
+    content = <ErrorRetry message="리포트를 불러오지 못했어요" onRetry={() => report.refetch()} />
   } else {
     content = (
       <ReportOverview

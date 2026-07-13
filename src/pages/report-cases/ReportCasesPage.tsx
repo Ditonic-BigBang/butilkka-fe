@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { Dropdown, DropdownOption, SortTrigger } from '@/shared/ui'
+import { Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
 import { SimilarCaseCard } from '@/entities/report'
 import { CASE_SORT_LABELS, useReportCases, type CaseSortOrder } from './model/useReportCases'
 
@@ -28,23 +28,14 @@ export default function ReportCasesPage() {
     content = <CasesSkeleton />
   } else if (cases.isError) {
     content = (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-        <p className="text-body-l-medium text-gray-500">유사 사례를 불러오지 못했어요</p>
-        <button
-          type="button"
-          onClick={() => cases.refetch()}
-          className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-        >
-          다시 시도
-        </button>
-      </div>
+      <ErrorRetry
+        message="유사 사례를 불러오지 못했어요"
+        onRetry={() => cases.refetch()}
+        className="flex-1 justify-center"
+      />
     )
   } else if (cases.data.length === 0) {
-    content = (
-      <p className="flex flex-1 items-center justify-center py-20 text-body-l-medium text-gray-400">
-        수집된 유사 사례가 없어요
-      </p>
-    )
+    content = <EmptyState message="수집된 유사 사례가 없어요" className="flex-1" />
   } else {
     content = (
       <ul className="flex stagger-fade-up flex-col gap-3 px-5 pb-6">

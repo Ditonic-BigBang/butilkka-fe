@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout } from '@/widgets/mobile-layout'
 import { ReportOverview, ReportOverviewSkeleton } from '@/widgets/report-overview'
+import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { formatQuarter } from '@/shared/lib/quarter'
+import { ErrorRetry } from '@/shared/ui'
 import { ReportLinkButton } from '@/entities/report'
 import { useAuthStore } from '@/entities/session'
 import { useLatestReport, useReportHistory } from './model/useLatestReport'
@@ -20,7 +22,7 @@ export default function ReportPage() {
   const report = useLatestReport()
   const history = useReportHistory()
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
-  useThemeColor('#f7f7f7')
+  useThemeColor(THEME_COLORS.surfaceGray)
 
   // 이전 분기 리포트 (히스토리에서 현재 분기보다 앞선 첫 항목) — 없으면 버튼 숨김
   const previous = report.data
@@ -31,7 +33,7 @@ export default function ReportPage() {
   if (report.isPending) {
     content = <ReportOverviewSkeleton />
   } else if (report.isError) {
-    content = <ReportError onRetry={() => report.refetch()} />
+    content = <ErrorRetry message="리포트를 불러오지 못했어요" onRetry={() => report.refetch()} />
   } else {
     content = (
       <ReportOverview
@@ -78,21 +80,5 @@ function ReportHeader({ region, category }: { region?: string; category?: string
         </div>
       )}
     </header>
-  )
-}
-
-/** 에러 — 재시도 */
-function ReportError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-20 text-center">
-      <p className="text-body-l-medium text-gray-500">리포트를 불러오지 못했어요</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-      >
-        다시 시도
-      </button>
-    </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { HomePage } from '@/pages/home'
 import { MapPage } from '@/pages/map'
 import { LoginPage } from '@/pages/login'
@@ -37,6 +37,14 @@ function AuthBootstrap() {
   return null
 }
 
+// 비로그인 접근 차단 — SessionGate 통과 후 렌더되므로 status 는 authenticated/anonymous 로 확정.
+// MSW 데모는 목 /me 가 항상 로그인을 줘서 필요 없었지만, 실서버는 미인증(403)이 실제로 발생한다.
+function RequireAuth() {
+  const status = useAuthStore((s) => s.status)
+  if (status !== 'authenticated') return <Navigate to="/login" replace />
+  return <Outlet />
+}
+
 // 세션 확인(idle/checking) 동안 스플래시 표시 → 로그인 UI 깜빡임·조기 리다이렉트 방지.
 // 콜백 페이지(/auth/kakao)는 자체 navigate 처리가 돌아야 하므로 게이트에서 제외.
 function SessionGate({ children }: { children: ReactNode }) {
@@ -63,24 +71,26 @@ export default function App() {
       <AuthBootstrap />
       <SessionGate>
         <Routes>
-          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/kakao" element={<AuthCallbackPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/report" element={<ReportPage />} />
-          <Route path="/report/history" element={<ReportHistoryPage />} />
-          <Route path="/report/:reportId" element={<ReportDetailPage />} />
-          <Route path="/report/:reportId/cases" element={<ReportCasesPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/my" element={<MyPage />} />
-          <Route path="/my/store" element={<MyStorePage />} />
-          <Route path="/my/store/new" element={<MyStoreEditPage />} />
-          <Route path="/my/store/:storeId/edit" element={<MyStoreEditPage />} />
-          <Route path="/my/category" element={<MyCategoryPage />} />
-          <Route path="/my/subscription" element={<SubscriptionPage />} />
-          <Route path="/my/subscription/complete" element={<SubscriptionCompletePage />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/report" element={<ReportPage />} />
+            <Route path="/report/history" element={<ReportHistoryPage />} />
+            <Route path="/report/:reportId" element={<ReportDetailPage />} />
+            <Route path="/report/:reportId/cases" element={<ReportCasesPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/my" element={<MyPage />} />
+            <Route path="/my/store" element={<MyStorePage />} />
+            <Route path="/my/store/new" element={<MyStoreEditPage />} />
+            <Route path="/my/store/:storeId/edit" element={<MyStoreEditPage />} />
+            <Route path="/my/category" element={<MyCategoryPage />} />
+            <Route path="/my/subscription" element={<SubscriptionPage />} />
+            <Route path="/my/subscription/complete" element={<SubscriptionCompletePage />} />
+          </Route>
         </Routes>
       </SessionGate>
     </BrowserRouter>
