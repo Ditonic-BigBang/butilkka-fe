@@ -2,9 +2,10 @@ import { preload } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router-dom'
 import storeIllustration from '@/shared/assets/illustrations/store.png'
 import { MobileLayout } from '@/widgets/mobile-layout'
+import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { CurrentDistrictCard } from '@/entities/district'
-import { MetricTrendCard } from '@/shared/ui'
+import { ErrorRetry, MetricTrendCard } from '@/shared/ui'
 import { useAuthStore, useIsAuthenticated } from '@/entities/session'
 import { useHomeDashboard, type HomeDashboard } from './model/useHomeDashboard'
 import { HomeHeader } from './ui/HomeHeader'
@@ -26,7 +27,7 @@ export default function HomePage() {
   const user = useAuthStore((s) => s.user)
   const dashboard = useHomeDashboard()
   // 홈 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
-  useThemeColor('#f7f7f7')
+  useThemeColor(THEME_COLORS.surfaceGray)
 
   // 위치 pill — 마이페이지처럼 온보딩에서 저장한 가게 주소 기준, "서울" 접두만 생략
   // (예: "서울 중구 충무로2가 111" → "중구 충무로2가 111"). 주소 없으면 상권명으로 폴백.
@@ -39,7 +40,9 @@ export default function HomePage() {
   if (dashboard.isPending) {
     content = <DashboardSkeleton />
   } else if (dashboard.isError) {
-    content = <DashboardError onRetry={() => dashboard.refetch()} />
+    content = (
+      <ErrorRetry message="대시보드를 불러오지 못했어요" onRetry={() => dashboard.refetch()} />
+    )
   } else {
     content = <DashboardContent data={dashboard.data} />
   }
@@ -99,22 +102,6 @@ function DashboardSkeleton() {
         <div className="h-[168px] animate-pulse rounded-12 bg-white" />
         <div className="h-[168px] animate-pulse rounded-12 bg-white" />
       </div>
-    </div>
-  )
-}
-
-/** 에러 — 재시도 */
-function DashboardError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-20 text-center">
-      <p className="text-body-l-medium text-gray-500">대시보드를 불러오지 못했어요</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-      >
-        다시 시도
-      </button>
     </div>
   )
 }

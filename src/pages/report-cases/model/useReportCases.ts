@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchReportCases, reportKeys } from '@/entities/report'
-import type { ReportCaseDto } from '@/shared/api/types'
+import { fetchReportCases, reportKeys, type ReportCaseDto } from '@/entities/report'
 
 /** 정렬 순서 — 기간순(기본, 최근 기간 먼저)/추천순(서버 순서 = 유사도) */
 export type CaseSortOrder = 'period' | 'recommended'

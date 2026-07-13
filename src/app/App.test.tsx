@@ -25,6 +25,16 @@ describe('App', () => {
     useAuthStore.setState({ user: null, status: 'idle' })
   })
 
+  it('비로그인 사용자는 로그인 페이지로 이동한다', async () => {
+    // 실서버 특성 재현: 미인증 /me = 403, refresh = 401 (쿠키 없음)
+    server.use(
+      http.get(`${API}/api/v1/users/me`, () => new HttpResponse(null, { status: 403 })),
+      http.post(`${API}/api/v1/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
+    )
+    renderApp()
+    expect(await screen.findByRole('button', { name: /카카오 로그인/ })).toBeInTheDocument()
+  })
+
   it('미온보딩 사용자는 온보딩(약관 동의)으로 이동한다', async () => {
     // 기본 mock: isOnboarded=false → 홈 게이트가 /onboarding 으로 보낸다
     renderApp()
@@ -44,6 +54,7 @@ describe('App', () => {
     )
     renderApp()
     // 대시보드(GET /api/v1/dashboard) 목이 로드되면 헤더에 내 상권 위치가 뜬다 = 홈 렌더 성공
-    expect(await screen.findByText('강남구 가로수길')).toBeInTheDocument()
+    // (위치 폴백 = dashboard.store.address 에서 "서울" 접두를 뗀 값)
+    expect(await screen.findByText('강남구 신사동')).toBeInTheDocument()
   })
 })

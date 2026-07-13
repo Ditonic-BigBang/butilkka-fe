@@ -1,5 +1,5 @@
 import { apiJson } from '@/shared/api/api'
-import type { ReportCasesResponse, ReportHistoryResponse, ReportResponse } from '@/shared/api/types'
+import type { ReportCasesResponse, ReportHistoryResponse, ReportResponse } from './types'
 
 /**
  * reports 쿼리 키 팩토리 (TkDodo 패턴).

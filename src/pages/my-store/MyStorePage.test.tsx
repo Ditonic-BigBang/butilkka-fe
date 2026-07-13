@@ -77,12 +77,10 @@ describe('MyStorePage', () => {
     )
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '가게 B' }))
+    fireEvent.click(await screen.findByRole('button', { name: '가게 B' }, { timeout: 5000 }))
 
-    // 클릭 즉시 마이페이지로 이동
-    expect(await screen.findByText('마이페이지 화면')).toBeInTheDocument()
-    // 대표 지정 PATCH 도 발사됨(가게 B)
     await waitFor(() => expect(patchedId).toBe(2))
+    expect(await screen.findByText('마이페이지 화면')).toBeInTheDocument()
   })
 
   it('신규 등록 직후(state.toast) 하단 토스트를 표시하고 2.5초 뒤 사라진다', async () => {

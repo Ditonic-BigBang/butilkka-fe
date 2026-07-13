@@ -60,7 +60,7 @@ export default function LoginPage() {
             type="button"
             onClick={redirectToKakaoLogin}
             disabled={!configured}
-            className="flex h-14 w-full items-center justify-center gap-3.5 rounded-8 bg-[#fee500] text-body-l-semibold text-black/85 transition-[filter] active:brightness-95 disabled:pointer-events-none disabled:opacity-50"
+            className="flex h-14 w-full items-center justify-center gap-3.5 rounded-8 bg-kakao-yellow text-body-l-semibold text-black/85 transition-[filter] active:brightness-95 disabled:pointer-events-none disabled:opacity-50"
           >
             <KakaoSymbol />
             카카오 로그인

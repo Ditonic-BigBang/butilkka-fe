@@ -1,5 +1,5 @@
 import { formatQuarter } from '@/shared/lib/quarter'
-import type { ReportAlternativeRegion, ReportResponse } from '@/shared/api/types'
+import type { ReportAlternativeRegion, ReportResponse } from '@/entities/report'
 import {
   alternativesTitle,
   GRADE_STATUS,
@@ -84,9 +84,10 @@ export function toReportView(d: ReportResponse): ReportView {
     recommendationTitle: RECOMMENDATION_TITLES[d.decision.recommendation],
     reason: { title: d.decision.title, description: d.decision.description },
     alternativesTitle: alternativesTitle(d.decision.recommendation, d.quarter),
-    alternatives: d.alternativeRegions.map((r) => ({
-      rank: r.rank,
-      name: r.regionName,
+    // rank 는 실서버 미제공이라 배열 순서로, 이름은 regionName 도착 전까지 코드로 폴백
+    alternatives: d.alternativeRegions.map((r, i) => ({
+      rank: r.rank ?? i + 1,
+      name: r.regionName ?? r.regionCode ?? r.region_code ?? '',
       description: r.reason,
       stats: toRegionStats(r),
       referenceDate: r.referenceDate ? `${r.referenceDate} 기준` : undefined,

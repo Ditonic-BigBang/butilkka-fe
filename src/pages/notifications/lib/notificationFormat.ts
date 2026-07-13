@@ -1,4 +1,4 @@
-import type { NotificationCategory } from '@/shared/api/types'
+import type { NotificationCategory } from '@/entities/notification'
 
 // 카테고리 enum → 화면 라벨
 const CATEGORY_LABEL: Record<NotificationCategory, string> = {

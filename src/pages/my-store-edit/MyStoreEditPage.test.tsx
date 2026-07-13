@@ -70,7 +70,8 @@ describe('MyStoreEditPage', () => {
     expect(patched).toMatchObject({
       storeName: '새 가게 이름',
       storeOpenDate: '2022-08-15',
-      address: '서울 중구 명동10길 52',
+      // 요청은 storeAddress (스웨거 계약 — 응답의 address 와 필드명이 다름)
+      storeAddress: '서울 중구 명동10길 52',
       regionCode: '3110001',
     })
   })

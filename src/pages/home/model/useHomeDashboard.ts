@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { apiJson } from '@/shared/api/api'
-import type { DashboardResponse, MetricSeries } from '@/shared/api/types'
+import {
+  dashboardKeys,
+  fetchDashboard,
+  type DashboardResponse,
+  type MetricSeries,
+} from '@/entities/dashboard'
 import type { SparkPoint } from '@/shared/ui'
 
 /** 홈 지표 카드 1개 (유동인구·점포수·폐업률) */
@@ -19,17 +23,6 @@ export type HomeDashboard = {
   lastGrade: string
   briefing: string
   metrics: { floating: HomeMetric; stores: HomeMetric; closure: HomeMetric }
-}
-
-/** dashboard 쿼리 키 팩토리 (TkDodo 패턴) */
-export const dashboardKeys = {
-  all: ['dashboard'] as const,
-  detail: () => [...dashboardKeys.all, 'detail'] as const,
-}
-
-/** GET /api/v1/dashboard (명세: envelope.data = DashboardResponse) */
-function fetchDashboard(): Promise<DashboardResponse> {
-  return apiJson<DashboardResponse>('/api/v1/dashboard')
 }
 
 // ── DTO → 뷰모델 매핑 ────────────────────────────────────────────
@@ -55,7 +48,8 @@ function toMetric(title: string, unit: string, m: MetricSeries, withChange = tru
 
 function toHomeDashboard(d: DashboardResponse): HomeDashboard {
   return {
-    location: `${d.store.district} ${d.store.regionName}`,
+    // 위치 pill 폴백 — 주소에서 "서울" 접두만 떼서 표시(HomePage 의 user.store.address 표기와 동일 규칙)
+    location: d.store.address?.replace(/^서울(특별시)?\s+/, '') ?? d.store.regionName,
     grade: d.grade.current as HomeDashboard['grade'],
     lastGrade: `${d.grade.previous}등급`,
     briefing: d.briefing,

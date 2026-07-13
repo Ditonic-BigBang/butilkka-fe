@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchReportHistory, reportKeys } from '@/entities/report'
+import { fetchReportHistory, reportKeys, type ReportHistoryItem } from '@/entities/report'
 import { formatQuarter } from '@/shared/lib/quarter'
-import type { ReportHistoryItem } from '@/shared/api/types'
 
 /** 정렬 순서 — 최신순(기본)/오래된순 */
 export type SortOrder = 'latest' | 'oldest'

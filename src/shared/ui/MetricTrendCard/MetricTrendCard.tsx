@@ -39,7 +39,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
           y1={p.y}
           x2={p.x}
           y2={GUIDE_BOTTOM}
-          stroke="#e4e4e4"
+          stroke="var(--color-gray-100)"
           strokeWidth={1}
           strokeDasharray="3 1.5"
         />
@@ -50,7 +50,7 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
         pathLength={1}
         className="animate-draw-line"
         fill="none"
-        stroke="#ff621b"
+        stroke="var(--color-key)"
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -61,15 +61,22 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
           cx={last.x}
           cy={last.y}
           r={4.5}
-          fill="#fff"
-          stroke="#ff621b"
+          fill="white"
+          stroke="var(--color-key)"
           strokeWidth={2}
           className="animate-pop-in [animation-delay:600ms]"
         />
       )}
       {/* x축 라벨 */}
       {points.map((p) => (
-        <text key={p.label} x={p.x} y={LABEL_Y} textAnchor="middle" fontSize={10} fill="#adadad">
+        <text
+          key={p.label}
+          x={p.x}
+          y={LABEL_Y}
+          textAnchor="middle"
+          fontSize={10}
+          fill="var(--color-gray-300)"
+        >
           {p.label}
         </text>
       ))}

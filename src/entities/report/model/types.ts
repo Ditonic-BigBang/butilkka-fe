@@ -1,33 +1,3 @@
-// 백엔드 응답 DTO (API명세서 V3). envelope 의 `data` 부분 형태 — 실서버/MSW 공통 계약.
-// UI 뷰모델(HomeDashboard, NotificationView 등)은 각 페이지 model 에서 이 DTO 를 매핑해 만든다.
-
-// ── 홈 대시보드 (GET /api/v1/dashboard) ──────────────────────────
-export interface MetricSeries {
-  /** 증감 방향 */
-  direction: 'UP' | 'DOWN'
-  /** 변화율(%) */
-  delta: number
-  /** 절대 증감량 (유동인구=명, 점포/폐업=개) */
-  gap: number
-  /** 최근 3분기 추이 */
-  points: { quarter: string; value: number }[]
-}
-
-export interface DashboardResponse {
-  store: { regionCode: string; regionName: string; categoryName: string; district: string }
-  grade: {
-    /** 이번 분기 등급 A~E */
-    current: string
-    /** 지난 분기 등급 A~E */
-    previous: string
-    /** 게이지 수치 0~100 */
-    gaugeValue: number
-  }
-  briefing: string
-  metrics: { footTraffic: MetricSeries; storeCount: MetricSeries; closureRate: MetricSeries }
-}
-
-// ── AI 리포트 (GET /api/v1/reports/latest · /api/v1/reports/{reportId}) ──
 export type ReportGrade = 'A' | 'B' | 'C' | 'D' | 'E'
 export type ReportDeclineType = '성장형' | '순환형' | '쇠퇴형' | '정체형'
 export type ReportCauseLevel = '높음' | '중간' | '낮음'
@@ -65,9 +35,13 @@ export interface ReportRegionStat {
 }
 
 export interface ReportAlternativeRegion {
-  rank: number
-  regionCode: string
-  regionName: string
+  /** 순위 — 실서버 미제공, 뷰에서 배열 순서로 대체 */
+  rank?: number
+  regionCode?: string
+  /** 실서버가 스네이크케이스로 내려줌 — regionCode 통일 요청 중(백엔드) */
+  region_code?: string
+  /** 상권 이름 — 실서버 미제공(백엔드 추가 요청 중), 오기 전까진 코드로 폴백 표시 */
+  regionName?: string
   reason: string
   /** 핵심 지표 한 줄 (예: "유동인구 +6.2%") — stats 없을 때 타일 1개로 폴백 */
   stat: string
@@ -101,7 +75,6 @@ export interface ReportResponse {
   alternativeRegions: ReportAlternativeRegion[]
 }
 
-// ── 유사 사례 전체 목록 (GET /api/v1/reports/{reportId}/cases) ────
 export interface ReportCaseDto {
   caseId: string
   regionCode: string
@@ -123,7 +96,6 @@ export interface ReportCasesResponse {
   cases: ReportCaseDto[]
 }
 
-// ── 리포트 히스토리 (GET /api/v1/reportsHistory) ──────────────────
 export interface ReportHistoryItem {
   reportId: number
   quarter: string
@@ -137,47 +109,4 @@ export interface ReportHistoryResponse {
   totalCount: number
   hasNext: boolean
   reports: ReportHistoryItem[]
-}
-
-// ── 구독 (POST /api/v1/users/me/subscription — 명세 미반영 선규격) ──
-export type SubscriptionPlan = 'ANNUAL' | 'MONTHLY'
-
-export interface SubscriptionResponse {
-  /** 구독 후 리포트 PRO 여부 (GET /users/me 의 isReportPro 와 동일 의미) */
-  isReportPro: boolean
-  plan: SubscriptionPlan
-}
-
-// ── 알림 설정 (GET/PATCH /api/v1/users/me/notification-settings) ──
-export interface NotificationSettings {
-  /** SMS(카카오톡) 알림 연동 */
-  smsAlert: boolean
-  /** 분기별 자동 리포트 */
-  autoReport: boolean
-  /** 이상(비상) 신호 즉시 알림 */
-  urgentAlert: boolean
-}
-
-// ── 알림 (GET /api/v1/notifications, PATCH …/{id}) ────────────────
-export type NotificationCategory = 'EMERGENCY' | 'REPORT' | 'SYSTEM'
-
-export interface NotificationDto {
-  notificationId: number
-  category: NotificationCategory
-  title: string
-  content: string
-  isRead: boolean
-  /** 발송 일시 (ISO 8601, 오프셋 없음 — 예: "2026-06-20T09:00:00") */
-  sentAt: string
-}
-
-export interface NotificationListResponse {
-  totalCount: number
-  hasNext: boolean
-  notifications: NotificationDto[]
-}
-
-export interface NotificationReadResponse {
-  notificationId: number
-  isRead: boolean
 }

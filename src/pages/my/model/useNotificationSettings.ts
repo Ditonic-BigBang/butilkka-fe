@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { NotificationSettings } from '@/shared/api/types'
 import {
   getNotificationSettings,
-  patchNotificationSettings,
   notificationSettingsKeys,
-} from './notificationSettingsApi'
+  patchNotificationSettings,
+  type NotificationSettings,
+} from '@/entities/notification'
 
 /** 알림 설정 조회 훅 (GET /api/v1/users/me/notification-settings) */
 export function useNotificationSettings() {

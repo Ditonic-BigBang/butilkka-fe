@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { Dropdown, DropdownOption, SortTrigger } from '@/shared/ui'
-import { ReportCard, reportKeys } from '@/entities/report'
-import type { ReportHistoryResponse } from '@/shared/api/types'
+import { Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
+import { ReportCard, reportKeys, type ReportHistoryResponse } from '@/entities/report'
 import { SORT_LABELS, useReportHistoryList, type SortOrder } from './model/useReportHistoryList'
 
 /**
@@ -46,23 +45,14 @@ export default function ReportHistoryPage() {
     content = <HistorySkeleton />
   } else if (reports.isError) {
     content = (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-center">
-        <p className="text-body-l-medium text-gray-500">리포트 목록을 불러오지 못했어요</p>
-        <button
-          type="button"
-          onClick={() => reports.refetch()}
-          className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-        >
-          다시 시도
-        </button>
-      </div>
+      <ErrorRetry
+        message="리포트 목록을 불러오지 못했어요"
+        onRetry={() => reports.refetch()}
+        className="flex-1 justify-center"
+      />
     )
   } else if (reports.data.length === 0) {
-    content = (
-      <p className="flex flex-1 items-center justify-center py-20 text-body-l-medium text-gray-400">
-        발행된 리포트가 없어요
-      </p>
-    )
+    content = <EmptyState message="발행된 리포트가 없어요" className="flex-1" />
   } else {
     content = (
       <ul className="flex stagger-fade-up flex-col">

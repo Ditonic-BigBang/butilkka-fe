@@ -4,7 +4,7 @@ import Compass from '~icons/ci/compass'
 import Search from '~icons/ci/search'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { StoreLocationPicker } from '@/widgets/store-location-picker'
-import { ToastHost } from '@/shared/ui'
+import { EmptyState, ErrorRetry, ToastHost } from '@/shared/ui'
 import { StoreCard, useMyStores, lookupRegion, type StoreLocation } from '@/entities/store'
 import { useSetPrimaryStore } from './model/useSetPrimaryStore'
 import { formatFounded } from './lib/storeFormat'
@@ -36,10 +36,11 @@ export default function MyStorePage() {
       .catch(() => navigate('/my/store/new', { state: { location: loc } }))
   }
 
-  // 대표 지정 — 클릭 즉시 대표로 등록(백그라운드)하고 마이페이지로 돌아간다.
+  // 대표 지정 성공 후 마이페이지로 돌아간다. 실패하면 현재 목록에 남겨 재시도할 수 있게 한다.
   const selectAsPrimary = (storeId: number) => {
-    setPrimary.mutate(storeId)
-    navigate('/my')
+    setPrimary.mutate(storeId, {
+      onSuccess: () => navigate('/my'),
+    })
   }
 
   if (picker) {
@@ -60,23 +61,10 @@ export default function MyStorePage() {
     content = <StoreListSkeleton />
   } else if (stores.isError) {
     content = (
-      <div className="flex flex-col items-center gap-3 py-20 text-center">
-        <p className="text-body-l-medium text-gray-500">가게 목록을 불러오지 못했어요</p>
-        <button
-          type="button"
-          onClick={() => stores.refetch()}
-          className="rounded-max bg-gray-900 px-4 py-2 text-body-m-medium text-white active:bg-gray-800"
-        >
-          다시 시도
-        </button>
-      </div>
+      <ErrorRetry message="가게 목록을 불러오지 못했어요" onRetry={() => stores.refetch()} />
     )
   } else if (stores.data.length === 0) {
-    content = (
-      <p className="flex items-center justify-center py-20 text-body-l-medium text-gray-400">
-        등록된 가게가 없어요
-      </p>
-    )
+    content = <EmptyState message="등록된 가게가 없어요" />
   } else {
     content = (
       <ul>
@@ -123,6 +111,12 @@ export default function MyStorePage() {
         </div>
 
         {content}
+
+        {setPrimary.isError && (
+          <p className="px-5 py-3 text-body-m-regular text-status-red">
+            대표 가게를 변경하지 못했어요. 다시 시도해주세요.
+          </p>
+        )}
 
         {/* 등록 완료 등 라우트 토스트 (Figma 446:23137) */}
         <ToastHost />
