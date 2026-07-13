@@ -175,11 +175,7 @@ export default function KakaoMap({
       <div ref={containerRef} className={cn('size-full', !isLoaded && 'hidden')} />
       {myLocationEl &&
         createPortal(
-          <img
-            src={iconGps}
-            alt="현재 위치"
-            className="pointer-events-none size-[50px] max-w-none"
-          />,
+          <img src={iconGps} alt="현재 위치" className="pointer-events-none w-[50px] max-w-none" />,
           myLocationEl,
         )}
       {overlayEls.map(({ id, el }) => {
