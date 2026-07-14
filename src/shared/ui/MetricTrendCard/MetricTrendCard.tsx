@@ -108,8 +108,9 @@ const CHIP_TEXT: Record<Direction, string> = {
 }
 
 /**
- * 홈 지표 추이 카드 (Figma: Home_Graph 585:11060 · Home_Graph_폐업률 585:11172).
- * 제목 + 큰 값 + 증감 칩 + 3포인트 스파크라인(보기 전용, 인터랙션 없음).
+ * 홈 지표 추이 카드 (Figma: Home_Graph 1390:14011 · Home_Graph_폐업률 585:11172).
+ * 제목 + 큰 값 + 증감 칩(값 아래) + 3포인트 스파크라인(보기 전용, 인터랙션 없음).
+ * 칩은 값 아래 세로 배치 — 값이 길어도(예: -9299.31%) 칩이 밀려나지 않는다.
  * - `vertical`: 반폭 카드, 차트가 아래 (유동인구·점포수)
  * - `horizontal`: 전폭 카드, 차트가 우측 (폐업률)
  */
@@ -126,8 +127,8 @@ export function MetricTrendCard({
   const header = (
     <div className={cn('flex flex-col', horizontal ? 'gap-5' : 'gap-2')}>
       <p className="text-body-l-medium text-gray-700">{title}</p>
-      <div className="flex items-center gap-2">
-        <span className="text-[28px] leading-[1.4] font-semibold tracking-[-0.02em] text-gray-900">
+      <div className="flex flex-col items-start gap-1">
+        <span className="text-[28px] leading-[1.4] font-semibold tracking-[-0.02em] whitespace-nowrap text-gray-900">
           {value}
         </span>
         {change && (
@@ -165,7 +166,13 @@ export function MetricTrendCard({
   }
 
   return (
-    <div className={cn('flex w-full flex-col gap-5 rounded-12 bg-white p-4', className)}>
+    // overflow-hidden: 비정상적으로 긴 값(nowrap)이 옆 카드까지 삐져나가지 않게 (Figma overflow-clip)
+    <div
+      className={cn(
+        'flex w-full flex-col gap-[22px] overflow-hidden rounded-12 bg-white p-4',
+        className,
+      )}
+    >
       {header}
       <Sparkline data={trend} />
     </div>

@@ -37,7 +37,8 @@ export const dashboardMock: DashboardResponse = {
   metrics: {
     footTraffic: {
       direction: 'DOWN',
-      delta: 18,
+      // 실서버는 소수점 긴 원값을 준다 — FE 표시 포맷(둘째 자리 반올림) 검증용
+      delta: 18.4271,
       gap: 1215,
       points: [
         { quarter: '2025Q3', value: 132423 },
