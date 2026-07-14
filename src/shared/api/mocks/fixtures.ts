@@ -105,6 +105,9 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
       '현재 상권은 회복보다 쇠퇴 신호가 강하게 나타나고\n있어요. 지금 바로 대응이 필요해요.',
     aiOutlook:
       '가로수길은 향후 1년간 유동인구 감소와 공실 증가, 그리고 임대료 상승 압력이라는 선행 지표로 인해, 과거 광화문·이태원 상권과 유사한 구조적 침체 초입 국면에 진입할 가능성이 높습니다. 다만 서울시 상권 재생 정책 개입 여부에 따라 회복 경로가 갈릴 수 있습니다.',
+    // 다음 분기 예측 (2026-07-14 백엔드 추가) — 8분기 이력 없으면 실서버는 null
+    predictedTrend: '쇠퇴',
+    predictedNextGrade: 'D',
     causes: [
       { title: '유동인구 감소', level: '높음' },
       { title: '오피스 공실률 상승', level: '중간' },
@@ -184,6 +187,9 @@ const GRADE_SCORES: Record<ReportGrade, number> = { A: 16, B: 38, C: 64, D: 82, 
  * 최신 리포트 목에 덮어쓴다. 등급이 좋으면(A·B) '버티기', 나쁘면 '이동' 추천으로
  * 데모에서 두 추천 상태를 모두 볼 수 있게 한다.
  */
+// 예측 등급 데모용 — 한 단계 악화 (E 는 그대로)
+const WORSE_GRADE: Record<ReportGrade, ReportGrade> = { A: 'B', B: 'C', C: 'D', D: 'E', E: 'E' }
+
 export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
   const recommendation = item.grade === 'A' || item.grade === 'B' ? '버티기' : '이동'
   return {
@@ -193,6 +199,9 @@ export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
     grade: item.grade,
     score: GRADE_SCORES[item.grade],
     briefing: item.briefing,
+    // 예측도 등급과 어긋나지 않게 — 좋은 등급은 유지, 나쁜 등급은 한 단계 악화 전망
+    predictedTrend: recommendation === '버티기' ? '유지' : '쇠퇴',
+    predictedNextGrade: recommendation === '버티기' ? item.grade : WORSE_GRADE[item.grade],
   }
 }
 
