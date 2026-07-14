@@ -1,10 +1,53 @@
+import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import confetti from 'canvas-confetti'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
 import { ProStatusCard } from './ui/ProStatusCard'
 import { BenefitRow } from './ui/BenefitRow'
 import successIllust from './assets/success.svg'
+
+// 성공 일러스트(success.svg) 팔레트 그대로 — 오렌지·하늘색·노랑
+const CONFETTI_COLORS = ['#ff621b', '#ff9058', '#ffbe81', '#8bdaff', '#ffe68c']
+
+/**
+ * 진입 시 폭죽 발사 — 성공 일러스트 중앙에서 위로 터진다 (온보딩 완료 스텝과 동일 패턴).
+ * 모션 최소화 설정 사용자는 건너뛴다.
+ */
+function fireConfetti(img: HTMLImageElement | null): ReturnType<typeof setTimeout> | undefined {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+
+  const rect = img?.getBoundingClientRect()
+  const origin = rect
+    ? {
+        x: (rect.left + rect.width / 2) / window.innerWidth,
+        y: (rect.top + rect.height * 0.55) / window.innerHeight,
+      }
+    : { x: 0.5, y: 0.3 }
+
+  // 큰 한 방 + 잠깐 뒤 잔폭죽 — 조각 적게, ticks 짧게(빨리 사라짐)
+  void confetti({
+    particleCount: 45,
+    spread: 70,
+    startVelocity: 45,
+    ticks: 120,
+    scalar: 1.3,
+    origin,
+    colors: CONFETTI_COLORS,
+  })
+  return setTimeout(() => {
+    void confetti({
+      particleCount: 18,
+      spread: 100,
+      startVelocity: 30,
+      ticks: 100,
+      scalar: 1,
+      origin,
+      colors: CONFETTI_COLORS,
+    })
+  }, 180)
+}
 
 type Plan = 'annual' | 'monthly'
 
@@ -56,6 +99,13 @@ export default function SubscriptionCompletePage() {
   const routerLocation = useLocation()
   const plan = (routerLocation.state as { plan?: Plan } | null)?.plan ?? 'monthly'
   const { label, price } = PLAN_INFO[plan]
+  const illustRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    // StrictMode(dev)에선 마운트가 2회라 두 번 터질 수 있음 — 무해, prod 는 1회
+    const timer = fireConfetti(illustRef.current)
+    return () => clearTimeout(timer)
+  }, [])
 
   const goHome = () => navigate('/', { replace: true })
 
@@ -64,8 +114,8 @@ export default function SubscriptionCompletePage() {
       <div className="flex min-h-full flex-col bg-white">
         <GNB showBack={false} onClose={goHome} />
 
-        {/* 성공 일러스트 (풀블리드) */}
-        <img src={successIllust} alt="" aria-hidden className="w-full" />
+        {/* 성공 일러스트 (풀블리드) — 진입 폭죽의 발사 기준점 */}
+        <img ref={illustRef} src={successIllust} alt="" aria-hidden className="w-full" />
 
         {/* pb-4 + CTA 자체 pt-3(12px) = Figma 콘텐츠↔CTA 28px 간격 */}
         <div className="flex flex-1 flex-col px-5 pb-4">
