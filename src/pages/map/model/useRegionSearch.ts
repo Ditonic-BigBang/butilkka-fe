@@ -4,19 +4,23 @@ import { useDebouncedValue } from '@/shared/lib/useDebouncedValue'
 import type { SearchResult } from '@/widgets/search'
 
 type RegionSearchView = {
-  /** SearchOverlay 에 넘길 결과 행 (id = regionCode) */
+  /** SearchOverlay 에 넘길 결과 행 (id = 구 대표 상권 regionCode) */
   results: SearchResult[]
   /** 선택 처리용 원본 조회 (regionCode → 항목) */
   byId: Map<string, RegionSearchItem>
 }
 
+// 결과는 구 단위 표기("서대문구") — 같은 구의 상권 여러 개는 첫 항목을 대표로 중복 제거
 function toView(items: RegionSearchItem[]): RegionSearchView {
+  const byDistrict = new Map<string, RegionSearchItem>()
+  items.forEach((item) => {
+    if (!byDistrict.has(item.district)) byDistrict.set(item.district, item)
+  })
+  const unique = [...byDistrict.values()]
+
   return {
-    results: items.map((item) => ({
-      id: item.regionCode,
-      label: `${item.district} ${item.regionName}`,
-    })),
-    byId: new Map(items.map((item) => [item.regionCode, item])),
+    results: unique.map((item) => ({ id: item.regionCode, label: item.district })),
+    byId: new Map(unique.map((item) => [item.regionCode, item])),
   }
 }
 

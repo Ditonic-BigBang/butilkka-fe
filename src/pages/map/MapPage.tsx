@@ -121,7 +121,9 @@ export default function MapPage() {
       panToDistrict(item.district)
       return
     }
-    selectDistrict(item.district, regionCode)
+    // 상세는 마커 클릭과 같은 구 대표 상권 기준 (검색 결과의 첫 상권이 아니라)
+    const representative = regionByDistrict?.get(item.district)
+    selectDistrict(item.district, representative?.regionCode ?? regionCode)
   }
 
   // 마커 탭 → 구 대표 상권 기준 선택
