@@ -20,6 +20,7 @@ import { findDistrictAt, useGuBoundaries } from '@/entities/district'
 import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation, Toast } from '@/shared/ui'
 import { formatQuarter } from '@/shared/lib/quarter'
+import { useTransientToast } from '@/shared/lib/useTransientToast'
 import type { RankingOrder } from '@/entities/region'
 import { CATEGORY_BY_FILTER, getCategoryView, type MapCategory } from './model/mapCategory'
 import { useRegionMarkers } from './model/useRegionMarkers'
@@ -54,8 +55,8 @@ export default function MapPage() {
   // 즐겨찾기 "지도에서 선택" 모드 — 지도 탭으로 구를 고른다 (Figma 257:7523)
   const [mapSelecting, setMapSelecting] = useState(false)
   const [mapSelectDistrict, setMapSelectDistrict] = useState<string | null>(null)
-  // 등록 완료 안내 토스트 (Figma 257:9468) — 2.5초 뒤 자동 닫힘
-  const [toast, setToast] = useState<string | null>(null)
+  // 등록 완료 안내 토스트 (Figma 257:9468) — 노출 후 퇴장 애니를 거쳐 자동 닫힘
+  const { toast, closing: toastClosing, show: showToast } = useTransientToast()
   // 지도 선택/등록 후 검색 화면으로 복귀할 때 input 을 다시 포커스
   const [pendingSearchFocus, setPendingSearchFocus] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -161,20 +162,20 @@ export default function MapPage() {
     setRegisterMode(false)
     setMapSelecting(false)
     setMapSelectDistrict(null)
-    setToast('즐겨찾는 지역에 등록되었습니다.')
+    showToast('즐겨찾는 지역에 등록되었습니다.')
     setPendingSearchFocus(true)
   }
 
   const registerDistrict = (district: string, fallbackCode?: string) => {
     // 최대 개수 초과 방어 — 진입점(추가 버튼)은 막혀 있지만 등록 모드 잔류 등 우회 경로 대비
     if (favorites.length >= MAX_FAVORITES) {
-      setToast('최대 4개까지만 등록 가능합니다')
+      showToast('최대 4개까지만 등록 가능합니다')
       return
     }
     const code = regionByDistrict?.get(district)?.regionCode ?? fallbackCode
     // 상권 데이터가 없는 구는 등록할 대표 상권이 없다 — 조용히 무시하지 않고 안내
     if (!code) {
-      setToast('해당 구의 상권 데이터가 아직 없어요.')
+      showToast('해당 구의 상권 데이터가 아직 없어요.')
       return
     }
     addFavorite(code, { onSuccess: finishRegister })
@@ -237,13 +238,6 @@ export default function MapPage() {
     searchInputRef.current?.focus()
     setPendingSearchFocus(false)
   }, [pendingSearchFocus, mapSelecting])
-
-  // 토스트 자동 닫힘
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), 2500)
-    return () => clearTimeout(timer)
-  }, [toast])
 
   // 즐겨찾는 지역 편집의 "추가"로 진입 — 등록 모드 검색 화면을 바로 연다
   useEffect(() => {
@@ -370,7 +364,9 @@ export default function MapPage() {
         {/* 등록 완료 토스트 (Figma 257:9468) — 검색 화면(z-20) 위 */}
         {toast && (
           <div className="pointer-events-none absolute inset-x-0 bottom-8 z-30 flex justify-center px-5">
-            <Toast className="animate-toast-in">{toast}</Toast>
+            <Toast className={toastClosing ? 'animate-toast-out' : 'animate-toast-in'}>
+              {toast}
+            </Toast>
           </div>
         )}
 

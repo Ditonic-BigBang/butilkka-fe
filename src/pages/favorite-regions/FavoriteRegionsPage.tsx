@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LocationPin from '~icons/ci/location'
 import CloseSm from '~icons/ci/close-sm'
@@ -6,6 +6,7 @@ import AddPlusCircle from '~icons/ci/add-plus-circle'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { useFavorites, MAX_FAVORITES, type FavoriteItem } from '@/entities/favorite'
 import { ConfirmPopup, Toast } from '@/shared/ui'
+import { useTransientToast } from '@/shared/lib/useTransientToast'
 
 /**
  * 즐겨찾는 지역 편집 (Figma: 지도 - 검색시 424:12134·257:9299·424:12198).
@@ -16,17 +17,11 @@ export default function FavoriteRegionsPage() {
   const { favorites, remove } = useFavorites()
   // 삭제 확인 팝업 대상 — null 이면 닫힘
   const [removeTarget, setRemoveTarget] = useState<FavoriteItem | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), 2500)
-    return () => clearTimeout(timer)
-  }, [toast])
+  const { toast, closing: toastClosing, show: showToast } = useTransientToast()
 
   const confirmRemove = () => {
     if (!removeTarget) return
-    remove(removeTarget.regionCode, { onSuccess: () => setToast('삭제되었습니다.') })
+    remove(removeTarget.regionCode, { onSuccess: () => showToast('삭제되었습니다.') })
     setRemoveTarget(null)
   }
 
@@ -88,7 +83,9 @@ export default function FavoriteRegionsPage() {
 
         {toast && (
           <div className="pointer-events-none absolute inset-x-0 bottom-8 z-30 flex justify-center px-5">
-            <Toast className="animate-toast-in">{toast}</Toast>
+            <Toast className={toastClosing ? 'animate-toast-out' : 'animate-toast-in'}>
+              {toast}
+            </Toast>
           </div>
         )}
       </div>
