@@ -7,6 +7,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { MobileLayout } from '@/widgets/mobile-layout'
 import { cn } from '@/shared/lib/cn'
 import {
@@ -25,7 +26,7 @@ import { useRegionMarkers } from './model/useRegionMarkers'
 import { useRanking } from './model/useRanking'
 import { useRegionSearch } from './model/useRegionSearch'
 import { useRegionDetail } from './model/useRegionDetail'
-import { useFavorites } from './model/useFavorites'
+import { useFavorites } from '@/entities/favorite'
 import { RankingSheet } from './ui/RankingSheet'
 import { QuarterSheet } from './ui/QuarterSheet'
 import { RegisterSelect } from './ui/RegisterSelect'
@@ -40,6 +41,8 @@ const REGISTER_OUTLINE_COLOR = '#f1c0dc'
 const NO_MARKERS: MapMarker[] = []
 
 export default function MapPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const mapRef = useRef<KakaoMapHandle>(null)
   const [query, setQuery] = useState('')
   // 검색 모드(검색바 포커스) — 풀스크린 흰 화면 + 하단 탭 숨김 (Figma: 지도 - 검색시 257:7104)
@@ -224,6 +227,15 @@ export default function MapPage() {
     return () => clearTimeout(timer)
   }, [toast])
 
+  // 즐겨찾는 지역 편집의 "추가"로 진입 — 등록 모드 검색 화면을 바로 연다
+  useEffect(() => {
+    if (!(location.state as { registerFavorite?: boolean } | null)?.registerFavorite) return
+    setRegisterMode(true)
+    setPendingSearchFocus(true)
+    // state 소거 — 새로고침/뒤로가기 시 재진입 방지
+    navigate(location.pathname, { replace: true })
+  }, [location.state, location.pathname, navigate])
+
   const handleMyLocation = () => {
     navigator.geolocation?.getCurrentPosition((pos) => {
       const point = { lat: pos.coords.latitude, lng: pos.coords.longitude }
@@ -275,6 +287,7 @@ export default function MapPage() {
             results={search.results}
             onResultSelect={handleResultSelect}
             savedPlaces={favorites.map((f) => f.district)}
+            onEditPlaces={() => navigate('/map/favorites')}
             onAddPlace={() => setRegisterMode(true)}
             registerMode={registerMode}
             onSelectFromMap={handleSelectFromMap}
