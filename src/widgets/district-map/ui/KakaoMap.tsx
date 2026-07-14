@@ -17,8 +17,12 @@ export type MapMarker = {
 }
 
 export type KakaoMapHandle = {
-  /** 좌표로 부드럽게 이동, level 지정 시 줌도 변경 */
-  panTo: (lat: number, lng: number, level?: number) => void
+  /**
+   * 좌표로 부드럽게 이동, level 지정 시 줌도 변경.
+   * offsetY(px) 지정 시 좌표가 화면 중앙보다 그만큼 위에 오도록 보정 —
+   * 상/하단 오버레이(검색바·시트)에 가려지지 않는 영역 기준 센터링용.
+   */
+  panTo: (lat: number, lng: number, level?: number, offsetY?: number) => void
 }
 
 /** 구 경계 폴리곤 — 외곽 링 좌표 묶음 (색 미지정 시 오렌지 강조) */
@@ -83,10 +87,18 @@ export default function KakaoMap({
   const { isLoaded, error } = useKakaoMapsSDK()
 
   useImperativeHandle(ref, () => ({
-    panTo: (lat, lng, level) => {
+    panTo: (lat, lng, level, offsetY) => {
       if (!map) return
       if (level !== undefined) map.setLevel(level)
-      map.panTo(new kakao.maps.LatLng(lat, lng))
+      const target = new kakao.maps.LatLng(lat, lng)
+      if (!offsetY) {
+        map.panTo(target)
+        return
+      }
+      // 오프셋 센터링 — 좌표가 화면 중앙보다 offsetY(px) 만큼 위에 오도록
+      // 중심을 화면 기준 아래로 이동 (panBy 는 화면 픽셀 기준이라 좌표계 뒤집힘 걱정이 없다)
+      map.setCenter(target)
+      map.panBy(0, offsetY)
     },
   }))
 
@@ -113,11 +125,13 @@ export default function KakaoMap({
 
     const created = markers.map((marker) => {
       const el = document.createElement('div')
+      // 콘텐츠는 portal 로 나중에 채워져 kakao 의 anchor 계산(부착 시점 크기 측정)이 0 이 된다.
+      // anchor 는 0 으로 고정하고 콘텐츠가 CSS translate 로 스스로 중앙 정렬한다.
       const overlay = new kakao.maps.CustomOverlay({
         content: el,
         position: new kakao.maps.LatLng(marker.lat, marker.lng),
-        xAnchor: 0.5,
-        yAnchor: 0.5,
+        xAnchor: 0,
+        yAnchor: 0,
         zIndex: 10,
         clickable: true,
       })
@@ -177,8 +191,8 @@ export default function KakaoMap({
     const overlay = new kakao.maps.CustomOverlay({
       content: el,
       position: new kakao.maps.LatLng(pin.lat, pin.lng),
-      xAnchor: 0.5,
-      yAnchor: 1,
+      xAnchor: 0,
+      yAnchor: 0,
       zIndex: 30,
     })
     overlay.setMap(map)
@@ -198,8 +212,8 @@ export default function KakaoMap({
     const overlay = new kakao.maps.CustomOverlay({
       content: el,
       position: new kakao.maps.LatLng(myLocation.lat, myLocation.lng),
-      xAnchor: 0.5,
-      yAnchor: 0.5,
+      xAnchor: 0,
+      yAnchor: 0,
       zIndex: 20,
     })
     overlay.setMap(map)
@@ -231,10 +245,22 @@ export default function KakaoMap({
       <div ref={containerRef} className={cn('size-full', !isLoaded && 'hidden')} />
       {myLocationEl &&
         createPortal(
-          <img src={iconGps} alt="현재 위치" className="pointer-events-none w-[50px] max-w-none" />,
+          <img
+            src={iconGps}
+            alt="현재 위치"
+            className="pointer-events-none w-[50px] max-w-none -translate-x-1/2 -translate-y-1/2"
+          />,
           myLocationEl,
         )}
-      {pinEl && createPortal(<MapPin variant="inactive" className="pointer-events-none" />, pinEl)}
+      {/* 핀은 꼭짓점(바닥)이 좌표를 가리키게 아래 기준 정렬 */}
+      {pinEl &&
+        createPortal(
+          <MapPin
+            variant="inactive"
+            className="pointer-events-none -translate-x-1/2 -translate-y-full"
+          />,
+          pinEl,
+        )}
       {overlayEls.map(({ id, el }) => {
         const marker = markerById.get(id)
         if (!marker) return null
@@ -245,7 +271,7 @@ export default function KakaoMap({
               title={marker.title}
               caption={marker.caption}
               onClick={onMarkerClick ? () => onMarkerClick(id) : undefined}
-              className={onMarkerClick ? 'cursor-pointer' : undefined}
+              className={cn('-translate-x-1/2 -translate-y-1/2', onMarkerClick && 'cursor-pointer')}
             />
           </div>,
           el,

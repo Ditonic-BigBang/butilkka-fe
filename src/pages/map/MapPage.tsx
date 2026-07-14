@@ -39,6 +39,9 @@ const GU_ZOOM_LEVEL = 7
 const MAP_TAP_THRESHOLD = 10
 // 즐겨찾기 "지도에서 선택" 구 강조 색 (Figma 257:7523 — 핑크)
 const REGISTER_OUTLINE_COLOR = '#f1c0dc'
+// 첫 진입 센터링 보정(px) — 마커가 상단 오버레이(검색+칩)와 접힌 시트 사이
+// "보이는 영역"의 가운데에 오도록, 두 오버레이 높이 차의 절반만큼 위로 올린다
+const INITIAL_FOCUS_OFFSET_Y = 33
 
 const NO_MARKERS: MapMarker[] = []
 
@@ -178,7 +181,7 @@ export default function MapPage() {
       primaryStore.address?.split(' ').find((token) => token.endsWith('구'))
     initialFocusDone.current = true
     const point = district ? centroids.get(district) : undefined
-    if (point) mapRef.current?.panTo(point.lat, point.lng, GU_ZOOM_LEVEL)
+    if (point) mapRef.current?.panTo(point.lat, point.lng, GU_ZOOM_LEVEL, INITIAL_FOCUS_OFFSET_Y)
   }, [mapReady, primaryStore, guBoundaries, centroids, selectedDistrict])
 
   // 즐겨찾기 등록 완료 — 검색 화면으로 복귀해 갱신된 목록 + 토스트를 보여준다 (Figma 257:9468)
