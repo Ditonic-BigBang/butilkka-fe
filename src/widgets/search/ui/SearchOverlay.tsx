@@ -26,6 +26,8 @@ type SearchOverlayProps = {
   /** 즐겨찾기 등록 모드 (placeholder 변경 + "지도에서 선택") */
   registerMode?: boolean
   onSelectFromMap?: () => void
+  /** 검색 모드(포커스) 전환 알림 — 페이지가 풀스크린 전환·하단 탭 숨김에 사용 */
+  onFocusChange?: (focused: boolean) => void
   className?: string
 }
 
@@ -58,9 +60,14 @@ export function SearchOverlay({
   onAddPlace,
   registerMode = false,
   onSelectFromMap,
+  onFocusChange,
   className,
 }: SearchOverlayProps) {
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocusedState] = useState(false)
+  const setFocused = (next: boolean) => {
+    setFocusedState(next)
+    onFocusChange?.(next)
+  }
 
   const exitSearch = () => {
     onQueryChange('')
@@ -102,7 +109,11 @@ export function SearchOverlay({
               label={r.label}
               query={query}
               onMouseDown={keepFocus}
-              onClick={() => onResultSelect?.(r.id)}
+              // 결과 선택 = 지도로 복귀 — 풀스크린 검색 모드도 함께 끝낸다
+              onClick={() => {
+                onResultSelect?.(r.id)
+                exitSearch()
+              }}
             />
           ))}
         </div>
@@ -174,25 +185,33 @@ export function SearchOverlay({
       }}
       className={cn(
         'flex w-full flex-col',
-        // 포커스 시엔 흰 검색 시트, 평상시엔 투명 — 필터칩 행 뒤로 지도가 비친다
-        focused ? 'gap-4 bg-white pb-4 shadow-[0_2px_10px_rgba(0,0,0,0.1)]' : 'gap-2.5',
+        // 포커스 시엔 풀스크린 흰 검색 화면(지도 - 검색시 257:7104), 평상시엔 투명 — 칩 행 뒤로 지도가 비친다
+        focused && 'h-full bg-white',
         className,
       )}
     >
+      {/* 상단 검색 시트 — 풀스크린 흰 배경 위에 그림자로 경계만 표시 */}
       <div
         className={cn(
-          'w-full px-5 pt-4',
-          !focused && 'bg-white pb-3 shadow-[0_2px_2px_rgba(0,0,0,0.05)]',
+          'flex w-full flex-col',
+          focused ? 'gap-4 bg-white pb-4 shadow-[0_2px_10px_rgba(0,0,0,0.1)]' : 'gap-2.5',
         )}
       >
-        <SearchInput
-          value={query}
-          onChange={onQueryChange}
-          onBack={exitSearch}
-          placeholder={registerMode ? '즐겨찾는 지역으로 등록할 구 검색' : undefined}
-        />
+        <div
+          className={cn(
+            'w-full px-5 pt-4',
+            !focused && 'bg-white pb-3 shadow-[0_2px_2px_rgba(0,0,0,0.05)]',
+          )}
+        >
+          <SearchInput
+            value={query}
+            onChange={onQueryChange}
+            onBack={exitSearch}
+            placeholder={registerMode ? '즐겨찾는 지역으로 등록할 구 검색' : undefined}
+          />
+        </div>
+        {renderBelow()}
       </div>
-      {renderBelow()}
     </div>
   )
 }

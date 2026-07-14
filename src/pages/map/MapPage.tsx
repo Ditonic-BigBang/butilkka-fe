@@ -8,6 +8,7 @@ import {
   type PointerEvent,
 } from 'react'
 import { MobileLayout } from '@/widgets/mobile-layout'
+import { cn } from '@/shared/lib/cn'
 import { KakaoMap, type KakaoMapHandle, type MapOutline } from '@/widgets/district-map'
 import { useGuBoundaries } from '@/entities/district'
 import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
@@ -31,6 +32,8 @@ const MAP_TAP_THRESHOLD = 10
 export default function MapPage() {
   const mapRef = useRef<KakaoMapHandle>(null)
   const [query, setQuery] = useState('')
+  // 검색 모드(검색바 포커스) — 풀스크린 흰 화면 + 하단 탭 숨김 (Figma: 지도 - 검색시 257:7104)
+  const [searching, setSearching] = useState(false)
   // 카테고리 칩 — 마커·시트 내용이 함께 바뀐다 (기본: 쇠퇴등급)
   const [category, setCategory] = useState<MapCategory>('grade')
   const [order, setOrder] = useState<RankingOrder>('top')
@@ -150,7 +153,7 @@ export default function MapPage() {
   }
 
   return (
-    <MobileLayout>
+    <MobileLayout showBottomTab={!searching}>
       <div className="relative h-full overflow-hidden">
         {/* 시트 접기용 탭 감지 래퍼 — 지도 자체가 인터랙션을 소유하므로 시맨틱 없음 */}
         <div
@@ -188,7 +191,9 @@ export default function MapPage() {
           savedPlaces={favorites.map((f) => f.regionName)}
           onAddPlace={() => setRegisterMode(true)}
           registerMode={registerMode}
-          className="absolute inset-x-0 top-0 z-10"
+          onFocusChange={setSearching}
+          // 검색 모드는 시트·내 위치 버튼(z-10)까지 덮는 풀스크린
+          className={cn('absolute inset-x-0 top-0 z-10', searching && 'bottom-0 z-20')}
         />
 
         {/* 내 위치 버튼은 시트 바로 위에 붙어 시트 높이 변화를 따라간다 — 래퍼는 지도 조작을 막지 않게 클릭 통과 */}
