@@ -24,14 +24,17 @@ function toView(items: RegionSearchItem[]): RegionSearchView {
   }
 }
 
-/** 상권 검색 자동완성 — 입력이 잠잠해진 뒤(300ms)에만 `GET /regions/search` 호출 */
-export function useRegionSearch(keyword: string) {
+/**
+ * 상권 검색 자동완성 — 입력이 잠잠해진 뒤(300ms)에만 `GET /regions/search` 호출.
+ * enabled=false 면 호출하지 않는다 — 검색바가 선택된 구 표시용으로 채워져 있을 때(미포커스).
+ */
+export function useRegionSearch(keyword: string, enabled = true) {
   const debounced = useDebouncedValue(keyword.trim())
 
   const query = useQuery({
     queryKey: regionKeys.search(debounced),
     queryFn: () => searchRegions(debounced),
-    enabled: debounced.length > 0,
+    enabled: enabled && debounced.length > 0,
     select: toView,
   })
 

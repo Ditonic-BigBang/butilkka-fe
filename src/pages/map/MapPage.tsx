@@ -121,7 +121,8 @@ export default function MapPage() {
       }),
     [quarter],
   )
-  const search = useRegionSearch(query)
+  // 미포커스 검색바는 선택된 구 표시용 — 그 값으로 검색 API 를 부르지 않는다
+  const search = useRegionSearch(query, searching)
   const { favorites, add: addFavorite } = useFavorites()
 
   const panToDistrict = useCallback(
@@ -141,6 +142,18 @@ export default function MapPage() {
   const clearSelection = () => {
     setSelectedDistrict(null)
     setDetailRegionCode(null)
+  }
+
+  // 선택된 구를 검색바에 유지 (Figma 176:2687 — 미포커스 검색바에 "서대문구" + ✕).
+  // 검색 중(포커스)엔 사용자의 입력을 존중하고, 검색을 닫으면 선택된 구로 복원한다.
+  useEffect(() => {
+    if (!searching) setQuery(selectedDistrict ?? '')
+  }, [searching, selectedDistrict])
+
+  // 미포커스 상태의 ✕(값 지우기) = 구 선택 해제 (전체 보기와 동일)
+  const handleQueryChange = (next: string) => {
+    setQuery(next)
+    if (!next && !searching && selectedDistrict) clearSelection()
   }
 
   // 즐겨찾기 등록 완료 — 검색 화면으로 복귀해 갱신된 목록 + 토스트를 보여준다 (Figma 257:9468)
@@ -272,7 +285,7 @@ export default function MapPage() {
         {!mapSelecting && (
           <SearchOverlay
             query={query}
-            onQueryChange={setQuery}
+            onQueryChange={handleQueryChange}
             filters={filters}
             selectedFilter={categoryView.filterKey}
             onFilterSelect={(key) => {
