@@ -26,7 +26,7 @@ import { useRegionMarkers } from './model/useRegionMarkers'
 import { useRanking } from './model/useRanking'
 import { useRegionSearch } from './model/useRegionSearch'
 import { useRegionDetail } from './model/useRegionDetail'
-import { useFavorites } from '@/entities/favorite'
+import { useFavorites, MAX_FAVORITES } from '@/entities/favorite'
 import { RankingSheet } from './ui/RankingSheet'
 import { QuarterSheet } from './ui/QuarterSheet'
 import { RegisterSelect } from './ui/RegisterSelect'
@@ -166,6 +166,11 @@ export default function MapPage() {
   }
 
   const registerDistrict = (district: string, fallbackCode?: string) => {
+    // 최대 개수 초과 방어 — 진입점(추가 버튼)은 막혀 있지만 등록 모드 잔류 등 우회 경로 대비
+    if (favorites.length >= MAX_FAVORITES) {
+      setToast('최대 4개까지만 등록 가능합니다')
+      return
+    }
     const code = regionByDistrict?.get(district)?.regionCode ?? fallbackCode
     // 상권 데이터가 없는 구는 등록할 대표 상권이 없다 — 조용히 무시하지 않고 안내
     if (!code) {

@@ -231,6 +231,13 @@ export const handlers = [
   http.get(`${API}/api/v1/favorites`, () => ok('즐겨찾기 조회 성공', mockFavorites)),
 
   http.post(`${API}/api/v1/favorites`, async ({ request }) => {
+    // 즐겨찾는 지역은 최대 4개 (FE MAX_FAVORITES 와 동일 정책)
+    if (mockFavorites.length >= 4) {
+      return HttpResponse.json(
+        { code: 400, status: 'BAD_REQUEST', message: '최대 4개까지만 등록 가능합니다', data: null },
+        { status: 400 },
+      )
+    }
     const { regionCode } = (await request.json()) as { regionCode: string }
     const region = regionMapMock.regions.find((r) => r.regionCode === regionCode)
     if (!region) {

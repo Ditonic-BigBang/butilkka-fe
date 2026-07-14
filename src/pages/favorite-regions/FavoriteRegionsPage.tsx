@@ -4,7 +4,7 @@ import LocationPin from '~icons/ci/location'
 import CloseSm from '~icons/ci/close-sm'
 import AddPlusCircle from '~icons/ci/add-plus-circle'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { useFavorites, type FavoriteItem } from '@/entities/favorite'
+import { useFavorites, MAX_FAVORITES, type FavoriteItem } from '@/entities/favorite'
 import { ConfirmPopup, Toast } from '@/shared/ui'
 
 /**
@@ -61,15 +61,20 @@ export default function FavoriteRegionsPage() {
             </ul>
           )}
 
-          <button
-            type="button"
-            // 추가 = 지도 검색의 즐겨찾기 등록 모드로 진입
-            onClick={() => navigate('/map', { state: { registerFavorite: true } })}
-            className="flex items-center gap-2 text-gray-300"
-          >
-            <AddPlusCircle aria-hidden className="size-5 shrink-0" />
-            <span className="text-body-m-medium text-gray-400">즐겨찾는 지역 추가</span>
-          </button>
+          {favorites.length >= MAX_FAVORITES ? (
+            // 4개가 차면 추가 대신 안내 텍스트 (Figma 1462:14168)
+            <p className="text-body-m-medium text-gray-400">최대 4개까지만 등록 가능합니다</p>
+          ) : (
+            <button
+              type="button"
+              // 추가 = 지도 검색의 즐겨찾기 등록 모드로 진입
+              onClick={() => navigate('/map', { state: { registerFavorite: true } })}
+              className="flex items-center gap-2 text-gray-300"
+            >
+              <AddPlusCircle aria-hidden className="size-5 shrink-0" />
+              <span className="text-body-m-medium text-gray-400">즐겨찾는 지역 추가</span>
+            </button>
+          )}
         </div>
 
         <ConfirmPopup
