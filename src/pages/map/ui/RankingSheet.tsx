@@ -9,6 +9,9 @@ import type { SheetDetailView } from '../model/useRegionDetail'
 
 // 이만큼(px) 끌면 탭이 아닌 드래그로 판정해 펼침/접힘
 const DRAG_THRESHOLD = 20
+// 본문 max-height — 접힘(정렬 탭 상단만)/펼침. 드래그 추적·스냅 계산의 기준값
+const COLLAPSED_MAX = 88
+const EXPANDED_MAX = 560
 
 // 구 선택 상세 본문 — 카테고리에 따라 등급(GradeBody)/지표(MetricBody) 조립
 function renderDetail(view: SheetDetailView) {
@@ -72,7 +75,8 @@ type RankingSheetProps = {
 
 /**
  * 지도 상시 바텀시트 (Figma: 지도 홈 596:23182 · 쇠퇴등급(특정) 176:1140 · 지표 255:2413).
- * 접힘(핸들+헤더+탭)/펼침 두 상태 — 핸들·헤더를 탭하거나 위/아래로 끌어 전환.
+ * 접힘(핸들+헤더+탭)/펼침 두 상태 — 핸들·헤더를 탭하거나 끌어서 전환.
+ * 드래그 중엔 시트가 손가락을 따라오고, 놓으면 끈 방향으로 스냅된다(중간 정지 없음).
  * 구 선택 시 시트 높이는 그대로 두고 내용만 랭킹 → 해당 구 상세(등급/지표)로 바뀐다.
  */
 export function RankingSheet({
@@ -99,27 +103,52 @@ export function RankingSheet({
   }
   const dragStartY = useRef<number | null>(null)
   const dragged = useRef(false)
+  const bodyRef = useRef<HTMLDivElement>(null)
 
   const orderTabs = [
     { value: 'top', label: tabs[0] },
     { value: 'bottom', label: tabs[1] },
   ]
 
+  // 드래그 종료 — 인라인 스타일을 걷어 클래스(max-h)가 다시 높이를 결정하게.
+  // 걷는 순간 계산값이 클래스 값으로 바뀌며 transition 이 이어받아 스냅 애니메이션이 된다.
+  const endDrag = () => {
+    dragStartY.current = null
+    if (bodyRef.current) {
+      bodyRef.current.style.transitionProperty = ''
+      bodyRef.current.style.maxHeight = ''
+    }
+  }
+
   const handlePointerDown = (e: PointerEvent<HTMLButtonElement>) => {
     dragStartY.current = e.clientY
     dragged.current = false
+    // 핸들 밖으로 나가도 계속 추적 (네이티브 시트 느낌의 핵심) — jsdom 엔 없어 옵셔널 호출
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+  }
+  const handlePointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+    if (dragStartY.current === null || !bodyRef.current) return
+    const dy = e.clientY - dragStartY.current
+    if (!dragged.current && Math.abs(dy) < DRAG_THRESHOLD) return
+    dragged.current = true
+    // 시트가 손가락을 따라오게 — 드래그 중엔 transition 을 꺼서 즉각 반응
+    const base = expanded ? EXPANDED_MAX : COLLAPSED_MAX
+    const height = Math.min(EXPANDED_MAX, Math.max(COLLAPSED_MAX, base - dy))
+    bodyRef.current.style.transitionProperty = 'none'
+    bodyRef.current.style.maxHeight = `${height}px`
   }
   const handlePointerUp = (e: PointerEvent<HTMLButtonElement>) => {
     if (dragStartY.current === null) return
     const dy = e.clientY - dragStartY.current
-    dragStartY.current = null
-    if (dy < -DRAG_THRESHOLD) {
-      dragged.current = true
-      setExpanded(true)
-    } else if (dy > DRAG_THRESHOLD) {
-      dragged.current = true
-      setExpanded(false)
-    }
+    endDrag()
+    if (!dragged.current) return
+    // 끈 방향으로 스냅 — 문턱 미만이면 원래 상태로 복귀 (중간 정지 없음)
+    if (dy < -DRAG_THRESHOLD) setExpanded(true)
+    else if (dy > DRAG_THRESHOLD) setExpanded(false)
+  }
+  const handlePointerCancel = () => {
+    endDrag()
+    dragged.current = false
   }
   const handleClick = () => {
     // 드래그로 이미 전환했으면 뒤따르는 click 은 무시
@@ -170,7 +199,9 @@ export function RankingSheet({
           aria-label={`${title} 시트 펼침/접힘`}
           aria-expanded={expanded}
           onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
           onClick={handleClick}
           className="flex w-full cursor-grab touch-none flex-col text-left active:cursor-grabbing"
         >
@@ -188,8 +219,10 @@ export function RankingSheet({
       <div className="h-px w-full bg-gray-90" />
 
       {/* 본문 — 접힘 상태에서도 상단 일부가 보이게 max-height 로 전환.
-          랭킹 정렬 탭도 이 안에 두어 전체/구 선택 모드의 접힘 높이가 같다. */}
+          랭킹 정렬 탭도 이 안에 두어 전체/구 선택 모드의 접힘 높이가 같다.
+          드래그 중엔 인라인 max-height 가 이 클래스를 덮어 손가락을 따라온다. */}
       <div
+        ref={bodyRef}
         className={cn(
           'overflow-hidden transition-[max-height] duration-300 ease-out',
           expanded ? 'max-h-[560px]' : 'max-h-[88px]',
