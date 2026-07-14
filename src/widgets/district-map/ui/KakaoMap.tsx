@@ -1,144 +1,283 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { createPortal } from 'react-dom'
 import { useKakaoMapsSDK } from '@/shared/lib/useKakaoMapsSDK'
-import { useSeoulGeoJson, ringToLatLng, ringCentroid, type SeoulFeature } from '@/entities/district'
-import { SEOUL_DISTRICTS, type DistrictInfo } from '@/entities/district'
-import { GROUPS } from '@/entities/district'
+import { LocationMarker, MapPin, Spinner } from '@/shared/ui'
+import { cn } from '@/shared/lib/cn'
+import iconGps from '../assets/icon-gps.svg'
+
+/** 지도 위 등급 마커 데이터 (좌표 + LocationMarker 내용) */
+export type MapMarker = {
+  id: string
+  lat: number
+  lng: number
+  /** 마커 제목 (예: "서대문구") */
+  title: string
+  /** 보조 텍스트 (예: "C등급") */
+  caption?: string
+}
+
+export type KakaoMapHandle = {
+  /**
+   * 좌표로 부드럽게 이동, level 지정 시 줌도 변경.
+   * offsetY(px) 지정 시 좌표가 화면 중앙보다 그만큼 위에 오도록 보정 —
+   * 상/하단 오버레이(검색바·시트)에 가려지지 않는 영역 기준 센터링용.
+   */
+  panTo: (lat: number, lng: number, level?: number, offsetY?: number) => void
+}
+
+/** 구 경계 폴리곤 — 외곽 링 좌표 묶음 (색 미지정 시 오렌지 강조) */
+export type MapOutline = {
+  id: string
+  rings: { lat: number; lng: number }[][]
+  /** 라인·채움 색 (예: 즐겨찾기 선택 핑크) */
+  color?: string
+  fillOpacity?: number
+}
+
+type KakaoMapProps = {
+  markers?: MapMarker[]
+  onMarkerClick?: (id: string) => void
+  /** 구 경계 폴리곤 (라인 + 옅은 채움) */
+  outlines?: MapOutline[]
+  /** 현재 위치 GPS 점 (Figma: icon_gps 1418:14548) — 없으면 표시 안 함 */
+  myLocation?: { lat: number; lng: number } | null
+  /** 선택 핀 (Figma: Map Pin) — 즐겨찾기 지도에서 선택 모드 */
+  pin?: { lat: number; lng: number } | null
+  /** 지도 빈 곳 클릭 (kakao 클릭 이벤트 — 드래그와 자동 구분됨) */
+  onMapClick?: (point: { lat: number; lng: number }) => void
+  /** 지도 인스턴스 생성 완료 — 초기 위치 이동 등 ref 조작이 가능해진 시점 */
+  onReady?: () => void
+  className?: string
+  ref?: Ref<KakaoMapHandle>
+}
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 }
-const MAP_LEVEL = 10
+const DEFAULT_LEVEL = 9
 
-// 구 이름 → 구 데이터 맵
-const districtMap = new Map(SEOUL_DISTRICTS.map((d) => [d.name, d]))
+// 구 경계 스타일 — orange-500(@theme). kakao Polygon 은 CSS 변수를 못 받아 hex 로 미러링.
+const OUTLINE_COLOR = '#ff6b1b'
+const OUTLINE_FILL_OPACITY = 0.2
 
-function getOuterRings(feature: SeoulFeature): number[][][] {
-  const { geometry } = feature
-  if (geometry.type === 'Polygon') {
-    return [(geometry.coordinates as number[][][])[0]]
-  }
-  return (geometry.coordinates as number[][][][]).map((poly) => poly[0])
-}
+const NO_MARKERS: MapMarker[] = []
+const NO_OUTLINES: MapOutline[] = []
 
-interface Props {
-  onDistrictClick: (district: DistrictInfo) => void
-}
+/**
+ * 상권 지도 (Figma: 지도 홈 596:23173).
+ * 카카오맵 + 구 단위 쇠퇴등급 마커(LocationMarker)를 CustomOverlay 로 표시.
+ * 마커 클릭은 portal 로 React 이벤트를 그대로 사용 — kakao 이벤트를 거치지 않는다.
+ */
+export default function KakaoMap({
+  markers = NO_MARKERS,
+  onMarkerClick,
+  outlines = NO_OUTLINES,
+  myLocation,
+  pin,
+  onMapClick,
+  onReady,
+  className,
+  ref,
+}: KakaoMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [map, setMap] = useState<kakao.maps.Map | null>(null)
+  // 마커별 portal 컨테이너 — CustomOverlay content 로 붙인 DOM 노드
+  const [overlayEls, setOverlayEls] = useState<{ id: string; el: HTMLDivElement }[]>([])
+  const [myLocationEl, setMyLocationEl] = useState<HTMLDivElement | null>(null)
+  const [pinEl, setPinEl] = useState<HTMLDivElement | null>(null)
 
-export default function KakaoMap({ onDistrictClick }: Props) {
-  const mapRef = useRef<HTMLDivElement>(null)
-  const polygonsRef = useRef<kakao.maps.Polygon[]>([])
-  const overlaysRef = useRef<kakao.maps.CustomOverlay[]>([])
-  const hoverOverlayRef = useRef<kakao.maps.CustomOverlay | null>(null)
+  const { isLoaded, error } = useKakaoMapsSDK()
 
-  const { isLoaded, error: sdkError } = useKakaoMapsSDK()
-  const { data: geoJson, loading: geoLoading, error: geoError } = useSeoulGeoJson()
+  useImperativeHandle(ref, () => ({
+    panTo: (lat, lng, level, offsetY) => {
+      if (!map) return
+      if (level !== undefined) map.setLevel(level)
+      const target = new kakao.maps.LatLng(lat, lng)
+      if (!offsetY) {
+        map.panTo(target)
+        return
+      }
+      // 오프셋 센터링 — 좌표가 화면 중앙보다 offsetY(px) 만큼 위에 오도록
+      // 중심을 화면 기준 아래로 이동 (panBy 는 화면 픽셀 기준이라 좌표계 뒤집힘 걱정이 없다)
+      map.setCenter(target)
+      map.panBy(0, offsetY)
+    },
+  }))
 
+  // 지도 생성 (SDK 로드 후 1회)
   useEffect(() => {
-    if (!isLoaded || !geoJson || !mapRef.current) return
-
-    const map = new kakao.maps.Map(mapRef.current, {
+    if (!isLoaded || !containerRef.current) return
+    const instance = new kakao.maps.Map(containerRef.current, {
       center: new kakao.maps.LatLng(SEOUL_CENTER.lat, SEOUL_CENTER.lng),
-      level: MAP_LEVEL,
+      level: DEFAULT_LEVEL,
     })
+    setMap(instance)
+  }, [isLoaded])
 
-    // hover 툴팁
-    const hoverEl = document.createElement('div')
-    hoverEl.className = 'district-tooltip'
-    const hoverOverlay = new kakao.maps.CustomOverlay({
-      content: hoverEl,
-      position: new kakao.maps.LatLng(SEOUL_CENTER.lat, SEOUL_CENTER.lng),
-      yAnchor: 2.2,
-      zIndex: 200,
-    })
-    hoverOverlayRef.current = hoverOverlay
+  // 생성 완료 알림 — 콜백 참조 변경으로 지도를 재생성하지 않게 ref 로 최신 콜백만 유지
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
+  useEffect(() => {
+    if (map) onReadyRef.current?.()
+  }, [map])
 
-    // 구별 라벨 중심 누적
-    const guAccum = new Map<string, { latSum: number; lngSum: number; count: number }>()
+  // 마커 오버레이 생성/갱신
+  useEffect(() => {
+    if (!map || markers.length === 0) return
 
-    geoJson.features.forEach((feature) => {
-      const guName = feature.properties.sggnm
-      const districtInfo = districtMap.get(guName)
-      if (!districtInfo) return
-
-      const group = GROUPS[districtInfo.group]
-      const outerRings = getOuterRings(feature)
-
-      outerRings.forEach((ring) => {
-        const path = ringToLatLng(ring)
-        const polygon = new kakao.maps.Polygon({
-          map,
-          path,
-          strokeWeight: 1,
-          strokeColor: '#ffffff',
-          strokeOpacity: 0.6,
-          fillColor: group.color,
-          fillOpacity: 0.65,
-          zIndex: 1,
-        })
-        polygonsRef.current.push(polygon)
-
-        const [cLat, cLng] = ringCentroid(ring)
-
-        kakao.maps.event.addListener(polygon, 'mouseover', () => {
-          polygon.setOptions({ fillOpacity: 0.88, strokeWeight: 2 })
-          hoverEl.textContent = guName
-          hoverOverlay.setPosition(new kakao.maps.LatLng(cLat, cLng))
-          hoverOverlay.setMap(map)
-        })
-        kakao.maps.event.addListener(polygon, 'mouseout', () => {
-          polygon.setOptions({ fillOpacity: 0.65, strokeWeight: 1 })
-          hoverOverlay.setMap(null)
-        })
-        kakao.maps.event.addListener(polygon, 'click', () => {
-          onDistrictClick(districtInfo)
-        })
-
-        const acc = guAccum.get(guName) ?? { latSum: 0, lngSum: 0, count: 0 }
-        acc.latSum += cLat
-        acc.lngSum += cLng
-        acc.count += 1
-        guAccum.set(guName, acc)
-      })
-    })
-
-    // 구 이름 라벨 (구당 1개)
-    guAccum.forEach((acc, guName) => {
-      const labelEl = document.createElement('div')
-      labelEl.className = 'district-label'
-      labelEl.innerHTML = `<span class="dl-name">${guName}</span>`
+    const created = markers.map((marker) => {
+      const el = document.createElement('div')
+      // 콘텐츠는 portal 로 나중에 채워져 kakao 의 anchor 계산(부착 시점 크기 측정)이 0 이 된다.
+      // anchor 는 0 으로 고정하고 콘텐츠가 CSS translate 로 스스로 중앙 정렬한다.
       const overlay = new kakao.maps.CustomOverlay({
-        content: labelEl,
-        position: new kakao.maps.LatLng(acc.latSum / acc.count, acc.lngSum / acc.count),
-        yAnchor: 0.5,
+        content: el,
+        position: new kakao.maps.LatLng(marker.lat, marker.lng),
+        xAnchor: 0,
+        yAnchor: 0,
         zIndex: 10,
+        clickable: true,
       })
       overlay.setMap(map)
-      overlaysRef.current.push(overlay)
+      return { id: marker.id, el, overlay }
     })
+    setOverlayEls(created.map(({ id, el }) => ({ id, el })))
 
     return () => {
-      polygonsRef.current.forEach((p) => p.setMap(null))
-      overlaysRef.current.forEach((o) => o.setMap(null))
-      polygonsRef.current = []
-      overlaysRef.current = []
-      hoverOverlay.setMap(null)
+      created.forEach(({ overlay }) => overlay.setMap(null))
+      setOverlayEls([])
     }
-  }, [isLoaded, geoJson, onDistrictClick])
+  }, [map, markers])
 
-  const error = sdkError ?? geoError
-  const loading = !isLoaded || geoLoading
+  // 구 경계 폴리곤 — 오렌지 라인 + 20% 채움
+  useEffect(() => {
+    if (!map || outlines.length === 0) return
 
-  if (error)
+    const polygons = outlines.flatMap((outline) =>
+      outline.rings.map((ring) => {
+        const color = outline.color ?? OUTLINE_COLOR
+        const polygon = new kakao.maps.Polygon({
+          map,
+          path: ring.map((p) => new kakao.maps.LatLng(p.lat, p.lng)),
+          strokeWeight: 1.5,
+          strokeColor: color,
+          strokeOpacity: 1,
+          fillColor: color,
+          fillOpacity: outline.fillOpacity ?? OUTLINE_FILL_OPACITY,
+          zIndex: 1,
+        })
+        return polygon
+      }),
+    )
+
+    return () => {
+      polygons.forEach((polygon) => polygon.setMap(null))
+    }
+  }, [map, outlines])
+
+  // 지도 클릭 (kakao 이벤트 — 드래그 후에는 발생하지 않아 탭/패닝 구분이 필요 없다)
+  useEffect(() => {
+    if (!map || !onMapClick) return
+    const handler = (...args: unknown[]) => {
+      const e = args[0] as kakao.maps.MapMouseEvent
+      onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() })
+    }
+    kakao.maps.event.addListener(map, 'click', handler)
+    return () => kakao.maps.event.removeListener(map, 'click', handler)
+  }, [map, onMapClick])
+
+  // 선택 핀 오버레이 — 핀 꼭짓점이 좌표를 가리키게 yAnchor 1
+  useEffect(() => {
+    if (!map || !pin) return
+
+    const el = document.createElement('div')
+    const overlay = new kakao.maps.CustomOverlay({
+      content: el,
+      position: new kakao.maps.LatLng(pin.lat, pin.lng),
+      xAnchor: 0,
+      yAnchor: 0,
+      zIndex: 30,
+    })
+    overlay.setMap(map)
+    setPinEl(el)
+
+    return () => {
+      overlay.setMap(null)
+      setPinEl(null)
+    }
+  }, [map, pin])
+
+  // 현재 위치 GPS 점 오버레이
+  useEffect(() => {
+    if (!map || !myLocation) return
+
+    const el = document.createElement('div')
+    const overlay = new kakao.maps.CustomOverlay({
+      content: el,
+      position: new kakao.maps.LatLng(myLocation.lat, myLocation.lng),
+      xAnchor: 0,
+      yAnchor: 0,
+      zIndex: 20,
+    })
+    overlay.setMap(map)
+    setMyLocationEl(el)
+
+    return () => {
+      overlay.setMap(null)
+      setMyLocationEl(null)
+    }
+  }, [map, myLocation])
+
+  if (error) {
     return (
-      <div className="map-status error">
-        <p>⚠️ {error}</p>
+      <div className={cn('flex items-center justify-center bg-gray-70 px-5', className)}>
+        <p className="text-center text-body-m-medium text-gray-500">{error}</p>
       </div>
     )
-  if (loading)
-    return (
-      <div className="map-status loading">
-        <div className="spinner" />
-        <p>지도 데이터를 불러오는 중...</p>
-      </div>
-    )
+  }
 
-  return <div ref={mapRef} className="kakao-map" />
+  const markerById = new Map(markers.map((m) => [m.id, m]))
+
+  return (
+    <div className={className}>
+      {!isLoaded && (
+        <div className="flex size-full items-center justify-center bg-gray-70">
+          <Spinner />
+        </div>
+      )}
+      <div ref={containerRef} className={cn('size-full', !isLoaded && 'hidden')} />
+      {myLocationEl &&
+        createPortal(
+          <img
+            src={iconGps}
+            alt="현재 위치"
+            className="pointer-events-none w-[50px] max-w-none -translate-x-1/2 -translate-y-1/2"
+          />,
+          myLocationEl,
+        )}
+      {/* 핀은 꼭짓점(바닥)이 좌표를 가리키게 아래 기준 정렬 */}
+      {pinEl &&
+        createPortal(
+          <MapPin
+            variant="inactive"
+            className="pointer-events-none -translate-x-1/2 -translate-y-full"
+          />,
+          pinEl,
+        )}
+      {overlayEls.map(({ id, el }) => {
+        const marker = markerById.get(id)
+        if (!marker) return null
+        return createPortal(
+          // 마커 탭은 상세 진입 — 지도 빈 곳 탭(시트 접기 등)과 구분되게 전파를 끊는다
+          <div role="presentation" onClick={(e) => e.stopPropagation()}>
+            <LocationMarker
+              title={marker.title}
+              caption={marker.caption}
+              onClick={onMarkerClick ? () => onMarkerClick(id) : undefined}
+              className={cn('-translate-x-1/2 -translate-y-1/2', onMarkerClick && 'cursor-pointer')}
+            />
+          </div>,
+          el,
+          id,
+        )
+      })}
+    </div>
+  )
 }

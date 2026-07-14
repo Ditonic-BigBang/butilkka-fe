@@ -48,13 +48,35 @@ export const Decline: Story = {
   name: '쇠퇴형 (C등급)',
 }
 
-/** 고위험 D등급 — 게이지 ~90% (마커 4/4). */
+/** 고위험 D등급 — 게이지 ~91% (마커 4/4). */
 export const HighRisk: Story = {
   name: '고위험 (D등급)',
   args: {
     grade: 'D등급',
     status: '위험',
-    progress: 0.92,
+    progress: 0.91,
     description: '쇠퇴 신호가 전방위로 확산되고 있어요.\n즉각적인 대응 전략이 필요합니다.',
+  },
+}
+
+/** A등급 16% — 점수가 첫 마커(12.5%) 근처라 점을 감싸게 스냅되는 케이스. */
+export const SafeA: Story = {
+  name: '안전 (A등급, 마커 스냅)',
+  args: {
+    grade: 'A등급',
+    status: '안전',
+    progress: 0.16,
+    description: '상권이 안정적으로 유지되고 있어요.',
+  },
+}
+
+/** B등급 38% — 보정 없으면 두 번째 마커(37.5%)를 반으로 자르는 케이스. */
+export const StableB: Story = {
+  name: '양호 (B등급, 마커 스냅)',
+  args: {
+    grade: 'B등급',
+    status: '양호',
+    progress: 0.38,
+    description: '일부 지표에 변동이 있지만 양호한 흐름이에요.',
   },
 }

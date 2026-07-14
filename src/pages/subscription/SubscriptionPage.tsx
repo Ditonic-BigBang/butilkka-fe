@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
@@ -39,20 +39,34 @@ const BENEFITS = [
   },
 ]
 
+// 이 이내로 하단에 붙어 있으면 "맨 밑" 으로 판정 — 모바일 소수점 scrollTop 오차 흡수
+const AT_BOTTOM_EPSILON = 16
+
 /**
  * 구독 플랜 확인하기 (Figma: [4-9] 요금제 과정 1248:14758).
  * 마이페이지 "리포트 업그레이드 하기"·리포트 잠금 카드 → 진입. 헤더 + 구독 혜택 4종 +
  * 일반 vs 구독 비교표 + 연간/월간 플랜 선택 + "구독 시작하기" CTA.
- * CTA 는 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 리포트 잠금이 풀린다.
+ * CTA 는 하단 플로팅(sticky) — 맨 밑이 아니면 탭 시 끝까지 스크롤, 맨 밑에서 탭하면
+ * 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 리포트 잠금이 풀린다.
  */
 export default function SubscriptionPage() {
   const navigate = useNavigate()
   const [plan, setPlan] = useState<PlanKey>('annual')
   const subscription = useSubscribe()
+  const rootRef = useRef<HTMLDivElement>(null)
   // 상단 그라데이션 시작색을 노치·상태바까지 이어 보이게 (Android 상태바 색)
   useThemeColor(THEME_COLORS.subscriptionWarm)
 
-  const handleSubscribe = () => {
+  const handleCtaClick = () => {
+    // 스크롤러는 MobileLayout 의 main — 페이지 루트의 부모
+    const scroller = rootRef.current?.parentElement
+    if (scroller) {
+      const remaining = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
+      if (remaining > AT_BOTTOM_EPSILON) {
+        scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
+        return
+      }
+    }
     subscription.mutate(plan, {
       onSuccess: () => navigate('/my/subscription/complete', { state: { plan } }),
     })
@@ -61,7 +75,7 @@ export default function SubscriptionPage() {
   return (
     // className: 프레임(노치 영역 포함) 배경을 그라데이션 시작색으로 → iOS 노치가 헤더와 이어짐
     <MobileLayout showBottomTab={false} className="bg-subscription-warm">
-      <div className="relative flex min-h-full flex-col bg-white">
+      <div ref={rootRef} className="relative flex min-h-full flex-col bg-white">
         {/* 상단 웜 그라데이션 (헤더 배경) — Gradation/3 */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[442px] bg-gradation-3" />
 
@@ -142,14 +156,17 @@ export default function SubscriptionPage() {
           </section>
         </div>
 
-        {subscription.isError && (
-          <p className="px-5 pb-1 text-center text-body-m-medium text-status-red">
-            {subscription.error.message}
-          </p>
-        )}
-        <CTA disabled={subscription.isPending} onClick={handleSubscribe}>
-          {subscription.isPending ? '구독 처리 중…' : '구독 시작하기'}
-        </CTA>
+        {/* 플로팅 CTA — 투명 바탕으로 콘텐츠 위에 버튼만 떠서 항상 노출 */}
+        <div className="sticky bottom-0 z-10 mt-auto">
+          {subscription.isError && (
+            <p className="px-5 pt-2 pb-1 text-center text-body-m-medium text-status-red">
+              {subscription.error.message}
+            </p>
+          )}
+          <CTA transparent disabled={subscription.isPending} onClick={handleCtaClick}>
+            {subscription.isPending ? '구독 처리 중…' : '구독 시작하기'}
+          </CTA>
+        </div>
       </div>
     </MobileLayout>
   )

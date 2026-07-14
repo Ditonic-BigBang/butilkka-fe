@@ -13,7 +13,7 @@ const UP_TREND = [
   { label: '1분기', value: 506 },
 ]
 
-/** 홈 지표 추이 카드. Figma: Home_Graph 585:11060 · 585:11172. */
+/** 홈 지표 추이 카드. Figma: Home_Graph 1390:14011 · 585:11172. */
 const meta = {
   title: 'Shared/MetricTrendCard',
   component: MetricTrendCard,
@@ -22,9 +22,9 @@ const meta = {
     docs: {
       description: {
         component: [
-          '홈 지표 추이 카드 (보기 전용). **Figma:** `585:11060` · `585:11172`',
+          '홈 지표 추이 카드 (보기 전용). **Figma:** `1390:14011` · `585:11172`',
           '',
-          '- 제목 + 큰 값(28px) + 증감 칩(▲빨강 soft red / ▼파랑 soft blue)',
+          '- 제목 + 큰 값(28px) + 증감 칩(▲빨강 soft red / ▼파랑 soft blue, 값 아래 세로 배치)',
           '- 3포인트 스파크라인 — 세로 가이드선 + 라벨, 마지막 점 흰 링',
           '- **vertical**: 반폭, 차트 아래 (유동인구·점포수) · **horizontal**: 전폭, 차트 우측 (폐업률)',
         ].join('\n'),
@@ -52,6 +52,20 @@ type Story = StoryObj<typeof meta>
 /** 유동인구 — 세로, ▼파랑 칩. */
 export const FloatingPopulation: Story = {
   name: '유동인구 (세로)',
+  render: (args) => (
+    <div className="w-[170px]">
+      <MetricTrendCard {...args} />
+    </div>
+  ),
+}
+
+/** 긴 값 — 값이 길어도 칩이 아래라 안 밀린다 (Figma 1390:14011 예시). */
+export const LongValue: Story = {
+  name: '긴 값 (세로)',
+  args: {
+    value: '-9,299.31%',
+    change: { direction: 'down', label: '15,289명' },
+  },
   render: (args) => (
     <div className="w-[170px]">
       <MetricTrendCard {...args} />

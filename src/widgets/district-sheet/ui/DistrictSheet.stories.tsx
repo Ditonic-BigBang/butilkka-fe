@@ -43,7 +43,7 @@ type DemoProps = Parameters<typeof DistrictSheet>[0]
 function Demo({ title, subtitle, content }: Omit<DemoProps, 'open' | 'onClose'>) {
   const [open, setOpen] = useState(true)
   return (
-    <div className="flex h-dvh flex-col items-center bg-gray-100 p-5">
+    <div className="relative flex h-dvh flex-col items-center bg-gray-100 p-5">
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -54,6 +54,7 @@ function Demo({ title, subtitle, content }: Omit<DemoProps, 'open' | 'onClose'>)
       <DistrictSheet
         open={open}
         onClose={() => setOpen(false)}
+        className="absolute inset-x-0 bottom-0"
         title={title}
         subtitle={subtitle}
         content={content}
@@ -102,7 +103,7 @@ export const Ranking: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(await canvas.findByRole('dialog', { name: '쇠퇴 등급' })).toBeInTheDocument()
+    await expect(await canvas.findByRole('region', { name: '쇠퇴 등급' })).toBeInTheDocument()
     await expect(await canvas.findByText('서울 서대문구')).toBeInTheDocument()
     await expect(await canvas.findByText('평균 영업 기간')).toBeInTheDocument()
   },

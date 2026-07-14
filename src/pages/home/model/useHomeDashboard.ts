@@ -29,12 +29,17 @@ export type HomeDashboard = {
 // "2026Q1" → "1분기"
 const quarterLabel = (quarter: string) => `${quarter.slice(-1)}분기`
 
+// 변화율(%) 표시 — 소수점 둘째 자리까지 반올림, 뒤 0 은 안 붙는다 (18 → "18", 9299.3131 → "9,299.31").
+// 표시 자릿수는 화면 정책이라 FE 에서 처리한다 — 백엔드는 원값 그대로.
+// 부호는 direction 으로 붙이므로 delta 가 음수로 와도 이중 부호가 안 생기게 절댓값 사용.
+const formatDelta = (n: number) => Math.abs(n).toLocaleString('ko-KR', { maximumFractionDigits: 2 })
+
 // withChange=false 면 개수 칩을 숨긴다(폐업률). m.gap 은 그대로라 다시 켜기는 인자만 바꾸면 됨.
 function toMetric(title: string, unit: string, m: MetricSeries, withChange = true): HomeMetric {
   const sign = m.direction === 'UP' ? '+' : '-'
   return {
     title,
-    value: `${sign}${m.delta}%`,
+    value: `${sign}${formatDelta(m.delta)}%`,
     change: withChange
       ? {
           direction: m.direction === 'UP' ? 'up' : 'down',

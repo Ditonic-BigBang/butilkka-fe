@@ -1,5 +1,7 @@
 export type ReportGrade = 'A' | 'B' | 'C' | 'D' | 'E'
 export type ReportDeclineType = '성장형' | '순환형' | '쇠퇴형' | '정체형'
+/** 다음 분기 예측 추이 (2026-07-14 백엔드 추가) */
+export type ReportPredictedTrend = '성장' | '유지' | '쇠퇴'
 export type ReportCauseLevel = '높음' | '중간' | '낮음'
 export type ReportRecommendation = '버티기' | '이동'
 
@@ -67,6 +69,10 @@ export interface ReportResponse {
   briefing: string
   /** AI 종합 전망 (5~6줄) */
   aiOutlook: string
+  /** 다음 분기 예측 추이 — quarterly_history(8분기 이력) 없으면 null (2026-07-14 백엔드 추가) */
+  predictedTrend: ReportPredictedTrend | null
+  /** 다음 분기 예측 등급 — quarterly_history 없으면 null (2026-07-14 백엔드 추가) */
+  predictedNextGrade: ReportGrade | null
   causes: ReportCause[]
   leadingSignals: ReportLeadingSignal[]
   similarCases: ReportSimilarCase[]

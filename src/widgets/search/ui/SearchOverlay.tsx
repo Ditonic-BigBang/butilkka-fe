@@ -21,11 +21,17 @@ type SearchOverlayProps = {
   onResultSelect?: (id: string) => void
   /** 즐겨찾는 지역 (포커스 + 빈값 → 있으면 목록, 없으면 등록 안내) */
   savedPlaces?: string[]
+  /** 즐겨찾는 지역 탭 — 해당 구 선택으로 지도 복귀 */
+  onPlaceSelect?: (place: string) => void
   onEditPlaces?: () => void
   onAddPlace?: () => void
   /** 즐겨찾기 등록 모드 (placeholder 변경 + "지도에서 선택") */
   registerMode?: boolean
   onSelectFromMap?: () => void
+  /** 검색 모드(포커스) 전환 알림 — 페이지가 풀스크린 전환·하단 탭 숨김에 사용 */
+  onFocusChange?: (focused: boolean) => void
+  /** 검색 input ref — 등록 완료 후 검색 화면으로 복귀할 때 프로그램적 포커스용 */
+  inputRef?: React.Ref<HTMLInputElement>
   className?: string
 }
 
@@ -54,13 +60,20 @@ export function SearchOverlay({
   results = NO_RESULTS,
   onResultSelect,
   savedPlaces = NO_PLACES,
+  onPlaceSelect,
   onEditPlaces,
   onAddPlace,
   registerMode = false,
   onSelectFromMap,
+  onFocusChange,
+  inputRef,
   className,
 }: SearchOverlayProps) {
-  const [focused, setFocused] = useState(false)
+  const [focused, setFocusedState] = useState(false)
+  const setFocused = (next: boolean) => {
+    setFocusedState(next)
+    onFocusChange?.(next)
+  }
 
   const exitSearch = () => {
     onQueryChange('')
@@ -76,13 +89,13 @@ export function SearchOverlay({
           onWheel={(e) => {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) e.currentTarget.scrollLeft += e.deltaY
           }}
-          className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-5 [&::-webkit-scrollbar]:hidden"
+          className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)] [&::-webkit-scrollbar]:hidden"
         >
           {filters.map((f) => (
             <FilterChip
               key={f.key}
               caret={f.caret}
-              selected={selectedFilter === f.key}
+              selected={f.selected ?? selectedFilter === f.key}
               onClick={() => onFilterSelect?.(f.key)}
               className="shrink-0"
             >
@@ -102,7 +115,12 @@ export function SearchOverlay({
               label={r.label}
               query={query}
               onMouseDown={keepFocus}
-              onClick={() => onResultSelect?.(r.id)}
+              // 결과 선택 = 지도로 복귀 — 단, 등록 모드는 검색 화면에 남아 토스트를 보여준다
+              onClick={() => {
+                onResultSelect?.(r.id)
+                if (!registerMode) exitSearch()
+                else onQueryChange('')
+              }}
             />
           ))}
         </div>
@@ -115,7 +133,11 @@ export function SearchOverlay({
           <button
             type="button"
             onMouseDown={keepFocus}
-            onClick={onSelectFromMap}
+            // 지도에서 선택 = 검색 화면을 닫고 지도 선택 모드로
+            onClick={() => {
+              onSelectFromMap?.()
+              exitSearch()
+            }}
             className={ACTION_ROW}
           >
             <MapIcon aria-hidden className="size-5 shrink-0" />
@@ -130,10 +152,20 @@ export function SearchOverlay({
         <div className="flex w-full items-center justify-between px-5">
           <div className="flex min-w-0 items-center gap-3.5">
             {savedPlaces.map((place) => (
-              <span key={place} className="flex shrink-0 items-center gap-1">
+              <button
+                key={place}
+                type="button"
+                onMouseDown={keepFocus}
+                // 즐겨찾는 구 탭 = 그 구 선택으로 지도 복귀
+                onClick={() => {
+                  onPlaceSelect?.(place)
+                  exitSearch()
+                }}
+                className="flex shrink-0 items-center gap-1"
+              >
                 <LocationPin aria-hidden className="size-[22px] shrink-0 text-orange-500" />
                 <span className="text-body-m-medium text-gray-500">{place}</span>
-              </span>
+              </button>
             ))}
           </div>
           <button
@@ -173,19 +205,35 @@ export function SearchOverlay({
         }
       }}
       className={cn(
-        'flex w-full flex-col gap-4 bg-white pt-[60px] pb-4 shadow-[0_2px_10px_rgba(0,0,0,0.1)]',
+        'flex w-full flex-col',
+        // 포커스 시엔 풀스크린 흰 검색 화면(지도 - 검색시 257:7104), 평상시엔 투명 — 칩 행 뒤로 지도가 비친다
+        focused && 'h-full bg-white',
         className,
       )}
     >
-      <div className="px-5">
-        <SearchInput
-          value={query}
-          onChange={onQueryChange}
-          onBack={exitSearch}
-          placeholder={registerMode ? '즐겨찾는 지역으로 등록할 구 검색' : undefined}
-        />
+      {/* 상단 검색 시트 — 풀스크린 흰 배경 위에 그림자로 경계만 표시 */}
+      <div
+        className={cn(
+          'flex w-full flex-col',
+          focused ? 'gap-4 bg-white pb-4 shadow-[0_2px_10px_rgba(0,0,0,0.1)]' : 'gap-2.5',
+        )}
+      >
+        <div
+          className={cn(
+            'w-full px-5 pt-4',
+            !focused && 'bg-white pb-3 shadow-[0_2px_2px_rgba(0,0,0,0.05)]',
+          )}
+        >
+          <SearchInput
+            ref={inputRef}
+            value={query}
+            onChange={onQueryChange}
+            onBack={exitSearch}
+            placeholder={registerMode ? '즐겨찾는 지역으로 등록할 구 검색' : undefined}
+          />
+        </div>
+        {renderBelow()}
       </div>
-      {renderBelow()}
     </div>
   )
 }
