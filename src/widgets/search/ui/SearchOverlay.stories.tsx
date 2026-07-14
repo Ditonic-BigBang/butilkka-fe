@@ -137,9 +137,15 @@ export const SearchFocusFlow: Story = {
       await expect(canvas.getByRole('button', { name: /지도에서 선택/ })).toBeInTheDocument()
     })
 
-    await step('지도에서 선택 → Toast + Myplaces 등록', async () => {
+    await step('지도에서 선택 → 검색 화면 닫힘 + Toast', async () => {
       await userEvent.click(canvas.getByRole('button', { name: /지도에서 선택/ }))
       await expect(await canvas.findByText('즐겨찾는 지역에 등록되었습니다.')).toBeInTheDocument()
+      // 지도에서 선택은 검색 화면을 닫는다 — 필터칩 뷰로 복귀
+      await expect(canvas.getByRole('button', { name: '쇠퇴등급' })).toBeInTheDocument()
+    })
+
+    await step('재포커스 → Myplaces 에 등록된 구 표시', async () => {
+      await userEvent.click(canvas.getByRole('searchbox'))
       await expect(canvas.getByText('서대문구')).toBeInTheDocument()
     })
   },
