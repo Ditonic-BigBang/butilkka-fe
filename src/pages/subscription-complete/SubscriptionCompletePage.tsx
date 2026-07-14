@@ -28,7 +28,7 @@ function fireConfetti(img: HTMLImageElement | null): ReturnType<typeof setTimeou
 
   // 큰 한 방 + 잠깐 뒤 잔폭죽 — 조각 적게, ticks 짧게(빨리 사라짐)
   void confetti({
-    particleCount: 45,
+    particleCount: 60,
     spread: 70,
     startVelocity: 45,
     ticks: 120,
@@ -38,7 +38,7 @@ function fireConfetti(img: HTMLImageElement | null): ReturnType<typeof setTimeou
   })
   return setTimeout(() => {
     void confetti({
-      particleCount: 18,
+      particleCount: 25,
       spread: 100,
       startVelocity: 30,
       ticks: 100,
