@@ -300,6 +300,11 @@ export default function MapPage() {
             results={search.results}
             onResultSelect={handleResultSelect}
             savedPlaces={favorites.map((f) => f.district)}
+            onPlaceSelect={(district) => {
+              const representative = regionByDistrict?.get(district)
+              if (representative) selectDistrict(district, representative.regionCode)
+              else panToDistrict(district)
+            }}
             onEditPlaces={() => navigate('/map/favorites')}
             onAddPlace={() => setRegisterMode(true)}
             registerMode={registerMode}
@@ -347,7 +352,6 @@ export default function MapPage() {
               averagePeriod={ranking.data?.averagePeriod}
               onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
               detail={detailRegionCode !== null ? detail.data : null}
-              onClearDetail={clearSelection}
               expanded={sheetExpanded}
               onExpandedChange={setSheetExpanded}
               isPending={ranking.isPending}

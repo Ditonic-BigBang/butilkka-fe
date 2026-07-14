@@ -59,9 +59,8 @@ type RankingSheetProps = {
   averagePeriod?: { label: string; years: string }
   /** 순위 행 탭 — 해당 구 상세로 진입 */
   onRowClick?: (row: RankingRow) => void
-  /** 선택한 구 상세 — 있으면 랭킹 대신 카테고리별 상세 본문을 그 자리에서 보여준다 */
+  /** 선택한 구 상세 — 있으면 랭킹 대신 카테고리별 상세 본문을 그 자리에서 보여준다 (해제는 검색바 ✕) */
   detail?: SheetDetailView | null
-  onClearDetail?: () => void
   /** 펼침 상태 제어 — 지정 시 controlled (지도 탭으로 접기 등 외부 전환용) */
   expanded?: boolean
   onExpandedChange?: (expanded: boolean) => void
@@ -85,7 +84,6 @@ export function RankingSheet({
   averagePeriod,
   onRowClick,
   detail,
-  onClearDetail,
   expanded: controlledExpanded,
   onExpandedChange,
   isPending = false,
@@ -186,15 +184,6 @@ export function RankingSheet({
             </span>
           </span>
         </button>
-        {detail && onClearDetail && (
-          <button
-            type="button"
-            onClick={onClearDetail}
-            className="absolute top-[38px] right-5 text-body-m-regular text-gray-400"
-          >
-            전체 보기
-          </button>
-        )}
       </div>
       <div className="h-px w-full bg-gray-90" />
 

@@ -88,14 +88,12 @@ describe('RankingSheet', () => {
         onOrderChange={() => {}}
         rows={[]}
         detail={detail}
-        onClearDetail={() => {}}
       />,
     )
 
     expect(screen.getByText('서울 서대문구')).toBeInTheDocument()
     expect(screen.getByText('789')).toBeInTheDocument()
     expect(screen.getByText('이전 분기 대비')).toBeInTheDocument()
-    expect(screen.getByText('전체 보기')).toBeInTheDocument()
     // 상세 모드에선 정렬 탭이 없다
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
   })

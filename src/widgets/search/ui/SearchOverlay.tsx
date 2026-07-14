@@ -21,6 +21,8 @@ type SearchOverlayProps = {
   onResultSelect?: (id: string) => void
   /** 즐겨찾는 지역 (포커스 + 빈값 → 있으면 목록, 없으면 등록 안내) */
   savedPlaces?: string[]
+  /** 즐겨찾는 지역 탭 — 해당 구 선택으로 지도 복귀 */
+  onPlaceSelect?: (place: string) => void
   onEditPlaces?: () => void
   onAddPlace?: () => void
   /** 즐겨찾기 등록 모드 (placeholder 변경 + "지도에서 선택") */
@@ -58,6 +60,7 @@ export function SearchOverlay({
   results = NO_RESULTS,
   onResultSelect,
   savedPlaces = NO_PLACES,
+  onPlaceSelect,
   onEditPlaces,
   onAddPlace,
   registerMode = false,
@@ -149,10 +152,20 @@ export function SearchOverlay({
         <div className="flex w-full items-center justify-between px-5">
           <div className="flex min-w-0 items-center gap-3.5">
             {savedPlaces.map((place) => (
-              <span key={place} className="flex shrink-0 items-center gap-1">
+              <button
+                key={place}
+                type="button"
+                onMouseDown={keepFocus}
+                // 즐겨찾는 구 탭 = 그 구 선택으로 지도 복귀
+                onClick={() => {
+                  onPlaceSelect?.(place)
+                  exitSearch()
+                }}
+                className="flex shrink-0 items-center gap-1"
+              >
                 <LocationPin aria-hidden className="size-[22px] shrink-0 text-orange-500" />
                 <span className="text-body-m-medium text-gray-500">{place}</span>
-              </span>
+              </button>
             ))}
           </div>
           <button
