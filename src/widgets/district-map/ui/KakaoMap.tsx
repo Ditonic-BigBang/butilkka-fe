@@ -41,6 +41,8 @@ type KakaoMapProps = {
   pin?: { lat: number; lng: number } | null
   /** 지도 빈 곳 클릭 (kakao 클릭 이벤트 — 드래그와 자동 구분됨) */
   onMapClick?: (point: { lat: number; lng: number }) => void
+  /** 지도 인스턴스 생성 완료 — 초기 위치 이동 등 ref 조작이 가능해진 시점 */
+  onReady?: () => void
   className?: string
   ref?: Ref<KakaoMapHandle>
 }
@@ -67,6 +69,7 @@ export default function KakaoMap({
   myLocation,
   pin,
   onMapClick,
+  onReady,
   className,
   ref,
 }: KakaoMapProps) {
@@ -96,6 +99,13 @@ export default function KakaoMap({
     })
     setMap(instance)
   }, [isLoaded])
+
+  // 생성 완료 알림 — 콜백 참조 변경으로 지도를 재생성하지 않게 ref 로 최신 콜백만 유지
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
+  useEffect(() => {
+    if (map) onReadyRef.current?.()
+  }, [map])
 
   // 마커 오버레이 생성/갱신
   useEffect(() => {

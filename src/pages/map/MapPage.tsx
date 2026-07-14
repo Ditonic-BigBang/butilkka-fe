@@ -28,6 +28,7 @@ import { useRanking } from './model/useRanking'
 import { useRegionSearch } from './model/useRegionSearch'
 import { useRegionDetail } from './model/useRegionDetail'
 import { useFavorites, MAX_FAVORITES } from '@/entities/favorite'
+import { useMyStores } from '@/entities/store'
 import { RankingSheet } from './ui/RankingSheet'
 import { QuarterSheet } from './ui/QuarterSheet'
 import { RegisterSelect } from './ui/RegisterSelect'
@@ -125,6 +126,9 @@ export default function MapPage() {
   // 미포커스 검색바는 선택된 구 표시용 — 그 값으로 검색 API 를 부르지 않는다
   const search = useRegionSearch(query, searching)
   const { favorites, add: addFavorite } = useFavorites()
+  // 첫 진입 시 지도 초기 위치 = 대표 가게가 속한 구 (목록은 대표가 맨 위로 정렬됨)
+  const { data: myStores } = useMyStores()
+  const primaryStore = myStores?.[0]
 
   const panToDistrict = useCallback(
     (district: string) => {
@@ -156,6 +160,26 @@ export default function MapPage() {
     setQuery(next)
     if (!next && !searching && selectedDistrict) clearSelection()
   }
+
+  // 첫 진입 시 대표 가게의 구로 지도 이동 — 지도·가게·경계가 모두 준비된 뒤 딱 한 번.
+  // 가게가 없거나(온보딩 전) 이미 구를 선택했으면 기본(서울 전체) 유지.
+  const [mapReady, setMapReady] = useState(false)
+  const initialFocusDone = useRef(false)
+  useEffect(() => {
+    if (initialFocusDone.current || !mapReady || !primaryStore || !guBoundaries || !centroids)
+      return
+    if (selectedDistrict) {
+      initialFocusDone.current = true
+      return
+    }
+    // 좌표 → 구 판정, 경계 밖(좌표 오류 등)이면 주소의 "~구" 토큰 폴백
+    const district =
+      findDistrictAt({ lat: primaryStore.lat, lng: primaryStore.lng }, guBoundaries) ??
+      primaryStore.address?.split(' ').find((token) => token.endsWith('구'))
+    initialFocusDone.current = true
+    const point = district ? centroids.get(district) : undefined
+    if (point) mapRef.current?.panTo(point.lat, point.lng, GU_ZOOM_LEVEL)
+  }, [mapReady, primaryStore, guBoundaries, centroids, selectedDistrict])
 
   // 즐겨찾기 등록 완료 — 검색 화면으로 복귀해 갱신된 목록 + 토스트를 보여준다 (Figma 257:9468)
   const finishRegister = () => {
@@ -277,6 +301,7 @@ export default function MapPage() {
               mapSelecting && mapSelectDistrict ? (centroids?.get(mapSelectDistrict) ?? null) : null
             }
             onMapClick={mapSelecting ? handleRegisterMapClick : undefined}
+            onReady={() => setMapReady(true)}
             className="size-full"
           />
         </div>
