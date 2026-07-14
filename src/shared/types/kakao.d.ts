@@ -8,6 +8,11 @@ declare namespace kakao {
       getCenter(): LatLng
       setLevel(level: number, options?: { animate?: boolean }): void
       getLevel(): number
+      /** 부드럽게 중심 이동 (픽셀 거리가 크면 즉시 이동) */
+      panTo(latlng: LatLng): void
+      /** 화면 픽셀만큼 중심 이동 (dx: 오른쪽 +, dy: 아래 +) */
+      panBy(dx: number, dy: number): void
+      getProjection(): MapProjection
       /** 드래그 이동 허용 여부 (프리뷰 지도는 false) */
       setDraggable(draggable: boolean): void
       /** 스크롤 줌 허용 여부 (프리뷰 지도는 false) */
@@ -25,6 +30,18 @@ declare namespace kakao {
       constructor(lat: number, lng: number)
       getLat(): number
       getLng(): number
+    }
+
+    class Point {
+      constructor(x: number, y: number)
+      x: number
+      y: number
+    }
+
+    /** 좌표 ↔ 픽셀(현재 레벨 기준) 변환 — 오프셋 센터링 등에 사용 */
+    interface MapProjection {
+      pointFromCoords(latlng: LatLng): Point
+      coordsFromPoint(point: Point): LatLng
     }
 
     class Polygon {
@@ -62,6 +79,13 @@ declare namespace kakao {
       xAnchor?: number
       yAnchor?: number
       zIndex?: number
+      /** true 면 오버레이 클릭 시 지도 클릭 이벤트가 발생하지 않음 */
+      clickable?: boolean
+    }
+
+    /** 지도 클릭 등 마우스 이벤트 인자 */
+    interface MapMouseEvent {
+      latLng: LatLng
     }
 
     namespace event {

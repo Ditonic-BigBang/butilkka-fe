@@ -4,3 +4,6 @@ pnpm-lock.yaml
 
 # MSW 가 생성한 워커(벤더 파일) — 포맷 대상 아님
 public/mockServiceWorker.js
+
+# 지도 경계 데이터 — 포맷하면 pretty-print 로 용량만 커짐
+*.geojson

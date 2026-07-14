@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState, type PointerEvent } from 'react'
 import { DistrictRankRow, GradeGauge } from '@/entities/district'
-import { BottomSheet, ChangeIndicator, TrendGraph, type TrendPoint } from '@/shared/ui'
+import { ChangeIndicator, TrendGraph, type TrendPoint } from '@/shared/ui'
 import { cn } from '@/shared/lib/cn'
 
 type Direction = 'up' | 'down' | 'same'
@@ -47,7 +47,11 @@ type DistrictSheetProps = {
   title: string
   subtitle: string
   content: SheetContent
+  className?: string
 }
+
+// 핸들을 아래로 이만큼(px) 끌면 닫힘
+const DISMISS_THRESHOLD = 100
 
 const CHANGE_BG: Record<Direction, string> = {
   up: 'bg-status-red-soft',
@@ -64,7 +68,8 @@ function SectionDivider() {
   return <div className="h-2 w-full bg-gray-70" />
 }
 
-function PeriodSection({ label, years }: AveragePeriod) {
+/** 평균 영업 기간 섹션 — 시트 셸 없이 재사용 (지도 상시 시트의 폐업률 랭킹 하단) */
+export function PeriodSection({ label, years }: AveragePeriod) {
   return (
     <div className="flex flex-col gap-4 p-5">
       <p className="text-body-l-semibold text-gray-800">평균 영업 기간</p>
@@ -121,7 +126,8 @@ function RankingBody({ tabs, ranking, averagePeriod }: RankingContent) {
   )
 }
 
-function GradeBody({ quarter, grade, status, lastGrade, trend, trendTicks }: GradeContent) {
+/** 쇠퇴등급 상세 본문 — 시트 셸 없이 재사용 (지도 상시 시트의 구 선택 상태) */
+export function GradeBody({ quarter, grade, status, lastGrade, trend, trendTicks }: GradeContent) {
   return (
     <>
       <div className="flex flex-col items-center gap-2 px-5 py-6">
@@ -142,7 +148,8 @@ function GradeBody({ quarter, grade, status, lastGrade, trend, trendTicks }: Gra
   )
 }
 
-function MetricBody({
+/** 수치 지표 상세 본문 — 시트 셸 없이 재사용 (지도 상시 시트의 지표 카테고리 구 선택 상태) */
+export function MetricBody({
   quarter,
   value,
   unit,
@@ -205,18 +212,78 @@ function MetricBody({
 }
 
 /**
- * 상권 분석 바텀시트 (Figma: Bottom Sheet 353:10218).
- * 셸(BottomSheet) + content 종류별 조립:
+ * 상권 분석 바텀시트 (Figma: Bottom Sheet 353:10218 · 쇠퇴등급(특정) 176:1140).
+ * 지도 위에 뜨는 **비모달** 시트 — 딤 없이 하단 탭을 가리지 않도록 부모 컨테이너 안에
+ * absolute 로 배치한다(position 은 `className` 으로). 핸들을 아래로 끌면 닫힌다.
+ * content 종류별 조립:
  * - `ranking`: 세그먼트 탭 + 순위 리스트(DistrictRankRow) + 평균 영업 기간 (All)
  * - `grade`: 반원 게이지(GradeGauge) + 지난 분기 pill + 3년 추이 등급 (Grade)
  * - `metric`: 값 + 증감칩 + 3년 추이 값 (+평균 영업 기간) (Graph / Graph_Period)
  */
-export function DistrictSheet({ open, onClose, title, subtitle, content }: DistrictSheetProps) {
+export function DistrictSheet({
+  open,
+  onClose,
+  title,
+  subtitle,
+  content,
+  className,
+}: DistrictSheetProps) {
+  const [dragY, setDragY] = useState(0)
+  const dragging = useRef(false)
+  const startY = useRef(0)
+
+  if (!open) return null
+
+  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    dragging.current = true
+    startY.current = e.clientY
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current) return
+    setDragY(Math.max(0, e.clientY - startY.current))
+  }
+  const handlePointerUp = () => {
+    if (!dragging.current) return
+    dragging.current = false
+    if (dragY > DISMISS_THRESHOLD) onClose?.()
+    setDragY(0)
+  }
+
   return (
-    <BottomSheet open={open} onClose={onClose} title={title} subtitle={subtitle}>
-      {content.type === 'ranking' && <RankingBody {...content} />}
-      {content.type === 'grade' && <GradeBody {...content} />}
-      {content.type === 'metric' && <MetricBody {...content} />}
-    </BottomSheet>
+    <section
+      aria-label={title}
+      className={cn(
+        'flex max-h-[min(646px,100%)] w-full flex-col rounded-t-[20px] bg-white shadow-upper',
+        className,
+      )}
+      style={{
+        transform: `translateY(${dragY}px)`,
+        transition: dragging.current ? 'none' : 'transform 0.25s ease',
+      }}
+    >
+      {/* 핸들 (드래그로 닫기) */}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        className="flex h-[26px] shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+      >
+        <span className="h-1.5 w-[50px] rounded-full bg-gray-90" />
+      </div>
+
+      {/* 헤더 */}
+      <div className="flex shrink-0 flex-col gap-0.5 border-b border-gray-90 px-5 pb-4">
+        <p className="text-title-s-semibold text-gray-900">{title}</p>
+        <p className="text-body-l-medium text-gray-500">{subtitle}</p>
+      </div>
+
+      {/* 콘텐츠 (스크롤) */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {content.type === 'ranking' && <RankingBody {...content} />}
+        {content.type === 'grade' && <GradeBody {...content} />}
+        {content.type === 'metric' && <MetricBody {...content} />}
+      </div>
+    </section>
   )
 }

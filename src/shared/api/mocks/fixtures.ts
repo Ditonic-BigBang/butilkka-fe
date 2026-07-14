@@ -10,6 +10,18 @@ import type {
 } from '@/entities/report'
 import type { DashboardResponse } from '@/entities/dashboard'
 import type { NotificationListResponse } from '@/entities/notification'
+import type {
+  MetricKey,
+  RankingOrder,
+  RegionDetailResponse,
+  RegionDirection,
+  RegionGrade,
+  RegionMapItem,
+  RegionMapResponse,
+  RegionMetricMapResponse,
+  RegionMetricRankingResponse,
+  RegionRankingResponse,
+} from '@/entities/region'
 
 /** GET /api/v1/dashboard 데모 데이터 (명세 예시 기반) */
 export const dashboardMock: DashboardResponse = {
@@ -25,7 +37,8 @@ export const dashboardMock: DashboardResponse = {
   metrics: {
     footTraffic: {
       direction: 'DOWN',
-      delta: 18,
+      // 실서버는 소수점 긴 원값을 준다 — FE 표시 포맷(둘째 자리 반올림) 검증용
+      delta: 18.4271,
       gap: 1215,
       points: [
         { quarter: '2025Q3', value: 132423 },
@@ -92,6 +105,9 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
       '현재 상권은 회복보다 쇠퇴 신호가 강하게 나타나고\n있어요. 지금 바로 대응이 필요해요.',
     aiOutlook:
       '가로수길은 향후 1년간 유동인구 감소와 공실 증가, 그리고 임대료 상승 압력이라는 선행 지표로 인해, 과거 광화문·이태원 상권과 유사한 구조적 침체 초입 국면에 진입할 가능성이 높습니다. 다만 서울시 상권 재생 정책 개입 여부에 따라 회복 경로가 갈릴 수 있습니다.',
+    // 다음 분기 예측 (2026-07-14 백엔드 추가) — 8분기 이력 없으면 실서버는 null
+    predictedTrend: '쇠퇴',
+    predictedNextGrade: 'D',
     causes: [
       { title: '유동인구 감소', level: '높음' },
       { title: '오피스 공실률 상승', level: '중간' },
@@ -164,13 +180,16 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
 }
 
 // 등급 → 데모 쇠퇴 위험도 점수 (지난 리포트 상세 목 생성용)
-const GRADE_SCORES: Record<ReportGrade, number> = { A: 16, B: 38, C: 64, D: 82, E: 94 }
+const GRADE_SCORES: Record<ReportGrade, number> = { A: 16, B: 38, C: 64, D: 91, E: 94 }
 
 /**
  * GET /api/v1/reports/{reportId} 데모 데이터 — 히스토리 항목의 분기·등급·브리핑을
  * 최신 리포트 목에 덮어쓴다. 등급이 좋으면(A·B) '버티기', 나쁘면 '이동' 추천으로
  * 데모에서 두 추천 상태를 모두 볼 수 있게 한다.
  */
+// 예측 등급 데모용 — 한 단계 악화 (E 는 그대로)
+const WORSE_GRADE: Record<ReportGrade, ReportGrade> = { A: 'B', B: 'C', C: 'D', D: 'E', E: 'E' }
+
 export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
   const recommendation = item.grade === 'A' || item.grade === 'B' ? '버티기' : '이동'
   return {
@@ -180,6 +199,9 @@ export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
     grade: item.grade,
     score: GRADE_SCORES[item.grade],
     briefing: item.briefing,
+    // 예측도 등급과 어긋나지 않게 — 좋은 등급은 유지, 나쁜 등급은 한 단계 악화 전망
+    predictedTrend: recommendation === '버티기' ? '유지' : '쇠퇴',
+    predictedNextGrade: recommendation === '버티기' ? item.grade : WORSE_GRADE[item.grade],
   }
 }
 
@@ -344,5 +366,486 @@ export function makeNotificationsMock(): NotificationListResponse {
         sentAt: '2025-12-25T09:00:00',
       },
     ],
+  }
+}
+
+// ── 지도/상권 ────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/regions/map 데모 데이터 — 상권 단위 쇠퇴등급.
+ * 서대문구는 상권 2개(C·E)로 구 단위 마커의 최악 등급 대표 로직을 태운다.
+ * 등급 분포는 declineRankingMock(top: 서대문E→광진E→노원D→용산D→강서C)과 일치.
+ */
+export const regionMapMock: RegionMapResponse = {
+  quarter: '2025Q4',
+  regions: [
+    { regionCode: '3110001', regionName: '신촌', district: '서대문구', grade: 'C' },
+    { regionCode: '3110002', regionName: '이대역', district: '서대문구', grade: 'E' },
+    { regionCode: '3110003', regionName: '건대입구', district: '광진구', grade: 'E' },
+    { regionCode: '3110004', regionName: '노원역', district: '노원구', grade: 'D' },
+    { regionCode: '3110005', regionName: '이태원', district: '용산구', grade: 'D' },
+    { regionCode: '3110006', regionName: '화곡역', district: '강서구', grade: 'C' },
+    { regionCode: '3110007', regionName: '홍대입구', district: '마포구', grade: 'B' },
+    { regionCode: '3110008', regionName: '가로수길', district: '강남구', grade: 'A' },
+    { regionCode: '3110009', regionName: '명동', district: '중구', grade: 'B' },
+    { regionCode: '3110010', regionName: '종로3가', district: '종로구', grade: 'B' },
+    { regionCode: '3110011', regionName: '서울대입구', district: '관악구', grade: 'C' },
+    { regionCode: '3110012', regionName: '왕십리', district: '성동구', grade: 'B' },
+    { regionCode: '3110013', regionName: '잠실', district: '송파구', grade: 'A' },
+    { regionCode: '3110014', regionName: '서초역', district: '서초구', grade: 'A' },
+  ],
+}
+
+/** GET /api/v1/regions/declineRanking 최신 분기 기준 데이터 — 디자인(지도 홈) Top5 와 동일 */
+const declineRankingMock: Record<RankingOrder, RegionRankingResponse> = {
+  top: {
+    order: 'top',
+    quarter: '2025Q4',
+    regions: [
+      {
+        rank: 1,
+        regionCode: '3110002',
+        regionName: '서울 서대문구',
+        decline_grade: 'E',
+        direction: 'UP',
+      },
+      {
+        rank: 2,
+        regionCode: '3110003',
+        regionName: '서울 광진구',
+        decline_grade: 'E',
+        direction: 'DOWN',
+      },
+      {
+        rank: 3,
+        regionCode: '3110004',
+        regionName: '서울 노원구',
+        decline_grade: 'D',
+        direction: 'UP',
+      },
+      {
+        rank: 4,
+        regionCode: '3110005',
+        regionName: '서울 용산구',
+        decline_grade: 'D',
+        direction: 'FLAT',
+      },
+      {
+        rank: 5,
+        regionCode: '3110006',
+        regionName: '서울 강서구',
+        decline_grade: 'C',
+        direction: 'DOWN',
+      },
+    ],
+  },
+  bottom: {
+    order: 'bottom',
+    quarter: '2025Q4',
+    regions: [
+      {
+        rank: 1,
+        regionCode: '3110008',
+        regionName: '서울 강남구',
+        decline_grade: 'A',
+        direction: 'FLAT',
+      },
+      {
+        rank: 2,
+        regionCode: '3110013',
+        regionName: '서울 송파구',
+        decline_grade: 'A',
+        direction: 'UP',
+      },
+      {
+        rank: 3,
+        regionCode: '3110014',
+        regionName: '서울 서초구',
+        decline_grade: 'A',
+        direction: 'FLAT',
+      },
+      {
+        rank: 4,
+        regionCode: '3110007',
+        regionName: '서울 마포구',
+        decline_grade: 'B',
+        direction: 'DOWN',
+      },
+      {
+        rank: 5,
+        regionCode: '3110009',
+        regionName: '서울 중구',
+        decline_grade: 'B',
+        direction: 'UP',
+      },
+    ],
+  },
+}
+
+type MetricSeed = { value: number; direction: RegionDirection }
+
+/**
+ * 상권별 지표 값 시드 — 지표 카테고리(metricMap·metricRanking·상세 요약)가 모두 이 테이블에서
+ * 파생돼 마커·랭킹·구 선택 상세 값이 서로 일치한다. 여기 등록된 지표만 카테고리로 동작(나머지 400).
+ * 구 대표(최댓값) 기준 상위 5위가 디자인 Top5 순서(서대문 > 광진 > 노원 > 용산 > 강서)가 되게 배치.
+ */
+const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
+  // 매출 대비 임대료(원) — 서대문구 대표 789만원
+  rentRatio: {
+    '3110001': { value: 6_120_000, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 7_890_000, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 7_420_000, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 7_180_000, direction: 'UP' }, // 노원역
+    '3110005': { value: 6_950_000, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 6_600_000, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 4_310_000, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 3_950_000, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 4_480_000, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 5_240_000, direction: 'UP' }, // 종로3가
+    '3110011': { value: 5_760_000, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 5_020_000, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 3_620_000, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 3_140_000, direction: 'FLAT' }, // 서초역
+  },
+  // 유동인구(명) — 서대문구 대표 134,302명
+  footTraffic: {
+    '3110001': { value: 121_940, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 134_302, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 128_450, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 122_780, direction: 'UP' }, // 노원역
+    '3110005': { value: 118_630, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 112_940, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 96_210, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 74_380, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 81_020, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 88_760, direction: 'UP' }, // 종로3가
+    '3110011': { value: 102_540, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 91_830, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 78_150, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 68_930, direction: 'FLAT' }, // 서초역
+  },
+  // 공실률(%) — 서대문구 대표 13%
+  vacancyRate: {
+    '3110001': { value: 12.4, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 13, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 12.7, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 12.2, direction: 'UP' }, // 노원역
+    '3110005': { value: 11.8, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 11.3, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 8.9, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 6.4, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 7.2, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 8.1, direction: 'UP' }, // 종로3가
+    '3110011': { value: 9.6, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 8.5, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 6.8, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 5.9, direction: 'FLAT' }, // 서초역
+  },
+  // 폐업률(%) — 서대문구 대표 4.9%
+  closureRate: {
+    '3110001': { value: 4.6, direction: 'UP' }, // 신촌
+    '3110002': { value: 4.9, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 4.7, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 4.4, direction: 'UP' }, // 노원역
+    '3110005': { value: 4.2, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 3.9, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 3.1, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 2.3, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 2.6, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 2.9, direction: 'UP' }, // 종로3가
+    '3110011': { value: 3.4, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 2.7, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 2.4, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 2.1, direction: 'FLAT' }, // 서초역
+  },
+  // 점포수(개) — 서대문구 대표 567개
+  storeCount: {
+    '3110001': { value: 521, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 567, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 552, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 538, direction: 'UP' }, // 노원역
+    '3110005': { value: 512, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 498, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 431, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 289, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 342, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 405, direction: 'UP' }, // 종로3가
+    '3110011': { value: 463, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 377, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 318, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 265, direction: 'FLAT' }, // 서초역
+  },
+}
+
+// 시드 미등록 상권 폴백 값 (regionMapMock 에 상권을 추가해도 목이 깨지지 않게)
+const METRIC_SEED_FALLBACK: Record<string, MetricSeed> = {
+  rentRatio: { value: 5_000_000, direction: 'UP' },
+  footTraffic: { value: 100_000, direction: 'UP' },
+  vacancyRate: { value: 8, direction: 'UP' },
+  closureRate: { value: 3, direction: 'UP' },
+  storeCount: { value: 400, direction: 'UP' },
+}
+
+/** 서울 전체 평균 영업 기간(년) — 폐업률 랭킹 하단·상세 비교 기준 (디자인 5.9년) */
+const SEOUL_AVG_OPERATING_YEARS = 5.9
+
+function metricSeed(metric: MetricKey, regionCode: string): MetricSeed {
+  return (
+    METRIC_SEEDS[metric]?.[regionCode] ??
+    METRIC_SEED_FALLBACK[metric] ?? { value: 100, direction: 'FLAT' }
+  )
+}
+
+// ── 분기 이동 — 목은 최신 분기(2025Q4) 값 기준, 과거 분기 요청 시 추이 패턴만큼 결정적으로 되돌린다 ──
+
+const LATEST_QUARTER = '2025Q4'
+
+function quarterIndex(quarter: string): number | null {
+  const match = /^(\d{4})Q([1-4])$/.exec(quarter)
+  if (!match) return null
+  return Number(match[1]) * 4 + Number(match[2]) - 1
+}
+
+/** 요청 분기가 최신(2025Q4)보다 몇 분기 과거인지 — 미지정·형식 오류·미래는 0(최신) */
+function quartersBack(quarter?: string | null): number {
+  const index = quarter ? quarterIndex(quarter) : null
+  if (index === null) return 0
+  return Math.max(0, (quarterIndex(LATEST_QUARTER) as number) - index)
+}
+
+/** 응답에 실을 조회 분기 — 유효한 과거 분기만 그대로, 나머지는 최신 */
+function anchorQuarter(quarter?: string | null): string {
+  return quartersBack(quarter) > 0 ? (quarter as string) : LATEST_QUARTER
+}
+
+/** 기준 분기로 끝나는 count 개 분기 목록 (오름차순) */
+function quartersEnding(quarter: string, count: number): string[] {
+  const end = quarterIndex(quarter) ?? (quarterIndex(LATEST_QUARTER) as number)
+  return Array.from({ length: count }, (_, i) => {
+    const index = end - (count - 1 - i)
+    return `${Math.floor(index / 4)}Q${(index % 4) + 1}`
+  })
+}
+
+// 지표별 값 단위(반올림 스텝) — 추이·분기 이동 계산 공용
+const METRIC_ROUND_TO: Record<MetricKey, number> = {
+  rentRatio: 10_000,
+  footTraffic: 10,
+  vacancyRate: 0.1,
+  closureRate: 0.1,
+  storeCount: 1,
+}
+
+// direction 방향으로 분기당 값의 1.2%씩 변화 — k 분기 과거의 시드 값
+function seedValueAt(seed: MetricSeed, roundTo: number, k: number): number {
+  const sign = seed.direction === 'DOWN' ? -1 : seed.direction === 'UP' ? 1 : 0
+  const step = Math.max(roundTo, Math.round((seed.value * 0.012) / roundTo) * roundTo)
+  return Math.round((seed.value - sign * step * k) * 1000) / 1000
+}
+
+/**
+ * 최신 분기 등급 기준 k 분기 전 등급 — 상세 추이 패턴(TREND_OFFSETS)과 같은 소스를 쓰므로
+ * 지도 마커·랭킹·상세의 분기별 등급이 서로 일치한다.
+ */
+function gradeAtQuartersBack(latestGrade: RegionGrade, k: number): RegionGrade {
+  const offset = k <= 11 ? TREND_OFFSETS[11 - k] : TREND_OFFSETS[0]
+  const index = GRADE_ORDER.indexOf(latestGrade) + offset
+  return GRADE_ORDER[Math.min(4, Math.max(0, index))]
+}
+
+/** GET /api/v1/regions/map 데모 데이터 — 분기별 등급 이동 반영 */
+export function makeRegionMapMock(quarter?: string | null): RegionMapResponse {
+  const back = quartersBack(quarter)
+  return {
+    quarter: anchorQuarter(quarter),
+    regions: regionMapMock.regions.map((region) => ({
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      district: region.district,
+      grade: gradeAtQuartersBack(region.grade, back),
+    })),
+  }
+}
+
+/** GET /api/v1/regions/declineRanking 데모 데이터 — 분기별 등급 이동 반영 */
+export function makeDeclineRankingMock(
+  order: RankingOrder,
+  quarter?: string | null,
+): RegionRankingResponse {
+  const base = declineRankingMock[order]
+  const back = quartersBack(quarter)
+  return {
+    ...base,
+    quarter: anchorQuarter(quarter),
+    regions: base.regions.map((region) => ({
+      rank: region.rank,
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      decline_grade: gradeAtQuartersBack(region.decline_grade, back),
+      direction: region.direction,
+    })),
+  }
+}
+
+const metricMapMocks = Object.fromEntries(
+  Object.entries(METRIC_SEEDS).map(([metric, seeds]) => [
+    metric,
+    {
+      metric: metric as MetricKey,
+      quarter: '2025Q4',
+      regions: regionMapMock.regions.map(({ regionCode, regionName, district }) => ({
+        regionCode,
+        regionName,
+        district,
+        value: seeds[regionCode]?.value ?? metricSeed(metric as MetricKey, regionCode).value,
+      })),
+    },
+  ]),
+) as Partial<Record<MetricKey, RegionMetricMapResponse>>
+
+/**
+ * GET /api/v1/regions/metricMap 데모 데이터 (선규격) — 지원 지표만 등록, 분기별 값 이동 반영.
+ * 핸들러는 도메인 타입을 모른 채 문자열 metric 을 넘기고, 미지원이면 null(→400).
+ */
+export function getMetricMapMock(
+  metric: string | null,
+  quarter?: string | null,
+): RegionMetricMapResponse | null {
+  if (!metric) return null
+  const base = metricMapMocks[metric as MetricKey]
+  if (!base) return null
+  const back = quartersBack(quarter)
+  return {
+    ...base,
+    quarter: anchorQuarter(quarter),
+    regions: base.regions.map((region) => ({
+      regionCode: region.regionCode,
+      regionName: region.regionName,
+      district: region.district,
+      value: seedValueAt(
+        metricSeed(base.metric, region.regionCode),
+        METRIC_ROUND_TO[base.metric],
+        back,
+      ),
+    })),
+  }
+}
+
+/**
+ * GET /api/v1/regions/metricRanking 데모 데이터 (선규격) — metricMap 목에서 구 대표(최댓값)를
+ * 뽑아 정렬한 Top5. 순위명은 declineRanking 과 같은 구 단위("서울 서대문구") 표기.
+ */
+export function makeMetricRankingMock(
+  metric: string | null,
+  order: RankingOrder,
+  quarter?: string | null,
+): RegionMetricRankingResponse | null {
+  const map = getMetricMapMock(metric, quarter)
+  if (!map) return null
+
+  const topByDistrict = new Map<string, (typeof map.regions)[number]>()
+  map.regions.forEach((region) => {
+    const prev = topByDistrict.get(region.district)
+    if (!prev || region.value > prev.value) topByDistrict.set(region.district, region)
+  })
+
+  const regions = [...topByDistrict.values()]
+    .toSorted((a, b) => (order === 'top' ? b.value - a.value : a.value - b.value))
+    .slice(0, 5)
+    .map((region, i) => ({
+      rank: i + 1,
+      regionCode: region.regionCode,
+      regionName: `서울 ${region.district}`,
+      value: region.value,
+      direction: metricSeed(map.metric, region.regionCode).direction,
+    }))
+
+  return {
+    metric: map.metric,
+    order,
+    quarter: map.quarter,
+    regions,
+    // 폐업률만 랭킹 하단 "평균 영업 기간 — 서울 전체" 섹션용 값 포함
+    ...(map.metric === 'closureRate' && { avgOperatingYears: SEOUL_AVG_OPERATING_YEARS }),
+  }
+}
+
+const GRADE_ORDER: RegionGrade[] = ['A', 'B', 'C', 'D', 'E']
+// 최신 등급으로 수렴하는 결정적 오프셋 패턴 (마지막 = 최신, 직전 = 한 단계 양호 → 지난 분기 pill)
+const TREND_OFFSETS = [-2, -2, -1, -2, -1, -1, 0, -1, -1, 0, -1, 0]
+
+// 추이 마지막 두 분기의 증감률(%) — 상세 changeRate 를 추이와 일치시키는 용도
+function trendChangeRate(trend: { value: number }[]): number {
+  const prev = trend[trend.length - 2].value
+  const current = trend[trend.length - 1].value
+  return Math.round((Math.abs(current - prev) / prev) * 1000) / 10
+}
+
+/**
+ * GET /api/v1/districts/{regionCode} 데모 데이터 — 조회 분기 기준 12분기 추이를 만든다.
+ * 등급·지표 값 모두 분기 이동 헬퍼(gradeAtQuartersBack·seedValueAt)에서 파생되어
+ * 같은 분기의 지도 마커·랭킹 값과 항상 일치한다.
+ */
+export function makeRegionDetailMock(
+  region: RegionMapItem,
+  quarter?: string | null,
+): RegionDetailResponse {
+  const back = quartersBack(quarter)
+  const quarters = quartersEnding(anchorQuarter(quarter), 12)
+  const last = quarters.length - 1
+
+  const gradeTrend = quarters.map((q, i) => ({
+    quarter: q,
+    grade: gradeAtQuartersBack(region.grade, back + (last - i)),
+  }))
+
+  // 지표 요약 — 조회 분기 값 + 그 분기로 끝나는 추이 (마커/랭킹 값과 일치)
+  const summaryAt = (metric: MetricKey) => {
+    const seed = metricSeed(metric, region.regionCode)
+    const roundTo = METRIC_ROUND_TO[metric]
+    const trend = quarters.map((q, i) => ({
+      quarter: q,
+      value: seedValueAt(seed, roundTo, back + (last - i)),
+    }))
+    return {
+      value: seedValueAt(seed, roundTo, back),
+      changeRate: trendChangeRate(trend),
+      direction: seed.direction,
+      trend,
+    }
+  }
+
+  const closureSummary = summaryAt('closureRate')
+  const storeSummary = summaryAt('storeCount')
+
+  return {
+    regionCode: region.regionCode,
+    district: region.district,
+    regionName: region.regionName,
+    quarter: anchorQuarter(quarter),
+    declineGrade: {
+      current: gradeAtQuartersBack(region.grade, back),
+      previous: gradeAtQuartersBack(region.grade, back + 1),
+      trend: gradeTrend,
+    },
+    rentRatio: summaryAt('rentRatio'),
+    footTraffic: summaryAt('footTraffic'),
+    vacancyRate: summaryAt('vacancyRate'),
+    closureRate: {
+      ...closureSummary,
+      // 폐업률이 높을수록 평균 영업 기간이 짧다 — 시드에서 결정적으로 파생
+      avgOperatingYears: Math.round((8 - closureSummary.value) * 10) / 10,
+      seoulAvgOperatingYears: SEOUL_AVG_OPERATING_YEARS,
+    },
+    storeCount: {
+      value: storeSummary.value,
+      changeCount: storeSummary.value - storeSummary.trend[last - 1].value,
+      direction: storeSummary.direction,
+      trend: storeSummary.trend,
+      categoryDistribution: [
+        { category: '한식음식점', count: 92 },
+        { category: '커피-음료', count: 74 },
+      ],
+    },
   }
 }

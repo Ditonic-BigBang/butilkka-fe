@@ -99,13 +99,14 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
   const [foundedDate, setFoundedDate] = useState(store?.storeOpenDate ?? '')
   const [categoryCode, setCategoryCode] = useState(store?.categoryCode ?? '')
   const [categoryName, setCategoryName] = useState(store?.categoryName ?? '')
-  const [picking, setPicking] = useState(false)
+  // 'search': 주소 검색부터 · 'map': 현재 좌표로 바로 지도 확인 (미니맵 탭)
+  const [picking, setPicking] = useState<'search' | 'map' | null>(null)
   const [pickingCategory, setPickingCategory] = useState(false)
 
   // 위치 확정 → 상권코드 재매핑 (저장 payload 에 regionCode 필요). 실패해도 진행은 막지 않는다.
   const completeLocation = (loc: StoreLocation) => {
     setLocation(loc)
-    setPicking(false)
+    setPicking(null)
     void lookupRegion({ lat: loc.lat, lng: loc.lng })
       .then((regions) => {
         if (regions[0]) setRegionCode(regions[0].regionCode)
@@ -127,7 +128,9 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
       <MobileLayout showBottomTab={false}>
         <StoreLocationPicker
           cta="이 위치로 등록하기"
-          onClose={() => setPicking(false)}
+          // 미니맵 탭이면 현재 좌표로 바로 지도 확인 화면 (Figma 가게위치 변경하기/6)
+          startWithLocation={picking === 'map' ? location : undefined}
+          onClose={() => setPicking(null)}
           onComplete={completeLocation}
         />
       </MobileLayout>
@@ -197,15 +200,16 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
         {/* 지도 프리뷰 */}
         <div className="flex flex-col gap-1 p-5">
           {location ? (
+            // 미니맵 탭 → 현재 좌표가 찍힌 지도 확인 화면으로 (재선택은 아래 가게 위치 필드)
             <LocationPreviewMap
               lat={location.lat}
               lng={location.lng}
-              onClick={() => setPicking(true)}
+              onClick={() => setPicking('map')}
             />
           ) : (
             <button
               type="button"
-              onClick={() => setPicking(true)}
+              onClick={() => setPicking('search')}
               className="flex h-[124px] w-full items-center justify-center border border-gray-100 bg-gray-70 text-body-m-regular text-gray-400"
             >
               지도에서 위치를 선택해주세요
@@ -221,7 +225,7 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
           <Field label="가게 위치">
             <button
               type="button"
-              onClick={() => setPicking(true)}
+              onClick={() => setPicking('search')}
               className="flex h-12 w-full items-center rounded-8 border border-gray-100 bg-white px-4 text-left text-body-l-regular"
             >
               <span className={location ? 'truncate text-gray-900' : 'text-gray-500'}>

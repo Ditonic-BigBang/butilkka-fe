@@ -6,8 +6,10 @@ type DistrictRankRowProps = {
   rank: number
   /** 지역명 (예: "서울 서대문구") */
   name: string
-  /** 등급 문자 (예: "E") */
+  /** 값 문자 — 등급(예: "E") 또는 지표 값(예: "789") */
   grade: string
+  /** 값 뒤 단위 (예: "만원") — 미지정 시 등급 표기 */
+  unit?: string
   /** 증감 방향 화살표 — 없으면 표시 안 함 */
   direction?: 'up' | 'down' | 'same'
   onClick?: () => void
@@ -15,13 +17,14 @@ type DistrictRankRowProps = {
 }
 
 /**
- * 순위 지역 리스트 행 (Figma: Bottom Sheet All 176:2892).
- * 순위 뱃지 + 지역명 + 등급 + 증감 화살표(ChangeIndicator). 랭킹 리스트에서 divide-y 로 구분.
+ * 순위 지역 리스트 행 (Figma: Bottom Sheet All 176:2892 · 지표 176:2895).
+ * 순위 뱃지 + 지역명 + 값(등급/지표)·단위 + 증감 화살표(ChangeIndicator). 랭킹 리스트에서 divide-y 로 구분.
  */
 export function DistrictRankRow({
   rank,
   name,
   grade,
+  unit = '등급',
   direction,
   onClick,
   className,
@@ -45,7 +48,7 @@ export function DistrictRankRow({
         <span className="flex shrink-0 items-center gap-1.5">
           <span className="flex items-end gap-0.5 text-body-l-medium">
             <span className="text-gray-900">{grade}</span>
-            <span className="text-gray-500">등급</span>
+            <span className="text-gray-500">{unit}</span>
           </span>
           {direction && <ChangeIndicator direction={direction} />}
         </span>

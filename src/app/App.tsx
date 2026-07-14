@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { HomePage } from '@/pages/home'
 import { MapPage } from '@/pages/map'
+import { FavoriteRegionsPage } from '@/pages/favorite-regions'
 import { LoginPage } from '@/pages/login'
 import { AuthCallbackPage } from '@/pages/auth-callback'
 import { OnboardingPage } from '@/pages/onboarding'
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/onboarding/guide" element={<OnboardingGuidePage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/map/favorites" element={<FavoriteRegionsPage />} />
             <Route path="/report" element={<ReportPage />} />
             <Route path="/report/history" element={<ReportHistoryPage />} />
             <Route path="/report/:reportId" element={<ReportDetailPage />} />

@@ -22,6 +22,20 @@ type ScoreCardProps = {
   className?: string
 }
 
+// 채움 끝이 마커 점 근처(±4%p)에 오면 점을 살짝 감싸는 위치(+1.5%p)로 스냅 —
+// 점수 그대로 그리면 점을 반쯤 자르거나(38% vs 37.5% 점) 짧은 꼬리가 남아(16% vs 12.5% 점)
+// Figma(372:14335)의 "흰 점이 채움의 둥근 끝에 안착" 모양이 깨진다.
+const SNAP_RANGE = 0.04
+const SNAP_OFFSET = 0.015
+
+function snapToMarker(progress: number, segments: number): number {
+  for (let i = 0; i < segments; i++) {
+    const pos = (i + 0.5) / segments
+    if (Math.abs(progress - pos) <= SNAP_RANGE) return pos + SNAP_OFFSET
+  }
+  return progress
+}
+
 /**
  * 상권 점수 카드 (Figma: Card_M_상권점수 372:14335).
  * [제목·기간 + 유형칩] / [등급·상태칩 + 위험도 게이지] / 설명. rounded-14 흰 카드.
@@ -40,6 +54,8 @@ export function ScoreCard({
   className,
 }: ScoreCardProps) {
   const clamped = Math.min(Math.max(progress, 0), 1)
+  // 마커 점과의 충돌 보정 — 점 색상 판정도 같은 값을 써야 채움 안 점이 회색으로 남지 않는다
+  const fill = snapToMarker(clamped, segments)
 
   return (
     <div className={cn('flex w-full flex-col gap-3 rounded-14 bg-white px-4 py-5', className)}>
@@ -72,7 +88,7 @@ export function ScoreCard({
             {/* 채움 — 진입 시 0에서 점수까지 차오름 */}
             <div
               className="absolute inset-y-0 left-0 animate-gauge-fill rounded-full bg-orange-500"
-              style={{ width: `${clamped * 100}%` }}
+              style={{ width: `${fill * 100}%` }}
             />
             {Array.from({ length: segments }, (_, i) => {
               const pos = (i + 0.5) / segments
@@ -81,7 +97,7 @@ export function ScoreCard({
                   key={pos}
                   className={cn(
                     'absolute top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full',
-                    pos <= clamped ? 'bg-white' : 'bg-gray-200',
+                    pos <= fill ? 'bg-white' : 'bg-gray-200',
                   )}
                   style={{ left: `${pos * 100}%` }}
                 />

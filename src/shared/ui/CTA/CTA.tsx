@@ -1,4 +1,5 @@
 import { tv, type VariantProps } from '@/shared/lib/tv'
+import { cn } from '@/shared/lib/cn'
 
 const cta = tv({
   base: 'flex h-13 w-full items-center justify-center rounded-12 text-body-l-semibold text-white transition duration-150 select-none',
@@ -13,7 +14,11 @@ const cta = tv({
 })
 
 type CTAProps = Omit<React.ComponentProps<'button'>, 'disabled'> &
-  VariantProps<typeof cta> & { children: React.ReactNode }
+  VariantProps<typeof cta> & {
+    children: React.ReactNode
+    /** 바깥 바 배경 제거 — 콘텐츠 위에 버튼만 떠 보이는 플로팅 CTA 용 */
+    transparent?: boolean
+  }
 
 /**
  * 화면 하단 고정 주요 액션 바 (Figma: CTA 300:5672).
@@ -21,9 +26,18 @@ type CTAProps = Omit<React.ComponentProps<'button'>, 'disabled'> &
  * (Figma 의 검은 홈 인디케이터 바는 렌더링하지 않고 safe-area 로 대체).
  * MobileLayout 의 하단(BottomTab 처럼)에 배치.
  */
-export function CTA({ disabled, children, className, type = 'button', ...props }: CTAProps) {
+export function CTA({
+  disabled,
+  children,
+  className,
+  type = 'button',
+  transparent,
+  ...props
+}: CTAProps) {
   return (
-    <div className="w-full shrink-0 bg-white px-5 pt-3 pb-safe-bottom-or-3">
+    <div
+      className={cn('w-full shrink-0 px-5 pt-3 pb-safe-bottom-or-3', !transparent && 'bg-white')}
+    >
       <button
         type={type}
         disabled={disabled ?? undefined}
