@@ -180,7 +180,7 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
 }
 
 // 등급 → 데모 쇠퇴 위험도 점수 (지난 리포트 상세 목 생성용)
-const GRADE_SCORES: Record<ReportGrade, number> = { A: 16, B: 38, C: 64, D: 82, E: 94 }
+const GRADE_SCORES: Record<ReportGrade, number> = { A: 16, B: 38, C: 64, D: 91, E: 94 }
 
 /**
  * GET /api/v1/reports/{reportId} 데모 데이터 — 히스토리 항목의 분기·등급·브리핑을

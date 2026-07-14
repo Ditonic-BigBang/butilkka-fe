@@ -48,13 +48,13 @@ export const Decline: Story = {
   name: '쇠퇴형 (C등급)',
 }
 
-/** 고위험 D등급 — 게이지 ~90% (마커 4/4). */
+/** 고위험 D등급 — 게이지 ~91% (마커 4/4). */
 export const HighRisk: Story = {
   name: '고위험 (D등급)',
   args: {
     grade: 'D등급',
     status: '위험',
-    progress: 0.92,
+    progress: 0.91,
     description: '쇠퇴 신호가 전방위로 확산되고 있어요.\n즉각적인 대응 전략이 필요합니다.',
   },
 }
