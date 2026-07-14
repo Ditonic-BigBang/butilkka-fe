@@ -68,6 +68,11 @@ declare namespace kakao {
       clickable?: boolean
     }
 
+    /** 지도 클릭 등 마우스 이벤트 인자 */
+    interface MapMouseEvent {
+      latLng: LatLng
+    }
+
     namespace event {
       function addListener(
         target: Map | Polygon | Marker,

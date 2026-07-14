@@ -28,6 +28,8 @@ type SearchOverlayProps = {
   onSelectFromMap?: () => void
   /** 검색 모드(포커스) 전환 알림 — 페이지가 풀스크린 전환·하단 탭 숨김에 사용 */
   onFocusChange?: (focused: boolean) => void
+  /** 검색 input ref — 등록 완료 후 검색 화면으로 복귀할 때 프로그램적 포커스용 */
+  inputRef?: React.Ref<HTMLInputElement>
   className?: string
 }
 
@@ -61,6 +63,7 @@ export function SearchOverlay({
   registerMode = false,
   onSelectFromMap,
   onFocusChange,
+  inputRef,
   className,
 }: SearchOverlayProps) {
   const [focused, setFocusedState] = useState(false)
@@ -109,10 +112,11 @@ export function SearchOverlay({
               label={r.label}
               query={query}
               onMouseDown={keepFocus}
-              // 결과 선택 = 지도로 복귀 — 풀스크린 검색 모드도 함께 끝낸다
+              // 결과 선택 = 지도로 복귀 — 단, 등록 모드는 검색 화면에 남아 토스트를 보여준다
               onClick={() => {
                 onResultSelect?.(r.id)
-                exitSearch()
+                if (!registerMode) exitSearch()
+                else onQueryChange('')
               }}
             />
           ))}
@@ -126,7 +130,11 @@ export function SearchOverlay({
           <button
             type="button"
             onMouseDown={keepFocus}
-            onClick={onSelectFromMap}
+            // 지도에서 선택 = 검색 화면을 닫고 지도 선택 모드로
+            onClick={() => {
+              onSelectFromMap?.()
+              exitSearch()
+            }}
             className={ACTION_ROW}
           >
             <MapIcon aria-hidden className="size-5 shrink-0" />
@@ -204,6 +212,7 @@ export function SearchOverlay({
           )}
         >
           <SearchInput
+            ref={inputRef}
             value={query}
             onChange={onQueryChange}
             onBack={exitSearch}
