@@ -18,7 +18,7 @@ import {
 // API 가 생길 때마다 여기에 기능별로 추가한다. 응답 형식은 API명세서 V3 의
 // envelope({ code, status, message, data })를 따른다.
 //
-// 주의: public/seoul.geojson 은 실제 정적 에셋이므로 절대 mock 하지 않는다(passthrough).
+// 주의: public/seoul-gu.geojson 은 실제 정적 에셋이므로 절대 mock 하지 않는다(passthrough).
 
 // 백엔드 베이스 URL. 미설정이면 상대경로('/api/...')로 매칭한다.
 const API = import.meta.env.VITE_API_BASE_URL ?? ''
@@ -333,6 +333,31 @@ export const handlers = [
     Object.assign(target, rest)
     if (typeof storeAddress === 'string') target.address = storeAddress
     return ok('가게 정보 수정 성공', target)
+  }),
+
+  // 일반 가게 삭제 — 대표 가게는 다른 가게를 대표로 변경하기 전까지 삭제할 수 없다.
+  http.delete(`${API}/api/v1/users/me/stores/:storeId`, ({ params }) => {
+    const id = Number(params.storeId)
+    const index = mockStores.findIndex((store) => store.storeId === id)
+    if (index < 0) {
+      return HttpResponse.json(
+        { code: 404, status: 'NOT_FOUND', message: '존재하지 않는 가게입니다.', data: null },
+        { status: 404 },
+      )
+    }
+    if (mockStores[index].isPrimary) {
+      return HttpResponse.json(
+        {
+          code: 409,
+          status: 'CONFLICT',
+          message: '대표 가게는 삭제할 수 없습니다.',
+          data: null,
+        },
+        { status: 409 },
+      )
+    }
+    mockStores.splice(index, 1)
+    return ok('가게 삭제 성공', null)
   }),
 
   // ── 구독 (명세 미반영 선규격 — 백엔드 전달 예정) ──

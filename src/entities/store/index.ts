@@ -12,5 +12,6 @@ export {
   createStore,
   updateStore,
   setPrimaryStore,
+  deleteStore,
 } from './api/storeApi'
 export type { PutMyStorePayload, CreateStorePayload, UpdateStorePayload } from './api/storeApi'

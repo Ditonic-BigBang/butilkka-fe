@@ -123,6 +123,18 @@ describe('RankingSheet', () => {
     expect(onOrderChange).toHaveBeenCalledWith('bottom')
   })
 
+  it('안전한 순 응답이 전체 역순위를 내려줘도 목록 순번은 1부터 표시한다', () => {
+    const bottomRows = ROWS.map((row, index) => ({ ...row, rank: 25 - index }))
+    render(
+      <RankingSheet {...GRADE_PROPS} order="bottom" onOrderChange={() => {}} rows={bottomRows} />,
+    )
+
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.queryByText('25')).not.toBeInTheDocument()
+    expect(screen.queryByText('24')).not.toBeInTheDocument()
+  })
+
   it('핸들을 탭하면 펼침/접힘이 전환된다', async () => {
     const user = userEvent.setup()
     render(<RankingSheet {...GRADE_PROPS} order="top" onOrderChange={() => {}} rows={ROWS} />)

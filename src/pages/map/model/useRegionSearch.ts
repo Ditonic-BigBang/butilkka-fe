@@ -33,7 +33,7 @@ export function useRegionSearch(keyword: string, enabled = true) {
 
   const query = useQuery({
     queryKey: regionKeys.search(debounced),
-    queryFn: () => searchRegions(debounced),
+    queryFn: ({ signal }) => searchRegions(debounced, signal),
     enabled: enabled && debounced.length > 0,
     select: toView,
   })

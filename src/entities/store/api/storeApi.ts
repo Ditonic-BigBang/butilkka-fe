@@ -62,6 +62,13 @@ export function setPrimaryStore(storeId: number): Promise<MyStore> {
   return updateStore(storeId, { isPrimary: true })
 }
 
+/** 가게 삭제 (DELETE /api/v1/users/me/stores/{storeId}) */
+export function deleteStore(storeId: number): Promise<void> {
+  return apiJson<void>(`/api/v1/users/me/stores/${storeId}`, {
+    method: 'DELETE',
+  })
+}
+
 /** 업종 목록 조회 (온보딩 업종 스텝) */
 export function getCategories(): Promise<Category[]> {
   return apiJson<Category[]>('/api/v1/categories')

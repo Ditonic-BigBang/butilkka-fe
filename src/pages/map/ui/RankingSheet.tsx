@@ -28,6 +28,7 @@ function renderDetail(view: SheetDetailView) {
       />
     )
   }
+  const trendValueUnit = view.trendUnit.replace(/[()]/g, '')
   return (
     <MetricBody
       type="metric"
@@ -38,7 +39,9 @@ function renderDetail(view: SheetDetailView) {
       trend={view.trend}
       trendTicks={view.trendTicks}
       trendUnit={view.trendUnit}
-      trendTooltip={(p) => `${p.value.toLocaleString()}${view.unit}`}
+      trendTooltip={(p) =>
+        `${p.value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${trendValueUnit}`
+      }
       // y축 눈금은 도메인 보간이라 소수가 나온다 — 지표별 축약 라벨 우선, %만 소수 1자리, 나머지는 정수
       yFormatter={
         view.trendAxisLabel ??
@@ -172,10 +175,11 @@ export function RankingSheet({
     }
     return (
       <div className="flex flex-col divide-y divide-gray-90">
-        {rows.map((row) => (
+        {rows.map((row, index) => (
           <DistrictRankRow
-            key={row.rank}
-            rank={row.rank}
+            key={row.regionCode}
+            // API 가 안전한 순을 전체 역순위(25, 24...)로 내려줘도 현재 목록의 순번은 1부터 표시한다.
+            rank={index + 1}
             name={row.name}
             grade={row.value}
             unit={row.unit}

@@ -20,7 +20,8 @@ type StoreCardProps = {
 
 /**
  * 내 가게 카드 (Figma: List_M_가게 1198:26538).
- * (대표면) 상단 "현재 대표 위치" 라벨 + [빌딩 아이콘 · 창업일 / 가게명 / 주소 · 업종 칩 + 수정·삭제].
+ * (대표면) 상단 "현재 대표 위치" 라벨 + [빌딩 아이콘 · 창업일 / 가게명 / 주소 · 업종 칩 + 수정].
+ * `onDelete` 를 전달한 일반 가게에만 삭제 버튼을 표시한다.
  * `onSelect` 를 주면 본문 전체를 덮는 오버레이 버튼이 생긴다(가게명이 접근성 이름) —
  * 수정·삭제 버튼은 오버레이 위(z)로 올라가 있어 탭 대상에서 제외된다.
  */
@@ -71,7 +72,7 @@ export function StoreCard({
             {/* 수정·삭제는 오버레이 위(relative)로 올려 본문 탭 대상에서 제외 */}
             <div className="relative ml-auto flex items-center gap-2">
               <OutlineButton onClick={onEdit}>수정</OutlineButton>
-              <OutlineButton onClick={onDelete}>삭제</OutlineButton>
+              {!primary && onDelete && <OutlineButton onClick={onDelete}>삭제</OutlineButton>}
             </div>
           </div>
         </div>

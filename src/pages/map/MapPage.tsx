@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent,
-  type PointerEvent,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { MobileLayout } from '@/widgets/mobile-layout'
 import { cn } from '@/shared/lib/cn'
@@ -16,7 +8,7 @@ import {
   type MapMarker,
   type MapOutline,
 } from '@/widgets/district-map'
-import { findDistrictAt, useGuBoundaries } from '@/entities/district'
+import { findDistrictAt, useGuGeometry } from '@/entities/district'
 import { SearchOverlay, MAP_FILTERS } from '@/widgets/search'
 import { MyLocation, Toast } from '@/shared/ui'
 import { formatQuarter } from '@/shared/lib/quarter'
@@ -35,8 +27,6 @@ import { RegisterSelect } from './ui/RegisterSelect'
 
 // 검색/마커 선택 시 구 확대 레벨
 const GU_ZOOM_LEVEL = 7
-// 지도 위 포인터가 이만큼(px) 넘게 움직이면 탭이 아닌 패닝으로 판정
-const MAP_TAP_THRESHOLD = 10
 // 즐겨찾기 "지도에서 선택" 구 강조 색 (Figma 257:7523 — 핑크)
 const REGISTER_OUTLINE_COLOR = '#f1c0dc'
 // 첫 진입 센터링 보정(px) — 마커가 상단 오버레이(검색+칩)와 접힌 시트 사이
@@ -79,15 +69,14 @@ export default function MapPage() {
   const [sheetExpanded, setSheetExpanded] = useState(false)
 
   const categoryView = getCategoryView(category)
+  const { boundaries: guBoundaries, centroids } = useGuGeometry()
   const {
     markers,
-    centroids,
     regionByDistrict,
     quarter: dataQuarter,
-  } = useRegionMarkers(category, quarter ?? undefined)
+  } = useRegionMarkers(category, quarter ?? undefined, centroids)
   const ranking = useRanking(category, order, quarter ?? undefined)
   const detail = useRegionDetail(detailRegionCode, category, quarter ?? undefined)
-  const { data: guBoundaries } = useGuBoundaries()
 
   // 구 경계 폴리곤 — 평소엔 선택한 구 오렌지, 지도에서 선택 모드엔 고른 구 핑크
   const outlines = useMemo<MapOutline[]>(() => {
@@ -142,15 +131,18 @@ export default function MapPage() {
   )
 
   // 구 선택 — 경계 강조 + 시트 내용을 해당 구 상세로 전환 (시트 높이는 그대로)
-  const selectDistrict = (district: string, regionCode: string) => {
-    setSelectedDistrict(district)
-    setDetailRegionCode(regionCode)
-    panToDistrict(district)
-  }
-  const clearSelection = () => {
+  const selectDistrict = useCallback(
+    (district: string, regionCode: string) => {
+      setSelectedDistrict(district)
+      setDetailRegionCode(regionCode)
+      panToDistrict(district)
+    },
+    [panToDistrict],
+  )
+  const clearSelection = useCallback(() => {
     setSelectedDistrict(null)
     setDetailRegionCode(null)
-  }
+  }, [])
 
   // 선택된 구를 검색바에 유지 (Figma 176:2687 — 미포커스 검색바에 "서대문구" + ✕).
   // 검색 중(포커스)엔 사용자의 입력을 존중하고, 검색을 닫으면 선택된 구로 복원한다.
@@ -222,23 +214,19 @@ export default function MapPage() {
   }
 
   // 마커 탭 → 구 대표 상권 기준 선택
-  const handleMarkerClick = (district: string) => {
-    const region = regionByDistrict?.get(district)
-    if (region) selectDistrict(district, region.regionCode)
-    else panToDistrict(district)
-  }
+  const handleMarkerClick = useCallback(
+    (district: string) => {
+      const region = regionByDistrict?.get(district)
+      if (region) selectDistrict(district, region.regionCode)
+      else panToDistrict(district)
+    },
+    [panToDistrict, regionByDistrict, selectDistrict],
+  )
 
-  // 지도 빈 곳 탭 → 펼쳐진 시트 접기 (패닝은 이동 거리로 걸러냄, 마커 탭은 전파가 끊겨 안 옴)
-  const mapPressStart = useRef<{ x: number; y: number } | null>(null)
-  const handleMapPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    mapPressStart.current = { x: e.clientX, y: e.clientY }
-  }
-  const handleMapClick = (e: MouseEvent<HTMLDivElement>) => {
-    const start = mapPressStart.current
-    mapPressStart.current = null
-    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > MAP_TAP_THRESHOLD) return
-    setSheetExpanded(false)
-  }
+  const handleMapReady = useCallback(() => setMapReady(true), [])
+
+  // 지도 빈 곳 탭 → 펼쳐진 시트 접기. kakao click 은 드래그 뒤에는 발생하지 않는다.
+  const handleMapBackgroundClick = useCallback(() => setSheetExpanded(false), [])
 
   // "지도에서 선택" 진입 — 검색 화면이 닫히면서 지도 선택 모드로
   const handleSelectFromMap = () => {
@@ -285,15 +273,9 @@ export default function MapPage() {
   }
 
   return (
-    <MobileLayout showBottomTab={!searching && !mapSelecting}>
+    <MobileLayout showBottomTab={!searching && !mapSelecting} scrollable={false}>
       <div className="relative h-full overflow-hidden">
-        {/* 시트 접기용 탭 감지 래퍼 — 지도 자체가 인터랙션을 소유하므로 시맨틱 없음 */}
-        <div
-          role="presentation"
-          className="absolute inset-0"
-          onPointerDown={handleMapPointerDown}
-          onClick={handleMapClick}
-        >
+        <div className="absolute inset-0">
           <KakaoMap
             ref={mapRef}
             markers={mapSelecting ? NO_MARKERS : markers}
@@ -303,8 +285,8 @@ export default function MapPage() {
             pin={
               mapSelecting && mapSelectDistrict ? (centroids?.get(mapSelectDistrict) ?? null) : null
             }
-            onMapClick={mapSelecting ? handleRegisterMapClick : undefined}
-            onReady={() => setMapReady(true)}
+            onMapClick={mapSelecting ? handleRegisterMapClick : handleMapBackgroundClick}
+            onReady={handleMapReady}
             className="size-full"
           />
         </div>
@@ -366,10 +348,12 @@ export default function MapPage() {
         {/* 내 위치 버튼은 시트 바로 위에 붙어 시트 높이 변화를 따라간다 — 래퍼는 지도 조작을 막지 않게 클릭 통과 */}
         {!mapSelecting && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col">
-            <MyLocation
-              onClick={handleMyLocation}
-              className="pointer-events-auto mr-5 mb-3 self-end"
-            />
+            {!sheetExpanded && !quarterSheetOpen && (
+              <MyLocation
+                onClick={handleMyLocation}
+                className="pointer-events-auto mr-5 mb-3 self-end"
+              />
+            )}
             <RankingSheet
               title={categoryView.title}
               tabs={categoryView.tabs}

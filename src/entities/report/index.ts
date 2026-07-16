@@ -9,6 +9,7 @@ export { ScoreCard } from './ui/ScoreCard'
 export { SimilarCaseCard } from './ui/SimilarCaseCard'
 export { Sparkle } from './ui/Sparkle'
 export { reportBenefitIcons } from './model/reportBenefitIcons'
+export { downloadReport } from './lib/downloadReport'
 export {
   reportKeys,
   fetchLatestReport,

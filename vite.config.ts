@@ -4,6 +4,21 @@ import tailwindcss from '@tailwindcss/vite'
 import Icons from 'unplugin-icons/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { rm } from 'node:fs/promises'
+import type { Plugin } from 'vite'
+
+function removeProductionMswWorker(): Plugin {
+  return {
+    name: 'remove-production-msw-worker',
+    apply: 'build',
+    enforce: 'post',
+    async closeBundle() {
+      await rm(fileURLToPath(new URL('./dist/mockServiceWorker.js', import.meta.url)), {
+        force: true,
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -40,8 +55,17 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         navigateFallback: 'index.html',
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        // 서울 자치구 경계(정적·대용량 1.2MB)는 런타임 캐시 → 재방문 즉시 로드 + 지도 부분 오프라인.
+        maximumFileSizeToCacheInBytes: 500 * 1024,
+        // 앱 진입 셸과 공통 CSS, 단일 56KB 지도 geometry만 설치 시 선캐시한다.
+        globPatterns: [
+          'index.html',
+          'manifest.webmanifest',
+          'registerSW.js',
+          'assets/index-*.js',
+          'assets/jsx-runtime-*.js',
+          'assets/index-*.css',
+          'seoul-gu.geojson',
+        ],
         runtimeCaching: [
           {
             urlPattern: /\.geojson$/i,
@@ -52,13 +76,37 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            // 라우트·그래프 청크는 처음 방문할 때만 저장하고 이후 시연에서 재사용한다.
+            urlPattern: /\/assets\/.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'visited-page-chunks',
+              expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /\/assets\/.*\.(?:png|jpe?g|svg|webp|avif)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'visited-page-assets',
+              expiration: { maxEntries: 96, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
       devOptions: {
         enabled: false,
       },
     }),
+    // public/의 MSW worker는 로컬 개발 전용이며 프로덕션 산출물에는 남기지 않는다.
+    removeProductionMswWorker(),
   ],
+  build: {
+    manifest: true,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
