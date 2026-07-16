@@ -1,25 +1,87 @@
-import { useEffect, type ReactNode } from 'react'
+import {
+  Component,
+  Suspense,
+  lazy,
+  useEffect,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
-import { HomePage } from '@/pages/home'
-import { MapPage } from '@/pages/map'
-import { FavoriteRegionsPage } from '@/pages/favorite-regions'
-import { LoginPage } from '@/pages/login'
-import { AuthCallbackPage } from '@/pages/auth-callback'
-import { OnboardingPage } from '@/pages/onboarding'
-import { OnboardingGuidePage } from '@/pages/onboarding-guide'
-import { NotificationsPage } from '@/pages/notifications'
-import { ReportPage } from '@/pages/report'
-import { ReportHistoryPage } from '@/pages/report-history'
-import { ReportDetailPage } from '@/pages/report-detail'
-import { ReportCasesPage } from '@/pages/report-cases'
-import { MyPage } from '@/pages/my'
-import { MyStorePage } from '@/pages/my-store'
-import { MyStoreEditPage } from '@/pages/my-store-edit'
-import { MyCategoryPage } from '@/pages/my-category'
-import { SubscriptionPage } from '@/pages/subscription'
-import { SubscriptionCompletePage } from '@/pages/subscription-complete'
 import { useAuthStore } from '@/entities/session'
+import { PwaInstallGate } from '@/widgets/pwa-install'
 import { useAppHeight } from '@/shared/lib/useAppHeight'
+import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry'
+import { Spinner } from '@/shared/ui/Spinner/Spinner'
+
+const HomePage = lazy(() => import('@/pages/home/HomePage'))
+const MapPage = lazy(() => import('@/pages/map/MapPage'))
+const FavoriteRegionsPage = lazy(() => import('@/pages/favorite-regions/FavoriteRegionsPage'))
+const LoginPage = lazy(() => import('@/pages/login/LoginPage'))
+const AuthCallbackPage = lazy(() => import('@/pages/auth-callback/AuthCallbackPage'))
+const OnboardingPage = lazy(() => import('@/pages/onboarding/OnboardingPage'))
+const OnboardingGuidePage = lazy(() => import('@/pages/onboarding-guide/OnboardingGuidePage'))
+const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage'))
+const ReportPage = lazy(() => import('@/pages/report/ReportPage'))
+const ReportHistoryPage = lazy(() => import('@/pages/report-history/ReportHistoryPage'))
+const ReportDetailPage = lazy(() => import('@/pages/report-detail/ReportDetailPage'))
+const ReportCasesPage = lazy(() => import('@/pages/report-cases/ReportCasesPage'))
+const MyPage = lazy(() => import('@/pages/my/MyPage'))
+const MyStorePage = lazy(() => import('@/pages/my-store/MyStorePage'))
+const MyStoreEditPage = lazy(() => import('@/pages/my-store-edit/MyStoreEditPage'))
+const MyCategoryPage = lazy(() => import('@/pages/my-category/MyCategoryPage'))
+const SubscriptionPage = lazy(() => import('@/pages/subscription/SubscriptionPage'))
+const SubscriptionCompletePage = lazy(
+  () => import('@/pages/subscription-complete/SubscriptionCompletePage'),
+)
+
+const SPINNER_DELAY_MS = 200
+
+function FullScreenSpinner({ label = '화면 불러오는 중' }: { label?: string }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(true), SPINNER_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  return (
+    <div className="flex min-h-[var(--app-height,100dvh)] items-center justify-center bg-white">
+      {visible && <Spinner aria-label={label} />}
+    </div>
+  )
+}
+
+type LazyRouteErrorBoundaryState = { failed: boolean }
+
+class LazyRouteErrorBoundary extends Component<
+  { children: ReactNode },
+  LazyRouteErrorBoundaryState
+> {
+  state: LazyRouteErrorBoundaryState = { failed: false }
+
+  static getDerivedStateFromError(): LazyRouteErrorBoundaryState {
+    return { failed: true }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[route] 페이지 청크 로드 실패', error, info)
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="flex min-h-[var(--app-height,100dvh)] items-center justify-center bg-white px-5">
+          <ErrorRetry
+            message="화면을 불러오지 못했어요."
+            onRetry={() => window.location.reload()}
+          />
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function AuthBootstrap() {
   const location = useLocation()
@@ -54,23 +116,17 @@ function SessionGate({ children }: { children: ReactNode }) {
   const resolving = status === 'idle' || status === 'checking'
 
   if (resolving && location.pathname !== '/auth/kakao') {
-    return (
-      <div className="flex min-h-dvh items-center justify-center text-sm text-gray-400">
-        세션 확인 중…
-      </div>
-    )
+    return <FullScreenSpinner label="세션 확인 중" />
   }
   return <>{children}</>
 }
 
-export default function App() {
-  // iOS PWA 뷰포트 높이 안정화 (100dvh 첫 렌더 어긋남 → 하단 탭 위로 뜨는 문제 방지)
-  useAppHeight()
+function AppRoutes() {
+  const location = useLocation()
 
   return (
-    <BrowserRouter>
-      <AuthBootstrap />
-      <SessionGate>
+    <LazyRouteErrorBoundary key={location.pathname}>
+      <Suspense fallback={<FullScreenSpinner />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/kakao" element={<AuthCallbackPage />} />
@@ -94,7 +150,23 @@ export default function App() {
             <Route path="/my/subscription/complete" element={<SubscriptionCompletePage />} />
           </Route>
         </Routes>
+      </Suspense>
+    </LazyRouteErrorBoundary>
+  )
+}
+
+export default function App() {
+  // iOS PWA 뷰포트 높이 안정화 (100dvh 첫 렌더 어긋남 → 하단 탭 위로 뜨는 문제 방지)
+  useAppHeight()
+
+  return (
+    <BrowserRouter>
+      <AuthBootstrap />
+      <SessionGate>
+        <AppRoutes />
       </SessionGate>
+      {/* 홈 화면에 추가 유도 — 설치 가능 상황에서만 하단 시트 노출(그 외엔 렌더 안 함) */}
+      <PwaInstallGate />
     </BrowserRouter>
   )
 }

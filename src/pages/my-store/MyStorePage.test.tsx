@@ -101,8 +101,37 @@ describe('MyStorePage', () => {
     renderPage()
 
     const cardA = (await screen.findByText('가게 A')).closest('li')!
-    // 대표 가게엔 본문 오버레이 버튼이 없고, 수정·삭제 버튼만 존재
+    const cardB = screen.getByText('가게 B').closest('li')!
+    // 대표 가게엔 본문 오버레이와 삭제 버튼이 없고 수정만 표시한다.
     expect(within(cardA).queryByRole('button', { name: '가게 A' })).not.toBeInTheDocument()
     expect(within(cardA).getByRole('button', { name: '수정' })).toBeInTheDocument()
+    expect(within(cardA).queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+    expect(within(cardB).getByRole('button', { name: '삭제' })).toBeInTheDocument()
+  })
+
+  it('일반 가게는 확인 팝업을 거쳐 삭제하고 목록과 토스트를 갱신한다', async () => {
+    const stores = makeStores()
+    let deletedId: number | null = null
+    server.use(
+      http.get(`${API}/api/v1/users/me/stores`, () => ok('목록', stores)),
+      http.delete(`${API}/api/v1/users/me/stores/:storeId`, ({ params }) => {
+        deletedId = Number(params.storeId)
+        const index = stores.findIndex((store) => store.storeId === deletedId)
+        if (index >= 0) stores.splice(index, 1)
+        return ok('삭제', null)
+      }),
+    )
+    renderPage()
+
+    const cardB = (await screen.findByText('가게 B')).closest('li')!
+    fireEvent.click(within(cardB).getByRole('button', { name: '삭제' }))
+
+    const popup = screen.getByRole('alertdialog')
+    expect(popup).toHaveTextContent('가게 B')
+    fireEvent.click(within(popup).getByRole('button', { name: '삭제' }))
+
+    await waitFor(() => expect(deletedId).toBe(2))
+    await waitFor(() => expect(screen.queryByText('가게 B')).not.toBeInTheDocument())
+    expect(await screen.findByText('가게가 삭제되었습니다.')).toBeInTheDocument()
   })
 })

@@ -26,4 +26,11 @@ describe('MobileLayout', () => {
     renderWithRouter(<MobileLayout showBottomTab={false}>x</MobileLayout>)
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
+
+  it('scrollable=false 면 본문 스크롤과 오버스크롤을 막는다', () => {
+    renderWithRouter(<MobileLayout scrollable={false}>x</MobileLayout>)
+
+    expect(screen.getByRole('main')).toHaveClass('overflow-hidden', 'overscroll-none')
+    expect(screen.getByRole('main')).not.toHaveClass('overflow-y-auto')
+  })
 })

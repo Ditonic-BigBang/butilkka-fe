@@ -13,29 +13,72 @@ export const DIRECTION_UI: Record<RegionDirection, 'up' | 'down' | 'same'> = {
 export type MetricConfig = {
   /** 시트 헤더 제목 (예: "매출 대비 임대료") */
   title: string
-  /** 표시 단위 (예: "만원") */
+  /** 상세 상단 표시 단위 (예: "원") */
   unit: string
-  /** 원시 값 → 표시 값 (예: 원 → 만원) */
+  /** 원시 값 → 상세 상단 표시 값 */
   toDisplayValue: (raw: number) => number
-  /** 그래프 y축 눈금 라벨 (표시 값 기준) — 축 폭(30px)에 안 들어가는 큰 값만 축약 지정 */
+  /** 지도 마커·랭킹처럼 좁은 영역에서 사용할 단위와 값 */
+  compactUnit: string
+  toCompactValue: (raw: number) => number
+  /** 추이 그래프에서 사용할 단위와 값 */
+  trendUnit: string
+  toTrendValue: (raw: number) => number
+  /** 그래프 y축 눈금 라벨 (그래프 단위 기준) */
   toAxisLabel?: (value: number) => string
 }
+
+const rounded = (value: number) => Math.round(value)
+const oneDecimal = (value: number) => Math.round(value * 10) / 10
+const axisDecimal = (value: number) => value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })
 
 export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
   rentRatio: {
     title: '매출 대비 임대료',
-    unit: '만원',
-    toDisplayValue: (v) => Math.round(v / 10000),
+    unit: '원',
+    toDisplayValue: rounded,
+    compactUnit: '만원',
+    toCompactValue: (value) => Math.round(value / 10_000),
+    trendUnit: '천만원',
+    toTrendValue: (value) => value / 10_000_000,
+    toAxisLabel: axisDecimal,
   },
   footTraffic: {
     title: '유동인구',
     unit: '명',
-    toDisplayValue: (v) => Math.round(v),
-    toAxisLabel: (v) => `${(v / 10_000).toFixed(1)}만`,
+    toDisplayValue: rounded,
+    compactUnit: '명',
+    toCompactValue: rounded,
+    trendUnit: '만명',
+    toTrendValue: (value) => value / 10_000,
+    toAxisLabel: axisDecimal,
   },
-  vacancyRate: { title: '공실률', unit: '%', toDisplayValue: (v) => Math.round(v * 10) / 10 },
-  closureRate: { title: '폐업률', unit: '%', toDisplayValue: (v) => Math.round(v * 10) / 10 },
-  storeCount: { title: '점포수', unit: '개', toDisplayValue: (v) => Math.round(v) },
+  vacancyRate: {
+    title: '공실률',
+    unit: '%',
+    toDisplayValue: oneDecimal,
+    compactUnit: '%',
+    toCompactValue: oneDecimal,
+    trendUnit: '%',
+    toTrendValue: oneDecimal,
+  },
+  closureRate: {
+    title: '폐업률',
+    unit: '%',
+    toDisplayValue: oneDecimal,
+    compactUnit: '%',
+    toCompactValue: oneDecimal,
+    trendUnit: '%',
+    toTrendValue: oneDecimal,
+  },
+  storeCount: {
+    title: '점포수',
+    unit: '개',
+    toDisplayValue: rounded,
+    compactUnit: '개',
+    toCompactValue: rounded,
+    trendUnit: '개',
+    toTrendValue: rounded,
+  },
 }
 
 /**

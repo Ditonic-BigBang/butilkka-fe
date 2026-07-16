@@ -10,7 +10,7 @@ import { server } from '@/shared/api/mocks/server'
 
 // 전체 테스트 시작 전 1회: 요청 인터셉트 시작.
 // 핸들러 없는 요청은 에러로 처리(누락된 mock 을 즉시 발견).
-// 단, 정적 에셋과 public/seoul.geojson 은 통과시킨다.
+// 단, 정적 에셋과 public/seoul-gu.geojson 은 통과시킨다.
 beforeAll(() => {
   server.listen({
     onUnhandledRequest(request, print) {

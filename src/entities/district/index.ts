@@ -1,4 +1,3 @@
-export * from './model/useSeoulGeoJson'
 export * from './model/useGuBoundaries'
 export * from './lib/guCentroids'
 export * from './lib/pointInDistrict'

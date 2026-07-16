@@ -46,8 +46,8 @@ function toMetricView(data: RegionMetricRankingResponse, config: MetricConfig): 
       rank: r.rank,
       regionCode: r.regionCode,
       name: r.regionName,
-      value: config.toDisplayValue(r.value).toLocaleString(),
-      unit: config.unit,
+      value: config.toCompactValue(r.value).toLocaleString(),
+      unit: config.compactUnit,
       direction: DIRECTION_UI[r.direction] ?? 'same',
     })),
     averagePeriod:
@@ -66,14 +66,14 @@ export function useRanking(category: MapCategory, order: RankingOrder, quarter?:
 
   const gradeQuery = useQuery({
     queryKey: regionKeys.ranking(order, quarter),
-    queryFn: () => fetchDeclineRanking(order, quarter),
+    queryFn: ({ signal }) => fetchDeclineRanking(order, quarter, signal),
     select: toGradeView,
     placeholderData: keepPreviousData,
     enabled: metric === null,
   })
   const metricQuery = useQuery({
     queryKey: regionKeys.metricRanking(metric ?? 'rentRatio', order, quarter),
-    queryFn: () => fetchMetricRanking(metric ?? 'rentRatio', order, quarter),
+    queryFn: ({ signal }) => fetchMetricRanking(metric ?? 'rentRatio', order, quarter, signal),
     select: (data: RegionMetricRankingResponse) =>
       toMetricView(data, METRIC_CONFIG[metric ?? 'rentRatio']),
     placeholderData: keepPreviousData,

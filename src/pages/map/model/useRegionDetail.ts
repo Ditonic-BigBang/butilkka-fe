@@ -32,6 +32,11 @@ const trendLabel = (quarter: string) => (quarter.endsWith('Q1') ? quarter.slice(
 const yearTicks = (quarters: string[]) =>
   quarters.filter((q) => q.endsWith('Q1')).map((q) => q.slice(0, 4))
 
+function formatTruncatedPercent(value: number) {
+  const truncated = Math.trunc(Math.abs(value) * 100) / 100
+  return `${truncated.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}%`
+}
+
 /** 쇠퇴등급 상세 시트(GradeBody) 뷰모델 */
 export type GradeSheetView = {
   kind: 'grade'
@@ -95,9 +100,9 @@ export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): M
   const prev = summary.trend.at(-2)?.value
   const percent =
     'changeRate' in summary
-      ? `${Math.abs(summary.changeRate)}%`
+      ? formatTruncatedPercent(summary.changeRate)
       : prev
-        ? `${Math.round((Math.abs(summary.value - prev) / prev) * 1000) / 10}%`
+        ? formatTruncatedPercent((Math.abs(summary.value - prev) / prev) * 100)
         : `${Math.abs(summary.changeCount)}${config.unit}`
 
   return {
@@ -114,10 +119,10 @@ export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): M
     },
     trend: summary.trend.map((p) => ({
       label: trendLabel(p.quarter),
-      value: config.toDisplayValue(p.value),
+      value: config.toTrendValue(p.value),
     })),
     trendTicks: yearTicks(summary.trend.map((p) => p.quarter)),
-    trendUnit: `(${config.unit})`,
+    trendUnit: `(${config.trendUnit})`,
     trendAxisLabel: config.toAxisLabel,
     averagePeriod:
       'avgOperatingYears' in summary
@@ -138,7 +143,7 @@ export function useRegionDetail(
 ) {
   return useQuery({
     queryKey: regionKeys.detail(regionCode ?? '', quarter),
-    queryFn: () => fetchRegionDetail(regionCode as string, quarter),
+    queryFn: ({ signal }) => fetchRegionDetail(regionCode as string, quarter, signal),
     enabled: regionCode !== null,
     select: (d: RegionDetailResponse): SheetDetailView =>
       category === 'grade' ? toGradeSheetView(d) : toMetricSheetView(d, category),

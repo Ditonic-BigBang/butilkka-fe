@@ -4,9 +4,17 @@ import Compass from '~icons/ci/compass'
 import Search from '~icons/ci/search'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { StoreLocationPicker } from '@/widgets/store-location-picker'
-import { EmptyState, ErrorRetry, ToastHost } from '@/shared/ui'
-import { StoreCard, useMyStores, lookupRegion, type StoreLocation } from '@/entities/store'
+import { ConfirmPopup, EmptyState, ErrorRetry, Toast, ToastHost } from '@/shared/ui'
+import {
+  StoreCard,
+  useMyStores,
+  lookupRegion,
+  type MyStore,
+  type StoreLocation,
+} from '@/entities/store'
+import { useTransientToast } from '@/shared/lib/useTransientToast'
 import { useSetPrimaryStore } from './model/useSetPrimaryStore'
+import { useDeleteStore } from './model/useDeleteStore'
 import { formatFounded } from './lib/storeFormat'
 
 /**
@@ -14,12 +22,15 @@ import { formatFounded } from './lib/storeFormat'
  * 마이페이지 가게 행 → 진입하는 상세 화면(하단 탭 없음).
  * 주소 검색·현위치 → 주소검색 화면(StoreLocationPicker) → 위치 확정 시 신규 등록 폼(/my/store/new)으로.
  * 등록된 가게 목록(StoreCard, 대표 가게 칩) — 행 본문 탭(수정·삭제 제외) 시 그 가게를 대표로 지정,
- * "수정" → 수정 폼(/my/store/:id/edit). 삭제는 미구현.
+ * "수정" → 수정 폼(/my/store/:id/edit). 일반 가게만 확인 후 삭제할 수 있다.
  */
 export default function MyStorePage() {
   const navigate = useNavigate()
   const stores = useMyStores()
   const setPrimary = useSetPrimaryStore()
+  const deleteStore = useDeleteStore()
+  const [deleteTarget, setDeleteTarget] = useState<MyStore | null>(null)
+  const { toast, closing: toastClosing, show: showToast } = useTransientToast()
   // null: 목록 · 'search': 주소검색부터 · 'current': 현위치로 바로 지도 확인
   const [picker, setPicker] = useState<'search' | 'current' | null>(null)
 
@@ -40,6 +51,16 @@ export default function MyStorePage() {
   const selectAsPrimary = (storeId: number) => {
     setPrimary.mutate(storeId, {
       onSuccess: () => navigate('/my'),
+    })
+  }
+
+  const confirmDelete = () => {
+    if (!deleteTarget || deleteTarget.isPrimary) return
+    const storeId = deleteTarget.storeId
+    setDeleteTarget(null)
+    deleteStore.mutate(storeId, {
+      onSuccess: () => showToast('가게가 삭제되었습니다.'),
+      onError: (error) => showToast(error.message),
     })
   }
 
@@ -78,6 +99,7 @@ export default function MyStorePage() {
               primary={store.isPrimary}
               onSelect={store.isPrimary ? undefined : () => selectAsPrimary(store.storeId)}
               onEdit={() => navigate(`/my/store/${store.storeId}/edit`)}
+              onDelete={store.isPrimary ? undefined : () => setDeleteTarget(store)}
             />
           </li>
         ))}
@@ -87,7 +109,7 @@ export default function MyStorePage() {
 
   return (
     <MobileLayout showBottomTab={false}>
-      <div className="flex min-h-full flex-col bg-white">
+      <div className="relative flex min-h-full flex-col bg-white">
         <GNB title="내 가게 설정" showSettings={false} onBack={() => navigate(-1)} />
 
         <div className="flex flex-col gap-4 px-5 py-3">
@@ -116,6 +138,23 @@ export default function MyStorePage() {
           <p className="px-5 py-3 text-body-m-regular text-status-red">
             대표 가게를 변경하지 못했어요. 다시 시도해주세요.
           </p>
+        )}
+
+        <ConfirmPopup
+          open={deleteTarget !== null}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
+        >
+          <span className="font-semibold text-gray-900">{deleteTarget?.storeName}</span> 삭제를
+          진행하시겠습니까?
+        </ConfirmPopup>
+
+        {toast && (
+          <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 mx-auto flex max-w-[430px] justify-center px-5">
+            <Toast className={toastClosing ? 'animate-toast-out' : 'animate-toast-in'}>
+              {toast}
+            </Toast>
+          </div>
         )}
 
         {/* 등록 완료 등 라우트 토스트 (Figma 446:23137) */}
