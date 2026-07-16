@@ -75,7 +75,7 @@ export function buildMetricGuMarkers(
       lat: point.lat,
       lng: point.lng,
       title: district,
-      caption: `${config.toDisplayValue(region.value).toLocaleString()}${config.unit}`,
+      caption: `${config.toCompactValue(region.value).toLocaleString()}${config.compactUnit}`,
     })
   })
   return markers

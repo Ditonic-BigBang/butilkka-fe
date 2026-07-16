@@ -25,19 +25,20 @@ export const regionKeys = {
 }
 
 /** GET /api/v1/regions/map — 상권별 쇠퇴등급 (quarter 미지정 시 최신) */
-export function fetchRegionMap(quarter?: string): Promise<RegionMapResponse> {
+export function fetchRegionMap(quarter?: string, signal?: AbortSignal): Promise<RegionMapResponse> {
   const qs = quarter ? `?quarter=${encodeURIComponent(quarter)}` : ''
-  return apiJson<RegionMapResponse>(`/api/v1/regions/map${qs}`)
+  return apiJson<RegionMapResponse>(`/api/v1/regions/map${qs}`, { signal })
 }
 
 /** GET /api/v1/regions/declineRanking — 쇠퇴 등급 Top5 (order: top 위험 높은 순 · bottom 안전한 순) */
 export function fetchDeclineRanking(
   order: RankingOrder,
   quarter?: string,
+  signal?: AbortSignal,
 ): Promise<RegionRankingResponse> {
   const params = new URLSearchParams({ order })
   if (quarter) params.set('quarter', quarter)
-  return apiJson<RegionRankingResponse>(`/api/v1/regions/declineRanking?${params}`)
+  return apiJson<RegionRankingResponse>(`/api/v1/regions/declineRanking?${params}`, { signal })
 }
 
 /**
@@ -47,10 +48,11 @@ export function fetchDeclineRanking(
 export function fetchMetricMap(
   metric: MetricKey,
   quarter?: string,
+  signal?: AbortSignal,
 ): Promise<RegionMetricMapResponse> {
   const params = new URLSearchParams({ metric })
   if (quarter) params.set('quarter', quarter)
-  return apiJson<RegionMetricMapResponse>(`/api/v1/regions/metricMap?${params}`)
+  return apiJson<RegionMetricMapResponse>(`/api/v1/regions/metricMap?${params}`, { signal })
 }
 
 /**
@@ -61,16 +63,18 @@ export function fetchMetricRanking(
   metric: MetricKey,
   order: RankingOrder,
   quarter?: string,
+  signal?: AbortSignal,
 ): Promise<RegionMetricRankingResponse> {
   const params = new URLSearchParams({ metric, order })
   if (quarter) params.set('quarter', quarter)
-  return apiJson<RegionMetricRankingResponse>(`/api/v1/regions/metricRanking?${params}`)
+  return apiJson<RegionMetricRankingResponse>(`/api/v1/regions/metricRanking?${params}`, { signal })
 }
 
 /** GET /api/v1/regions/search — 상권 검색 자동완성 */
-export function searchRegions(keyword: string): Promise<RegionSearchItem[]> {
+export function searchRegions(keyword: string, signal?: AbortSignal): Promise<RegionSearchItem[]> {
   return apiJson<RegionSearchItem[]>(
     `/api/v1/regions/search?keyword=${encodeURIComponent(keyword)}`,
+    { signal },
   )
 }
 
@@ -81,7 +85,10 @@ export function searchRegions(keyword: string): Promise<RegionSearchItem[]> {
 export function fetchRegionDetail(
   regionCode: string,
   quarter?: string,
+  signal?: AbortSignal,
 ): Promise<RegionDetailResponse> {
   const qs = quarter ? `?quarter=${encodeURIComponent(quarter)}` : ''
-  return apiJson<RegionDetailResponse>(`/api/v1/districts/${encodeURIComponent(regionCode)}${qs}`)
+  return apiJson<RegionDetailResponse>(`/api/v1/districts/${encodeURIComponent(regionCode)}${qs}`, {
+    signal,
+  })
 }

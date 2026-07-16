@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { regionKeys, fetchRegionMap, fetchMetricMap } from '@/entities/region'
-import { useSeoulGeoJson, computeGuCentroids } from '@/entities/district'
+import type { LatLngPoint } from '@/entities/district'
 import type { MapMarker } from '@/widgets/district-map'
 import {
   buildGuMarkers,
@@ -18,24 +18,26 @@ const NO_MARKERS: MapMarker[] = []
  * centroids 는 검색 결과 선택 시 구로 지도 이동할 때도 쓰인다.
  * quarter 미지정이면 최신 분기 — 분기/카테고리 전환 시엔 이전 마커를 유지해 깜빡임을 막는다.
  */
-export function useRegionMarkers(category: MapCategory, quarter?: string) {
-  const { data: geoJson } = useSeoulGeoJson()
+export function useRegionMarkers(
+  category: MapCategory,
+  quarter: string | undefined,
+  centroids: Map<string, LatLngPoint> | null,
+) {
   const metric = category === 'grade' ? null : category
 
   const gradeQuery = useQuery({
     queryKey: regionKeys.map(quarter),
-    queryFn: () => fetchRegionMap(quarter),
+    queryFn: ({ signal }) => fetchRegionMap(quarter, signal),
     placeholderData: keepPreviousData,
     enabled: metric === null,
   })
   const metricQuery = useQuery({
     queryKey: regionKeys.metricMap(metric ?? 'rentRatio', quarter),
-    queryFn: () => fetchMetricMap(metric ?? 'rentRatio', quarter),
+    queryFn: ({ signal }) => fetchMetricMap(metric ?? 'rentRatio', quarter, signal),
     placeholderData: keepPreviousData,
     enabled: metric !== null,
   })
 
-  const centroids = useMemo(() => (geoJson ? computeGuCentroids(geoJson) : null), [geoJson])
   const markers = useMemo(() => {
     if (!centroids) return NO_MARKERS
     if (metric) {
@@ -54,7 +56,6 @@ export function useRegionMarkers(category: MapCategory, quarter?: string) {
 
   return {
     markers,
-    centroids,
     regionByDistrict,
     quarter: metric ? metricQuery.data?.quarter : gradeQuery.data?.quarter,
   }

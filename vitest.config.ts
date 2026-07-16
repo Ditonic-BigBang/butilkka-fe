@@ -29,6 +29,9 @@ const merged = mergeConfig(
             environment: 'jsdom',
             globals: true,
             setupFiles: ['./src/test/setup.ts'],
+            // lazy 라우트(React.lazy) 청크 로드가 CI 부하에서 findBy 기본 타임아웃(1s)을
+            // 넘겨 플래키하게 실패 → 상한을 넉넉히(통과 테스트는 즉시 반환이라 영향 없음).
+            testTimeout: 15000,
             // CSS 처리는 기본 비활성(동작 테스트엔 불필요·빠름).
             // 계산된 스타일/CSS 변수까지 테스트하려면 css: true 추가.
           },

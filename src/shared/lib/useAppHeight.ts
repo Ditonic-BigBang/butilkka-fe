@@ -1,24 +1,9 @@
 import { useLayoutEffect } from 'react'
+import { isIOS, isStandalone } from './platform'
 
 // iOS standalone 은 시작 직후 뷰포트 높이가 수백 ms 늦게 확정되면서 resize 를 안 쏘기도 한다
 // → 첫 2.5초 동안 몇 번 재측정해 따라잡는다 (하단 탭이 위로 떠 보이는 문제의 원인).
 const SETTLE_DELAYS_MS = [50, 150, 300, 600, 1000, 1600, 2500]
-
-type NavigatorWithStandalone = Navigator & { standalone?: boolean }
-
-function isIOS() {
-  return (
-    /iP(ad|hone|od)/.test(window.navigator.userAgent) ||
-    (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1)
-  )
-}
-
-function isStandalone() {
-  return (
-    window.matchMedia?.('(display-mode: standalone)').matches ||
-    (window.navigator as NavigatorWithStandalone).standalone === true
-  )
-}
 
 export function getAppViewportHeight() {
   const viewportHeights = [

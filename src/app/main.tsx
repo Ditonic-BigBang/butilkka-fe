@@ -6,12 +6,10 @@ import { queryClient } from '@/shared/api/queryClient'
 import './index.css'
 import App from './App.tsx'
 
-// VITE_ENABLE_MSW=true 일 때만 MSW worker 를 시작한다 (기본 꺼짐).
-// - 로컬: .env 로 토글 (백엔드 없이 UI 작업할 때 켜기)
-// - 배포: 백엔드 배포 전 mock 데모용으로 Vercel 환경변수에서 켜고, 실서버 전환 시 제거
-// 동적 import 라서 꺼져 있으면 MSW 코드는 로드되지 않는다(코드 스플리팅).
+// 개발 모드 + VITE_ENABLE_MSW=true 일 때만 MSW worker 를 시작한다.
+// import.meta.env.DEV 가 프로덕션에서 false 로 치환되어 MSW import/chunk 자체가 제거된다.
 async function enableMocking() {
-  if (import.meta.env.VITE_ENABLE_MSW !== 'true') return
+  if (!import.meta.env.DEV || import.meta.env.VITE_ENABLE_MSW !== 'true') return
 
   const { worker } = await import('@/shared/api/mocks/browser')
   const { isCommonAssetRequest } = await import('msw')
@@ -21,7 +19,7 @@ async function enableMocking() {
     onUnhandledRequest(request, print) {
       // Vite 에셋(/@vite, /src/*, 이미지·폰트 등)은 통과 — 콘솔 경고 폭주 방지.
       if (isCommonAssetRequest(request)) return
-      // public/seoul.geojson 같은 정적 파일도 통과(.geojson 은 위 함수가 못 잡음).
+      // public/seoul-gu.geojson 같은 정적 파일도 통과(.geojson 은 위 함수가 못 잡음).
       if (new URL(request.url).pathname.endsWith('.geojson')) return
       // 그 외 핸들러 없는 요청만 경고 → 빠뜨린 mock 을 발견.
       print.warning()

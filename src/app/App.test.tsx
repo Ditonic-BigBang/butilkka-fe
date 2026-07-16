@@ -32,13 +32,19 @@ describe('App', () => {
       http.post(`${API}/api/v1/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
     )
     renderApp()
-    expect(await screen.findByRole('button', { name: /카카오 로그인/ })).toBeInTheDocument()
+    // lazy 라우트 청크 로드를 기다림 (CI 부하 대비 타임아웃 상향)
+    expect(
+      await screen.findByRole('button', { name: /카카오 로그인/ }, { timeout: 10000 }),
+    ).toBeInTheDocument()
   })
 
   it('미온보딩 사용자는 온보딩(약관 동의)으로 이동한다', async () => {
     // 기본 mock: isOnboarded=false → 홈 게이트가 /onboarding 으로 보낸다
     renderApp()
-    expect(await screen.findByText(/서비스 이용약관에/)).toBeInTheDocument()
+    // 온보딩 페이지가 lazy 라우트라 청크 로드까지 대기 (CI 부하에서 1s 기본 타임아웃 초과 방지)
+    expect(
+      await screen.findByText(/서비스 이용약관에/, undefined, { timeout: 10000 }),
+    ).toBeInTheDocument()
   })
 
   it('온보딩을 마친 사용자는 홈을 렌더링한다', async () => {
@@ -55,6 +61,9 @@ describe('App', () => {
     renderApp()
     // 대시보드(GET /api/v1/dashboard) 목이 로드되면 헤더에 내 상권 위치가 뜬다 = 홈 렌더 성공
     // (위치 폴백 = dashboard.store.address 에서 "서울" 접두를 뗀 값)
-    expect(await screen.findByText('강남구 신사동')).toBeInTheDocument()
+    // 홈도 lazy 라우트라 청크 로드까지 대기 (CI 부하 대비 타임아웃 상향)
+    expect(
+      await screen.findByText('강남구 신사동', undefined, { timeout: 10000 }),
+    ).toBeInTheDocument()
   })
 })

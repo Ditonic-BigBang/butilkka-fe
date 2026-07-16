@@ -1,7 +1,32 @@
-import { useRef, useState, type PointerEvent } from 'react'
+import { Suspense, lazy, useRef, useState, type PointerEvent } from 'react'
 import { DistrictRankRow, GradeGauge } from '@/entities/district'
-import { ChangeIndicator, TrendGraph, type TrendPoint } from '@/shared/ui'
+import { ChangeIndicator, Spinner } from '@/shared/ui'
+import type { TrendGraphProps, TrendPoint } from '@/shared/ui/TrendGraph/TrendGraph'
 import { cn } from '@/shared/lib/cn'
+
+const TrendGraph = lazy(() =>
+  import('@/shared/ui/TrendGraph/TrendGraph').then((module) => ({
+    default: module.TrendGraph,
+  })),
+)
+
+function DeferredTrendGraph(props: TrendGraphProps) {
+  const height = props.height ?? 150
+  return (
+    <Suspense
+      fallback={
+        <div className="flex w-full flex-col gap-2">
+          {props.title && <p className="text-body-l-semibold text-gray-600">{props.title}</p>}
+          <div className="flex w-full items-center justify-center" style={{ height }}>
+            <Spinner className="size-8" aria-label="그래프 불러오는 중" />
+          </div>
+        </div>
+      }
+    >
+      <TrendGraph {...props} />
+    </Suspense>
+  )
+}
 
 type Direction = 'up' | 'down' | 'same'
 
@@ -142,7 +167,7 @@ export function GradeBody({ quarter, grade, status, lastGrade, trend, trendTicks
       </div>
       <SectionDivider />
       <div className="px-5 py-6">
-        <TrendGraph title="3년 추이" variant="grade" data={trend} xTicks={trendTicks} />
+        <DeferredTrendGraph title="3년 추이" variant="grade" data={trend} xTicks={trendTicks} />
       </div>
     </>
   )
@@ -192,7 +217,7 @@ export function MetricBody({
       </div>
       <SectionDivider />
       <div className="px-5 py-6">
-        <TrendGraph
+        <DeferredTrendGraph
           title="3년 추이"
           data={trend}
           xTicks={trendTicks}

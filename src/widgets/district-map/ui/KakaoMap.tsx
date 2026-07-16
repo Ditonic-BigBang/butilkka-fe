@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { createPortal } from 'react-dom'
 import { useKakaoMapsSDK } from '@/shared/lib/useKakaoMapsSDK'
 import { LocationMarker, MapPin, Spinner } from '@/shared/ui'
@@ -53,6 +53,9 @@ type KakaoMapProps = {
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 }
 const DEFAULT_LEVEL = 9
+// LocationMarker 의 지름(94px) 절반. 오버레이는 지도 제스처를 막지 않게 클릭을 통과시키고,
+// 지도 클릭 좌표가 이 반경 안에 있을 때만 마커 탭으로 판정한다.
+const MARKER_HIT_RADIUS = 47
 
 // 구 경계 스타일 — orange-500(@theme). kakao Polygon 은 CSS 변수를 못 받아 hex 로 미러링.
 const OUTLINE_COLOR = '#ff6b1b'
@@ -60,6 +63,13 @@ const OUTLINE_FILL_OPACITY = 0.2
 
 const NO_MARKERS: MapMarker[] = []
 const NO_OUTLINES: MapOutline[] = []
+
+type MarkerOverlayEntry = {
+  el: HTMLDivElement
+  overlay: kakao.maps.CustomOverlay
+  lat: number
+  lng: number
+}
 
 /**
  * 상권 지도 (Figma: 지도 홈 596:23173).
@@ -79,8 +89,11 @@ export default function KakaoMap({
 }: KakaoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<kakao.maps.Map | null>(null)
+  const mapInstanceRef = useRef<kakao.maps.Map | null>(null)
   // 마커별 portal 컨테이너 — CustomOverlay content 로 붙인 DOM 노드
   const [overlayEls, setOverlayEls] = useState<{ id: string; el: HTMLDivElement }[]>([])
+  const markerOverlaysRef = useRef(new Map<string, MarkerOverlayEntry>())
+  const overlayIdsRef = useRef<string[]>([])
   const [myLocationEl, setMyLocationEl] = useState<HTMLDivElement | null>(null)
   const [pinEl, setPinEl] = useState<HTMLDivElement | null>(null)
 
@@ -104,11 +117,12 @@ export default function KakaoMap({
 
   // 지도 생성 (SDK 로드 후 1회)
   useEffect(() => {
-    if (!isLoaded || !containerRef.current) return
+    if (!isLoaded || !containerRef.current || mapInstanceRef.current) return
     const instance = new kakao.maps.Map(containerRef.current, {
       center: new kakao.maps.LatLng(SEOUL_CENTER.lat, SEOUL_CENTER.lng),
       level: DEFAULT_LEVEL,
     })
+    mapInstanceRef.current = instance
     setMap(instance)
   }, [isLoaded])
 
@@ -119,32 +133,76 @@ export default function KakaoMap({
     if (map) onReadyRef.current?.()
   }, [map])
 
-  // 마커 오버레이 생성/갱신
+  // 마커 오버레이 조정 — ID가 유지되면 위치만 옮기고 portal 내용은 React가 갱신한다.
   useEffect(() => {
-    if (!map || markers.length === 0) return
+    if (!map) return
 
-    const created = markers.map((marker) => {
+    const nextIds = markers.map((marker) => marker.id)
+    const nextIdSet = new Set(nextIds)
+
+    markerOverlaysRef.current.forEach((entry, id) => {
+      if (nextIdSet.has(id)) return
+      entry.overlay.setMap(null)
+      markerOverlaysRef.current.delete(id)
+    })
+
+    markers.forEach((marker) => {
+      const existing = markerOverlaysRef.current.get(marker.id)
+      if (existing) {
+        if (existing.lat !== marker.lat || existing.lng !== marker.lng) {
+          existing.overlay.setPosition(new kakao.maps.LatLng(marker.lat, marker.lng))
+          existing.lat = marker.lat
+          existing.lng = marker.lng
+        }
+        return
+      }
+
       const el = document.createElement('div')
-      // 콘텐츠는 portal 로 나중에 채워져 kakao 의 anchor 계산(부착 시점 크기 측정)이 0 이 된다.
-      // anchor 는 0 으로 고정하고 콘텐츠가 CSS translate 로 스스로 중앙 정렬한다.
+      // 검은 마커 위에서 시작한 터치도 지도 드래그로 이어지게 한다.
+      // 탭 선택은 아래 kakao map click 이벤트에서 좌표 기반으로 처리한다.
+      el.style.pointerEvents = 'none'
       const overlay = new kakao.maps.CustomOverlay({
         content: el,
         position: new kakao.maps.LatLng(marker.lat, marker.lng),
         xAnchor: 0,
         yAnchor: 0,
         zIndex: 10,
-        clickable: true,
       })
       overlay.setMap(map)
-      return { id: marker.id, el, overlay }
+      markerOverlaysRef.current.set(marker.id, {
+        el,
+        overlay,
+        lat: marker.lat,
+        lng: marker.lng,
+      })
     })
-    setOverlayEls(created.map(({ id, el }) => ({ id, el })))
 
-    return () => {
-      created.forEach(({ overlay }) => overlay.setMap(null))
-      setOverlayEls([])
+    const idsChanged =
+      nextIds.length !== overlayIdsRef.current.length ||
+      nextIds.some((id, index) => id !== overlayIdsRef.current[index])
+    if (idsChanged) {
+      overlayIdsRef.current = nextIds
+      setOverlayEls(
+        nextIds.flatMap((id) => {
+          const entry = markerOverlaysRef.current.get(id)
+          return entry ? [{ id, el: entry.el }] : []
+        }),
+      )
     }
   }, [map, markers])
+
+  // 실제 지도 인스턴스가 사라질 때에만 마커 오버레이를 정리한다.
+  useEffect(() => {
+    if (!map) return
+    const markerOverlays = markerOverlaysRef.current
+    const overlayIds = overlayIdsRef
+    return () => {
+      markerOverlays.forEach(({ overlay }) => overlay.setMap(null))
+      markerOverlays.clear()
+      overlayIds.current = []
+      setOverlayEls([])
+    }
+  }, [map])
 
   // 구 경계 폴리곤 — 오렌지 라인 + 20% 채움
   useEffect(() => {
@@ -172,16 +230,49 @@ export default function KakaoMap({
     }
   }, [map, outlines])
 
-  // 지도 클릭 (kakao 이벤트 — 드래그 후에는 발생하지 않아 탭/패닝 구분이 필요 없다)
+  // 지도 클릭 (kakao 이벤트 — 드래그 후에는 발생하지 않아 탭/패닝 구분이 필요 없다).
+  // 마커 DOM 이 포인터 이벤트를 가로채지 않으므로 좌표가 원 안에 있는지 계산해 마커 탭을 구분한다.
+  const markersRef = useRef(markers)
+  const onMarkerClickRef = useRef(onMarkerClick)
+  const onMapClickRef = useRef(onMapClick)
+  markersRef.current = markers
+  onMarkerClickRef.current = onMarkerClick
+  onMapClickRef.current = onMapClick
+
   useEffect(() => {
-    if (!map || !onMapClick) return
+    if (!map) return
     const handler = (...args: unknown[]) => {
       const e = args[0] as kakao.maps.MapMouseEvent
-      onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() })
+      const currentMarkers = markersRef.current
+      const currentMarkerClick = onMarkerClickRef.current
+
+      if (currentMarkerClick && currentMarkers.length > 0) {
+        const projection = map.getProjection()
+        const clicked = projection.pointFromCoords(e.latLng)
+        const hitRadiusSquared = MARKER_HIT_RADIUS ** 2
+        let closestMarker: MapMarker | undefined
+        let closestDistanceSquared = Number.POSITIVE_INFINITY
+
+        for (const marker of currentMarkers) {
+          const point = projection.pointFromCoords(new kakao.maps.LatLng(marker.lat, marker.lng))
+          const distanceSquared = (point.x - clicked.x) ** 2 + (point.y - clicked.y) ** 2
+          if (distanceSquared <= hitRadiusSquared && distanceSquared < closestDistanceSquared) {
+            closestMarker = marker
+            closestDistanceSquared = distanceSquared
+          }
+        }
+
+        if (closestMarker) {
+          currentMarkerClick(closestMarker.id)
+          return
+        }
+      }
+
+      onMapClickRef.current?.({ lat: e.latLng.getLat(), lng: e.latLng.getLng() })
     }
     kakao.maps.event.addListener(map, 'click', handler)
     return () => kakao.maps.event.removeListener(map, 'click', handler)
-  }, [map, onMapClick])
+  }, [map])
 
   // 선택 핀 오버레이 — 핀 꼭짓점이 좌표를 가리키게 yAnchor 1
   useEffect(() => {
@@ -225,6 +316,8 @@ export default function KakaoMap({
     }
   }, [map, myLocation])
 
+  const markerById = useMemo(() => new Map(markers.map((m) => [m.id, m])), [markers])
+
   if (error) {
     return (
       <div className={cn('flex items-center justify-center bg-gray-70 px-5', className)}>
@@ -232,8 +325,6 @@ export default function KakaoMap({
       </div>
     )
   }
-
-  const markerById = new Map(markers.map((m) => [m.id, m]))
 
   return (
     <div className={className}>
@@ -265,15 +356,11 @@ export default function KakaoMap({
         const marker = markerById.get(id)
         if (!marker) return null
         return createPortal(
-          // 마커 탭은 상세 진입 — 지도 빈 곳 탭(시트 접기 등)과 구분되게 전파를 끊는다
-          <div role="presentation" onClick={(e) => e.stopPropagation()}>
-            <LocationMarker
-              title={marker.title}
-              caption={marker.caption}
-              onClick={onMarkerClick ? () => onMarkerClick(id) : undefined}
-              className={cn('-translate-x-1/2 -translate-y-1/2', onMarkerClick && 'cursor-pointer')}
-            />
-          </div>,
+          <LocationMarker
+            title={marker.title}
+            caption={marker.caption}
+            className="pointer-events-none -translate-x-1/2 -translate-y-1/2"
+          />,
           el,
           id,
         )

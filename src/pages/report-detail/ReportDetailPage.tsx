@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import Undo from '~icons/ci/undo'
+import Download from '~icons/ci/download'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { ReportOverview, ReportOverviewSkeleton } from '@/widgets/report-overview'
+import { downloadReport } from '@/entities/report'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { ErrorRetry } from '@/shared/ui'
@@ -10,7 +11,7 @@ import { useReportDetail } from './model/useReportDetail'
 /**
  * 지난 리포트 상세보기 (Figma: [3-4] 지난 리포트 상세보기 267:4395 · API: GET /api/v1/reports/{reportId}).
  * 히스토리 목록에서 리포트 탭 → 진입하는 상세 화면(하단 탭 없음).
- * GNB(뒤로·최신 리포트 이동) + 리포트 본문(ReportOverview 위젯) — 최신 리포트([3-1])와
+ * GNB(뒤로·리포트 다운로드) + 리포트 본문(ReportOverview 위젯) — 최신 리포트([3-1])와
  * 본문은 동일하고 "이전 리포트 확인하러 가기" 버튼만 없다.
  */
 export default function ReportDetailPage() {
@@ -44,12 +45,8 @@ export default function ReportDetailPage() {
           onBack={() => navigate(-1)}
           className="bg-gray-70"
           right={
-            <button
-              type="button"
-              onClick={() => navigate('/report')}
-              aria-label="최신 리포트로 가기"
-            >
-              <Undo aria-hidden className="size-6 shrink-0 text-gray-300" />
+            <button type="button" onClick={downloadReport} aria-label="리포트 다운로드">
+              <Download aria-hidden className="size-6 shrink-0 text-gray-300" />
             </button>
           }
         />

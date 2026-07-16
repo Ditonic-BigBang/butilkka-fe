@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import type { LatLngPoint } from '../lib/guCentroids'
+import { useQuery } from '@tanstack/react-query'
+import { computeGuCentroids, type LatLngPoint } from '../lib/guCentroids'
 
 // public/seoul-gu.geojson — 서울 자치구 경계 (southkorea/seoul-maps kostat 2013 simple)
 export interface GuFeatureProperties {
@@ -26,6 +26,11 @@ export interface GuGeoJson {
 /** 구 경계 폴리곤 — 지도에 그릴 외곽 링 좌표 묶음 */
 export type GuOutline = { district: string; rings: LatLngPoint[][] }
 
+export type GuGeometry = {
+  boundaries: GuOutline[]
+  centroids: Map<string, LatLngPoint>
+}
+
 /** GeoJSON 좌표([lng, lat]) → 지도 폴리곤용 외곽 링 목록 (구멍 링 제외) */
 export function toGuOutlines(geoJson: GuGeoJson): GuOutline[] {
   return geoJson.features.map((feature) => {
@@ -41,20 +46,29 @@ export function toGuOutlines(geoJson: GuGeoJson): GuOutline[] {
   })
 }
 
-/** 서울 자치구 경계 geojson (정적 에셋, mock 금지) */
-export function useGuBoundaries() {
-  const [data, setData] = useState<GuOutline[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+export function toGuGeometry(geoJson: GuGeoJson): GuGeometry {
+  const boundaries = toGuOutlines(geoJson)
+  return { boundaries, centroids: computeGuCentroids(boundaries) }
+}
 
-  useEffect(() => {
-    fetch('/seoul-gu.geojson')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json() as Promise<GuGeoJson>
-      })
-      .then((json) => setData(toGuOutlines(json)))
-      .catch((err: Error) => setError(`구 경계 로드 실패: ${err.message}`))
-  }, [])
+async function fetchGuGeometry({ signal }: { signal: AbortSignal }): Promise<GuGeometry> {
+  const response = await fetch(`${import.meta.env.BASE_URL}seoul-gu.geojson`, { signal })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return toGuGeometry((await response.json()) as GuGeoJson)
+}
 
-  return { data, error }
+/** 경계와 중심점을 같은 56KB 정적 geometry에서 한 번만 계산하고 세션 동안 유지한다. */
+export function useGuGeometry() {
+  const query = useQuery({
+    queryKey: ['district', 'gu-geometry'] as const,
+    queryFn: fetchGuGeometry,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  })
+
+  return {
+    ...query,
+    boundaries: query.data?.boundaries ?? null,
+    centroids: query.data?.centroids ?? null,
+  }
 }

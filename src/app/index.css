@@ -181,12 +181,18 @@
   html,
   body,
   #root {
-    min-height: 100%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   /* macOS/Retina 에서 기본 subpixel AA 로 텍스트가 디자인보다 두껍게 렌더되는 것 방지.
      grayscale AA 로 맞춰 Figma(동일 방식)와 글자 굵기를 일치시킨다. */
   body {
+    /* iOS Safari/PWA 의 문서 고무줄 스크롤 방지 — 실제 페이지 스크롤은 MobileLayout main 이 담당 */
+    position: fixed;
+    inset: 0;
     background: #fff;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
