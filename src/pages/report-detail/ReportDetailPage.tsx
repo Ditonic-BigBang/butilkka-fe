@@ -1,11 +1,14 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import Download from '~icons/ci/download'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { ReportOverview, ReportOverviewSkeleton } from '@/widgets/report-overview'
-import { downloadReport } from '@/entities/report'
+import {
+  ReportOverview,
+  ReportOverviewSkeleton,
+  useReportPdfDownload,
+} from '@/widgets/report-overview'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
-import { ErrorRetry } from '@/shared/ui'
+import { ErrorRetry, Spinner, Toast } from '@/shared/ui'
 import { useReportDetail } from './model/useReportDetail'
 
 /**
@@ -18,6 +21,7 @@ export default function ReportDetailPage() {
   const navigate = useNavigate()
   const { reportId } = useParams()
   const report = useReportDetail(Number(reportId))
+  const pdf = useReportPdfDownload(report.data)
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
   useThemeColor(THEME_COLORS.surfaceGray)
 
@@ -30,8 +34,10 @@ export default function ReportDetailPage() {
     content = (
       <ReportOverview
         data={report.data}
-        onViewAllCases={() => navigate(`/report/${report.data.reportId}/cases`)}
-        onViewMap={() => navigate('/map')}
+        onViewAllCases={() =>
+          navigate(`/report/${report.data.reportId}/cases`, { viewTransition: true })
+        }
+        onViewMap={() => navigate('/map', { viewTransition: true })}
       />
     )
   }
@@ -45,13 +51,31 @@ export default function ReportDetailPage() {
           onBack={() => navigate(-1)}
           className="bg-gray-70"
           right={
-            <button type="button" onClick={downloadReport} aria-label="리포트 다운로드">
-              <Download aria-hidden className="size-6 shrink-0 text-gray-300" />
+            <button
+              type="button"
+              onClick={pdf.download}
+              disabled={pdf.downloading}
+              aria-label="리포트 다운로드"
+              aria-busy={pdf.downloading}
+              className="transition active:scale-95"
+            >
+              {pdf.downloading ? (
+                <Spinner aria-label="PDF 생성 중" className="size-5" />
+              ) : (
+                <Download aria-hidden className="size-6 shrink-0 text-gray-300" />
+              )}
             </button>
           }
         />
         {content}
       </div>
+      {pdf.toast && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 mx-auto flex max-w-[430px] justify-center px-5">
+          <Toast className={pdf.closing ? 'animate-toast-out' : 'animate-toast-in'}>
+            {pdf.toast}
+          </Toast>
+        </div>
+      )}
     </MobileLayout>
   )
 }
