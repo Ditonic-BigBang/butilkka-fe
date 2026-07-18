@@ -52,9 +52,18 @@ if (!existsSync(serviceWorkerPath)) {
   fail('PWA service worker를 찾지 못했습니다.')
 } else {
   const serviceWorker = readFileSync(serviceWorkerPath, 'utf8')
-  const precacheUrls = [
-    ...new Set([...serviceWorker.matchAll(/url:"([^"]+)"/g)].map((match) => match[1])),
-  ]
+  const precacheEntries = [...serviceWorker.matchAll(/\{url:"([^"]+)",revision:(null|"[^"]*")\}/g)]
+  const revisionsByUrl = new Map()
+
+  for (const [, url, revision] of precacheEntries) {
+    const previousRevision = revisionsByUrl.get(url)
+    if (previousRevision !== undefined && previousRevision !== revision) {
+      fail(`PWA 선캐시에 서로 다른 revision의 중복 URL이 있습니다: ${url}`)
+    }
+    revisionsByUrl.set(url, revision)
+  }
+
+  const precacheUrls = [...revisionsByUrl.keys()]
   const precacheUrlSet = new Set(precacheUrls)
   let precacheSize = 0
 

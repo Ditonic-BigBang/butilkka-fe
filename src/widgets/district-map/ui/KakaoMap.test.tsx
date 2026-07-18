@@ -1,6 +1,7 @@
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
+import { createRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import KakaoMap, { type MapMarker } from './KakaoMap'
+import KakaoMap, { type KakaoMapHandle, type MapMarker } from './KakaoMap'
 
 vi.mock('@/shared/lib/useKakaoMapsSDK', () => ({
   useKakaoMapsSDK: () => ({ isLoaded: true, error: null }),
@@ -20,12 +21,16 @@ let overlayConstructor = vi.fn<(options: unknown) => void>()
 let overlayInstances: OverlayInstance[]
 let addListener = vi.fn<(...args: unknown[]) => void>()
 let removeListener = vi.fn<(...args: unknown[]) => void>()
+let setLevel = vi.fn<(...args: unknown[]) => void>()
+let panTo = vi.fn<(...args: unknown[]) => void>()
 
 beforeEach(() => {
   overlayConstructor = vi.fn<(options: unknown) => void>()
   overlayInstances = []
   addListener = vi.fn<(...args: unknown[]) => void>()
   removeListener = vi.fn<(...args: unknown[]) => void>()
+  setLevel = vi.fn<(...args: unknown[]) => void>()
+  panTo = vi.fn<(...args: unknown[]) => void>()
 
   class FakeLatLng {
     private readonly lat: number
@@ -46,10 +51,11 @@ beforeEach(() => {
   }
 
   class FakeMap {
-    setLevel = vi.fn()
-    panTo = vi.fn()
+    setLevel = setLevel
+    panTo = panTo
     setCenter = vi.fn()
     panBy = vi.fn()
+    getLevel = () => 9
     getProjection = () => ({
       pointFromCoords: (point: FakeLatLng) => ({ x: point.getLng(), y: point.getLat() }),
     })
@@ -81,10 +87,33 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.restoreAllMocks()
 })
 
 describe('KakaoMap overlay lifecycle', () => {
+  it('구 선택 원을 anchor로 유지해 확대하고 나서 중심으로 이동한다', async () => {
+    const ref = createRef<KakaoMapHandle>()
+    render(<KakaoMap ref={ref} />)
+    await waitFor(() => expect(ref.current).not.toBeNull())
+
+    vi.useFakeTimers()
+    act(() => ref.current?.panTo(37.5, 127, 7))
+
+    expect(setLevel).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        anchor: expect.anything(),
+        animate: { duration: 350 },
+      }),
+    )
+    expect(panTo).not.toHaveBeenCalled()
+
+    act(() => vi.advanceTimersByTime(350))
+    expect(panTo).toHaveBeenCalledWith(expect.anything())
+    vi.useRealTimers()
+  })
+
   it('같은 marker ID의 overlay와 지도 click listener를 재사용한다', async () => {
     const onMarkerClick = vi.fn()
     const view = render(<KakaoMap markers={FIRST_MARKERS} onMarkerClick={onMarkerClick} />)

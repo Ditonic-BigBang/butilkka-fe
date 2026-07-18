@@ -89,7 +89,7 @@ export function SearchOverlay({
           onWheel={(e) => {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) e.currentTarget.scrollLeft += e.deltaY
           }}
-          className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)] [&::-webkit-scrollbar]:hidden"
+          className="scrollbar-hide flex gap-1.5 overflow-x-auto px-5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]"
         >
           {filters.map((f) => (
             <FilterChip

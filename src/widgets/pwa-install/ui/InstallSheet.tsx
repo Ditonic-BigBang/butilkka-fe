@@ -38,7 +38,7 @@ function PlusSquareIcon({ className }: { className?: string }) {
 function Step({ index, children }: { index: number; children: ReactNode }) {
   return (
     <p className="flex items-start gap-2.5 text-body-m-regular text-gray-600">
-      <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-gray-200 pb-2 text-caption-l-semibold text-white">
+      <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-gray-200 text-caption-l-semibold leading-none text-white">
         {index}
       </span>
       <span className="flex-1">{children}</span>
