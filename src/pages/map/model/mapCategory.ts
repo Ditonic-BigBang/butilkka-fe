@@ -1,4 +1,5 @@
 import type { MetricKey, RegionDirection } from '@/entities/region'
+import { formatDecimal } from '@/shared/lib/formatNumber'
 
 /** 지도 카테고리 — 쇠퇴등급 또는 수치 지표(상세 응답 필드명 재사용) */
 export type MapCategory = 'grade' | MetricKey
@@ -29,7 +30,7 @@ export type MetricConfig = {
 
 const rounded = (value: number) => Math.round(value)
 const oneDecimal = (value: number) => Math.round(value * 10) / 10
-const axisDecimal = (value: number) => value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })
+const axisDecimal = formatDecimal
 
 export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
   rentRatio: {

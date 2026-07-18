@@ -45,7 +45,9 @@ export function MobileLayout({
         <main
           className={cn(
             'min-h-0 flex-1',
-            scrollable ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden overscroll-none',
+            scrollable
+              ? 'scrollbar-hide overflow-y-auto overscroll-contain'
+              : 'overflow-hidden overscroll-none',
           )}
         >
           {children}

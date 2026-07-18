@@ -19,7 +19,11 @@ function toDateString(date: Date): string {
  * 날짜 필드 클릭 → 캘린더 바텀시트(DatePicker) — 선택 시 CTA 활성.
  */
 export function FoundedStep() {
-  const { draft, patchDraft, terms, next, back } = useOnboardingStore()
+  const draft = useOnboardingStore((s) => s.draft)
+  const patchDraft = useOnboardingStore((s) => s.patchDraft)
+  const terms = useOnboardingStore((s) => s.terms)
+  const next = useOnboardingStore((s) => s.next)
+  const back = useOnboardingStore((s) => s.back)
 
   return (
     <OnboardingStepLayout

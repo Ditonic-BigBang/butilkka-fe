@@ -6,7 +6,10 @@ declare namespace kakao {
       constructor(container: HTMLElement, options: MapOptions)
       setCenter(latlng: LatLng): void
       getCenter(): LatLng
-      setLevel(level: number, options?: { animate?: boolean }): void
+      setLevel(
+        level: number,
+        options?: { animate?: boolean | { duration: number }; anchor?: LatLng },
+      ): void
       getLevel(): number
       /** 부드럽게 중심 이동 (픽셀 거리가 크면 즉시 이동) */
       panTo(latlng: LatLng): void

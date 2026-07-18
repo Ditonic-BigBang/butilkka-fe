@@ -59,7 +59,6 @@ export default defineConfig({
         // 앱 진입 셸과 공통 CSS, 단일 56KB 지도 geometry만 설치 시 선캐시한다.
         globPatterns: [
           'index.html',
-          'manifest.webmanifest',
           'registerSW.js',
           'assets/index-*.js',
           'assets/jsx-runtime-*.js',

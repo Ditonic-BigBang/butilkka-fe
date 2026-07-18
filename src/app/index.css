@@ -210,6 +210,18 @@
   background-image: var(--gradient-3);
 }
 
+/* 스크롤 동작·관성은 유지하고 플랫폼 기본 스크롤바만 숨긴다. */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
 /* 토스트 등장 — 아래에서 살짝 올라오며 페이드 인 */
 @keyframes toast-in {
   from {

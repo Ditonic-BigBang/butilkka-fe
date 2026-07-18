@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -155,7 +155,7 @@ export function TrendGraph({
   const [activeIndex, setActiveIndex] = useState<number | null>(defaultActiveIndex ?? null)
   const touchTargetRef = useRef<HTMLDivElement>(null)
   const resolvedTooltipFormatter = tooltipFormatter ?? (grade ? formatGradeTooltip : undefined)
-  const valueScale = getValueScale(data)
+  const valueScale = useMemo(() => getValueScale(data), [data])
   const valueDomain = valueScale.domain
   const yTicks = grade ? GRADE_TICKS : valueScale.ticks
   const horizontalGridCoordinates = ({ offset }: { offset: { top: number; height: number } }) =>

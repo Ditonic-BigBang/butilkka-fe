@@ -10,7 +10,11 @@ import { OnboardingStepLayout } from '../OnboardingStepLayout'
  * 확정하면 도로명 주소가 필드에 채워진다.
  */
 export function AddressStep() {
-  const { draft, patchDraft, terms, next, back } = useOnboardingStore()
+  const draft = useOnboardingStore((s) => s.draft)
+  const patchDraft = useOnboardingStore((s) => s.patchDraft)
+  const terms = useOnboardingStore((s) => s.terms)
+  const next = useOnboardingStore((s) => s.next)
+  const back = useOnboardingStore((s) => s.back)
   const [picking, setPicking] = useState(false)
 
   // 위치 확정 → 상권코드 매핑 (최종 저장 PUT 에 regionCode 필요).

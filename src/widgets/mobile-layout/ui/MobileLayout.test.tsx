@@ -27,10 +27,20 @@ describe('MobileLayout', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
+  it('스크롤 동작은 유지하면서 기본 스크롤바만 숨긴다', () => {
+    renderWithRouter(<MobileLayout>x</MobileLayout>)
+
+    expect(screen.getByRole('main')).toHaveClass(
+      'scrollbar-hide',
+      'overflow-y-auto',
+      'overscroll-contain',
+    )
+  })
+
   it('scrollable=false 면 본문 스크롤과 오버스크롤을 막는다', () => {
     renderWithRouter(<MobileLayout scrollable={false}>x</MobileLayout>)
 
     expect(screen.getByRole('main')).toHaveClass('overflow-hidden', 'overscroll-none')
-    expect(screen.getByRole('main')).not.toHaveClass('overflow-y-auto')
+    expect(screen.getByRole('main')).not.toHaveClass('scrollbar-hide', 'overflow-y-auto')
   })
 })

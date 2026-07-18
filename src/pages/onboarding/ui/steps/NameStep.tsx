@@ -9,7 +9,11 @@ const MAX_LENGTH = 25
  * 자유 입력(25자 제한) — 입력 시 CTA 활성.
  */
 export function NameStep() {
-  const { draft, patchDraft, terms, next, back } = useOnboardingStore()
+  const draft = useOnboardingStore((s) => s.draft)
+  const patchDraft = useOnboardingStore((s) => s.patchDraft)
+  const terms = useOnboardingStore((s) => s.terms)
+  const next = useOnboardingStore((s) => s.next)
+  const back = useOnboardingStore((s) => s.back)
 
   return (
     <OnboardingStepLayout

@@ -10,7 +10,11 @@ import { OnboardingStepLayout } from '../OnboardingStepLayout'
  * 2열 그리드에서 하나 선택 시 CTA 활성.
  */
 export function IndustryStep() {
-  const { draft, patchDraft, terms, next, back } = useOnboardingStore()
+  const draft = useOnboardingStore((s) => s.draft)
+  const patchDraft = useOnboardingStore((s) => s.patchDraft)
+  const terms = useOnboardingStore((s) => s.terms)
+  const next = useOnboardingStore((s) => s.next)
+  const back = useOnboardingStore((s) => s.back)
   const { data } = useQuery({
     queryKey: storeKeys.categories(),
     queryFn: getCategories,

@@ -2,6 +2,7 @@ import type { RegionGrade, RegionMapItem, RegionMetricMapItem } from '@/entities
 import type { LatLngPoint } from '@/entities/district'
 import type { MapMarker } from '@/widgets/district-map'
 import type { MetricConfig } from './mapCategory'
+import { formatNumber } from '@/shared/lib/formatNumber'
 
 // 등급 심각도 — 뒤로 갈수록 위험(E 최악)
 const GRADE_SEVERITY: Record<RegionGrade, number> = { A: 0, B: 1, C: 2, D: 3, E: 4 }
@@ -75,7 +76,7 @@ export function buildMetricGuMarkers(
       lat: point.lat,
       lng: point.lng,
       title: district,
-      caption: `${config.toCompactValue(region.value).toLocaleString()}${config.compactUnit}`,
+      caption: `${formatNumber(config.toCompactValue(region.value))}${config.compactUnit}`,
     })
   })
   return markers

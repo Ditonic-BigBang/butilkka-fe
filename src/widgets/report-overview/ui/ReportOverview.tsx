@@ -50,7 +50,7 @@ function CasesSection({
           <ChevronRight aria-hidden className="size-4 shrink-0 text-gray-300" />
         </button>
       </div>
-      <div className="flex snap-x snap-mandatory scroll-pl-5 [scrollbar-width:none] gap-3 overflow-x-auto px-5 [&::-webkit-scrollbar]:hidden">
+      <div className="scrollbar-hide flex snap-x snap-mandatory scroll-pl-5 gap-3 overflow-x-auto px-5">
         {data.similarCases.map((c) => (
           <SimilarCaseCard
             key={c.caseId}
