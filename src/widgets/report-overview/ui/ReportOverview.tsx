@@ -44,7 +44,7 @@ function CasesSection({
         <button
           type="button"
           onClick={onViewAllCases}
-          className="flex items-center gap-1 text-body-m-medium text-gray-500"
+          className="flex press items-center gap-1 text-body-m-medium text-gray-500"
         >
           전체 보기
           <ChevronRight aria-hidden className="size-4 shrink-0 text-gray-300" />

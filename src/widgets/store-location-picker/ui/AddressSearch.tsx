@@ -63,7 +63,7 @@ export function AddressSearch({ onSelect, onBack, sdkReady }: AddressSearchProps
           type="button"
           onClick={useCurrentLocation}
           disabled={locating}
-          className="flex items-center gap-1.5 self-start disabled:opacity-50"
+          className="flex press items-center gap-1.5 self-start disabled:opacity-50"
         >
           <Compass aria-hidden className="size-5 shrink-0 text-gray-600" />
           <span className="text-body-m-regular text-gray-600">

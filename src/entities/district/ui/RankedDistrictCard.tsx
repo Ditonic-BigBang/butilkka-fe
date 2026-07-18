@@ -31,6 +31,8 @@ type RankedDistrictCardProps = {
   expanded?: boolean
   defaultExpanded?: boolean
   onToggle?: (expanded: boolean) => void
+  /** 보기 전용(PDF 등 정적 문서용) — 항상 펼침 고정, 토글 화살표·하단 액션 버튼 숨김 */
+  readOnly?: boolean
   className?: string
 }
 
@@ -50,10 +52,11 @@ export function RankedDistrictCard({
   expanded,
   defaultExpanded = false,
   onToggle,
+  readOnly = false,
   className,
 }: RankedDistrictCardProps) {
   const [internal, setInternal] = useState(defaultExpanded)
-  const open = expanded ?? internal
+  const open = readOnly || (expanded ?? internal)
 
   const toggle = () => {
     if (expanded === undefined) setInternal(!open)
@@ -82,13 +85,15 @@ export function RankedDistrictCard({
           <span className="text-body-l-semibold text-gray-900">{name}</span>
           <span className="text-body-m-regular text-gray-700">{description}</span>
         </span>
-        <ChevronDown
-          aria-hidden
-          className={cn(
-            'size-6 shrink-0 text-gray-400 transition-transform duration-300',
-            open && 'rotate-180',
-          )}
-        />
+        {!readOnly && (
+          <ChevronDown
+            aria-hidden
+            className={cn(
+              'size-6 shrink-0 text-gray-400 transition-transform duration-300',
+              open && 'rotate-180',
+            )}
+          />
+        )}
       </button>
 
       {/* 펼침 콘텐츠 — grid-rows 0fr→1fr 높이 전환 (닫힘 = invisible·inert) */}
@@ -125,22 +130,24 @@ export function RankedDistrictCard({
               <span className="text-caption-l-regular text-gray-300">{referenceDate}</span>
             )}
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggle}
-                className="w-[128px] shrink-0 rounded-8 border border-gray-100 px-4 py-3 text-body-m-semibold text-gray-900 transition-colors active:bg-gray-70"
-              >
-                접기
-              </button>
-              <button
-                type="button"
-                onClick={onViewMap}
-                className="flex-1 rounded-8 bg-key px-4 py-3 text-body-m-semibold text-white transition-colors active:bg-orange-600"
-              >
-                지도에서 확인하기
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggle}
+                  className="w-[128px] shrink-0 rounded-8 border border-gray-100 px-4 py-3 text-body-m-semibold text-gray-900 transition-colors active:bg-gray-70"
+                >
+                  접기
+                </button>
+                <button
+                  type="button"
+                  onClick={onViewMap}
+                  className="flex-1 rounded-8 bg-key px-4 py-3 text-body-m-semibold text-white transition-colors active:bg-orange-600"
+                >
+                  지도에서 확인하기
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

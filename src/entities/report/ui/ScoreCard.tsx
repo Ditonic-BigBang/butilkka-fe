@@ -76,7 +76,8 @@ export function ScoreCard({
           <div className="flex items-end justify-between gap-2">
             <span className="flex items-center gap-2">
               <span className="text-title-m-bold text-gray-900">{grade}</span>
-              <span className="shrink-0 rounded-max bg-orange-10 px-3 py-1 text-body-m-medium text-orange-400">
+              {/* 게이지가 어느 정도 차오른 시점(0.5s)에 팝 인 */}
+              <span className="shrink-0 animate-pop-in rounded-max bg-orange-10 px-3 py-1 text-body-m-medium text-orange-400 [animation-delay:500ms]">
                 {status}
               </span>
             </span>
@@ -92,15 +93,25 @@ export function ScoreCard({
             />
             {Array.from({ length: segments }, (_, i) => {
               const pos = (i + 0.5) / segments
+              const inside = pos <= fill
               return (
+                // 바깥 span 이 위치(translate) 담당 — pop-in 의 transform 과 분리
                 <span
                   key={pos}
-                  className={cn(
-                    'absolute top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full',
-                    pos <= fill ? 'bg-white' : 'bg-gray-200',
-                  )}
+                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
                   style={{ left: `${pos * 100}%` }}
-                />
+                >
+                  <span
+                    className={cn(
+                      'block size-1.5 rounded-full',
+                      // 채움 안 점은 게이지 끝이 지나가는 타이밍에 맞춰 순서대로 팝 인
+                      inside ? 'animate-pop-in bg-white' : 'bg-gray-200',
+                    )}
+                    style={
+                      inside ? { animationDelay: `${Math.round(150 + 800 * pos)}ms` } : undefined
+                    }
+                  />
+                </span>
               )
             })}
           </div>

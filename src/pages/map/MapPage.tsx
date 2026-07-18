@@ -340,7 +340,7 @@ export default function MapPage() {
               if (representative) selectDistrict(district, representative.regionCode)
               else panToDistrict(district)
             }}
-            onEditPlaces={() => navigate('/map/favorites')}
+            onEditPlaces={() => navigate('/map/favorites', { viewTransition: true })}
             onAddPlace={() => setRegisterMode(true)}
             registerMode={registerMode}
             onSelectFromMap={handleSelectFromMap}

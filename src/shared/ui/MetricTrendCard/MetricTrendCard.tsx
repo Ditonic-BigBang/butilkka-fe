@@ -1,5 +1,6 @@
 import { ChangeIndicator } from '@/shared/ui/ChangeIndicator/ChangeIndicator'
 import { cn } from '@/shared/lib/cn'
+import { useCountUp } from '@/shared/lib/useCountUp'
 
 type Direction = 'up' | 'down'
 
@@ -84,6 +85,21 @@ function Sparkline({ data }: { data: SparkPoint[] }) {
   )
 }
 
+// 값 문자열의 숫자부만 카운트업 — 접두/단위는 유지 (예: "-18%" 0→-18, "1,215명" 0→1,215).
+// 숫자부가 없으면 원문 그대로.
+function AnimatedValue({ value }: { value: string }) {
+  const match = value.match(/-?\d[\d,]*(?:\.\d+)?/)
+  const num = match ? parseFloat(match[0].replace(/,/g, '')) : 0
+  const decimals = match?.[0].includes('.') ? match[0].split('.')[1].length : 0
+  const animated = useCountUp(num)
+  if (!match) return value
+  const formatted = animated.toLocaleString('ko-KR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })
+  return value.replace(match[0], formatted)
+}
+
 type MetricTrendCardProps = {
   /** 지표명 (예: "유동인구"·"폐업률") */
   title: string
@@ -129,7 +145,7 @@ export function MetricTrendCard({
       <p className="text-body-l-medium text-gray-700">{title}</p>
       <div className="flex flex-col items-start gap-1">
         <span className="text-[28px] leading-[1.4] font-semibold tracking-[-0.02em] whitespace-nowrap text-gray-900">
-          {value}
+          <AnimatedValue value={value} />
         </span>
         {change && (
           <span

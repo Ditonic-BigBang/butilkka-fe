@@ -2,7 +2,7 @@ import { tv, type VariantProps } from '@/shared/lib/tv'
 import ChevronDown from '~icons/ci/chevron-down'
 
 const filterChip = tv({
-  base: 'inline-flex h-9 items-center justify-center gap-1 rounded-max border px-[14px] text-body-m-medium whitespace-nowrap transition-colors select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
+  base: 'press inline-flex h-9 items-center justify-center gap-1 rounded-max border px-[14px] text-body-m-medium whitespace-nowrap select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
   variants: {
     selected: {
       true: 'border-orange-600 bg-orange-10 text-orange-600',

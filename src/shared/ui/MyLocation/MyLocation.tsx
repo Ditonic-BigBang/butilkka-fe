@@ -14,7 +14,7 @@ export function MyLocation({
       type={type}
       aria-label="내 위치"
       className={cn(
-        'inline-flex items-center justify-center rounded-max bg-white p-2 text-gray-300 shadow-[0_0_5px_rgba(0,0,0,0.29)]',
+        'inline-flex press items-center justify-center rounded-max bg-white p-2 text-gray-300 shadow-[0_0_5px_rgba(0,0,0,0.29)]',
         className,
       )}
       {...props}

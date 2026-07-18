@@ -37,7 +37,7 @@ export default function ReportHistoryPage() {
           }
         : prev,
     )
-    navigate(`/report/${reportId}`)
+    navigate(`/report/${reportId}`, { viewTransition: true })
   }
 
   let content

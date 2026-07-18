@@ -24,7 +24,7 @@ export function SearchResultItem({
   return (
     <button
       type={type}
-      className={cn('flex w-full items-center gap-3.5 text-left', className)}
+      className={cn('flex w-full press-soft items-center gap-3.5 text-left', className)}
       {...props}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-max bg-gray-70">

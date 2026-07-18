@@ -3,7 +3,7 @@ import { tv } from '@/shared/lib/tv'
 import { TABS, type TabKey } from '../model/tabs'
 
 const tabItem = tv({
-  base: 'flex min-h-14 flex-1 flex-col items-center  justify-center gap-1 py-2.5 text-caption-m-regular transition-colors select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none focus-visible:ring-inset',
+  base: 'press flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2.5 text-caption-m-regular select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none focus-visible:ring-inset',
   variants: {
     active: {
       true: 'text-gray-900',
@@ -36,9 +36,10 @@ export function BottomTab({ activeTab, defaultTab = TABS[0].key, onTabChange }: 
   }
 
   return (
+    // view-transition-name: 페이지 전환에서 탭바를 화면 간 공유 요소로 고정 (본문만 페이드)
     <nav
       aria-label="메인 내비게이션"
-      className="flex border-t border-gray-200 bg-white px-5 pb-safe-bottom-or-3"
+      className="flex border-t border-gray-200 bg-white px-5 pb-safe-bottom-or-3 [view-transition-name:bottom-tab]"
     >
       {TABS.map((tab) => {
         const isActive = tab.key === active
@@ -50,7 +51,7 @@ export function BottomTab({ activeTab, defaultTab = TABS[0].key, onTabChange }: 
             onClick={() => handleSelect(tab.key)}
             className={tabItem({ active: isActive })}
           >
-            <tab.Icon aria-hidden className="size-6" />
+            <tab.Icon aria-hidden className={isActive ? 'size-6 animate-tab-pop' : 'size-6'} />
             {tab.label}
           </button>
         )

@@ -17,7 +17,7 @@ export function ReportProActiveCard({ onClick, className }: ReportProActiveCardP
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center justify-between gap-2 rounded-12 bg-gray-900 px-4 py-3 text-left',
+        'flex w-full press-soft items-center justify-between gap-2 rounded-12 bg-gray-900 px-4 py-3 text-left',
         className,
       )}
     >

@@ -23,7 +23,7 @@ export function MyPageRow({ icon, label, children, onClick, className }: MyPageR
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center justify-between gap-3 bg-white px-4 py-5 text-left',
+        'flex w-full press-soft items-center justify-between gap-3 bg-white px-4 py-5 text-left active:bg-gray-70',
         className,
       )}
     >

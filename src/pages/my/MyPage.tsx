@@ -70,8 +70,8 @@ export default function MyPage() {
             {store && (
               <button
                 type="button"
-                onClick={() => navigate('/my/store')}
-                className="flex w-full items-center justify-between gap-3 rounded-12 border border-gray-100 bg-white p-4 text-left"
+                onClick={() => navigate('/my/store', { viewTransition: true })}
+                className="flex w-full press-soft items-center justify-between gap-3 rounded-12 border border-gray-100 bg-white p-4 text-left active:bg-gray-70"
               >
                 <span className="flex min-w-0 items-start gap-2.5">
                   <Building aria-hidden className="size-6 shrink-0 text-gray-900" />
@@ -96,7 +96,9 @@ export default function MyPage() {
             {user?.isReportPro ? (
               <ReportProActiveCard />
             ) : (
-              <ReportProUpgradeCard onUpgrade={() => navigate('/my/subscription')} />
+              <ReportProUpgradeCard
+                onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
+              />
             )}
 
             <section className="overflow-hidden rounded-14 border border-gray-100">
