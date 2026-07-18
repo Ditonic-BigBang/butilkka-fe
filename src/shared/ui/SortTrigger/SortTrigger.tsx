@@ -22,7 +22,10 @@ export function SortTrigger({
   return (
     <button
       type={type}
-      className={cn('inline-flex items-center gap-1 text-body-m-medium text-gray-700', className)}
+      className={cn(
+        'inline-flex press items-center gap-1 text-body-m-medium text-gray-700',
+        className,
+      )}
       {...props}
     >
       {label}

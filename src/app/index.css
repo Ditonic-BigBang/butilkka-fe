@@ -261,6 +261,36 @@
   }
 }
 
+/* ── 페이지 전환 (View Transition API) ────────────────────────── */
+/* React Router 의 viewTransition 내비게이션에서만 발동 — 이전 화면은 빠르게 페이드 아웃,
+   새 화면은 살짝 아래에서 떠오른다. 미지원 브라우저는 옵션 자체가 무시돼 즉시 전환. */
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-drift-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+::view-transition-old(root) {
+  animation: vt-fade-out 0.15s ease both;
+}
+::view-transition-new(root) {
+  animation: vt-drift-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* ── 마이크로 인터랙션 ─────────────────────────────────────────── */
 /* 콘텐츠 등장 — 아래에서 살짝 올라오며 페이드 인 */
 @keyframes fade-up {
@@ -315,6 +345,13 @@
   }
 }
 
+/* 하단 탭 활성 아이콘 — 살짝 움츠렸다 튕겨 올라오는 스프링 팝 */
+@keyframes tab-pop {
+  from {
+    transform: scale(0.86);
+  }
+}
+
 @utility animate-fade-up {
   animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -341,6 +378,39 @@
   transform-box: fill-box;
   transform-origin: center;
   animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@utility animate-tab-pop {
+  animation: tab-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 프레스 피드백 — 누르는 동안 살짝 움츠러드는 공용 인터랙션.
+   색 전환도 함께 커버하므로 transition-colors 를 대체한다 (transition-property 는 병합이 아니라
+   마지막 선언이 통째로 이겨서, 나눠 선언하면 둘 중 하나가 죽는다).
+   강도는 기존 관례와 통일: 작은 컨트롤 press(0.97) · 큰 카드/행 press-soft(0.99) */
+@utility press {
+  transition-property: color, background-color, border-color, opacity, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+@utility press-soft {
+  transition-property: color, background-color, border-color, opacity, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+/* 정적 캡처(PDF 등)용 — 하위 등장 애니·전환을 전부 꺼서 최종 상태로 고정 */
+@utility motion-static {
+  & * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 /* 자식 순차 등장 — 카드 리스트/컬럼 엔트런스 (6번째부터는 동일 딜레이) */
 @utility stagger-fade-up {
@@ -372,6 +442,7 @@
   .animate-drop-in,
   .animate-draw-line,
   .animate-pop-in,
+  .animate-tab-pop,
   .stagger-fade-up > * {
     animation: none;
   }

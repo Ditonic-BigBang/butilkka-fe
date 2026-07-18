@@ -23,7 +23,7 @@ export function AddressItem({ address, badge, subAddress, onClick, className }: 
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center justify-between gap-3 border-b border-gray-100 bg-white px-5 py-4 text-left',
+        'flex w-full press-soft items-center justify-between gap-3 border-b border-gray-100 bg-white px-5 py-4 text-left active:bg-gray-70',
         className,
       )}
     >

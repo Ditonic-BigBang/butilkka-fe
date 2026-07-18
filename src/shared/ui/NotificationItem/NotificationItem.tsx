@@ -34,7 +34,7 @@ export function NotificationItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-start gap-3.5 px-5 py-4 text-left',
+        'flex w-full press-soft items-start gap-3.5 px-5 py-4 text-left',
         read ? 'bg-white' : 'bg-info-blue-soft',
         className,
       )}

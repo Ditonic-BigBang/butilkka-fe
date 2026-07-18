@@ -53,7 +53,7 @@ export default function HomePage() {
       <div className="min-h-full bg-gray-70">
         <HomeHeader
           location={storeAddress ?? dashboard.data?.location ?? ''}
-          onBell={() => navigate('/notifications')}
+          onBell={() => navigate('/notifications', { viewTransition: true })}
         />
         <div className="px-5 pt-3 pb-6">{content}</div>
       </div>

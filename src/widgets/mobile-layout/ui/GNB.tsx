@@ -57,11 +57,11 @@ export function GNB({
       <header
         className={cn('flex h-[50px] items-center justify-between bg-gray-70 px-5 py-3', className)}
       >
-        <button type="button" onClick={onLocation} className="flex items-center gap-1">
+        <button type="button" onClick={onLocation} className="flex press items-center gap-1">
           <MapPinIcon aria-hidden className={ICON} />
           <span className="text-body-l-medium text-gray-700">{location}</span>
         </button>
-        <button type="button" onClick={onBell} aria-label="알림">
+        <button type="button" onClick={onBell} aria-label="알림" className="press">
           <Bell aria-hidden className={ICON} />
         </button>
       </header>
@@ -74,7 +74,7 @@ export function GNB({
     >
       <div className="flex w-6 justify-start">
         {showBack && (
-          <button type="button" onClick={onBack} aria-label="뒤로 가기">
+          <button type="button" onClick={onBack} aria-label="뒤로 가기" className="press">
             <ChevronLeft aria-hidden className={ICON} />
           </button>
         )}
@@ -83,12 +83,12 @@ export function GNB({
       <div className="flex w-6 justify-end">
         {right ??
           (onClose ? (
-            <button type="button" onClick={onClose} aria-label="닫기">
+            <button type="button" onClick={onClose} aria-label="닫기" className="press">
               <Close aria-hidden className={ICON} />
             </button>
           ) : (
             showSettings && (
-              <button type="button" onClick={onSettings} aria-label="설정">
+              <button type="button" onClick={onSettings} aria-label="설정" className="press">
                 <Settings aria-hidden className={ICON} />
               </button>
             )

@@ -1,7 +1,7 @@
 import { tv, type VariantProps } from '@/shared/lib/tv'
 
 const periodChip = tv({
-  base: 'inline-flex w-[85px] items-center justify-center rounded-8 border px-[10px] py-3 text-body-l-medium whitespace-nowrap transition-colors select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
+  base: 'press inline-flex w-[85px] items-center justify-center rounded-8 border px-[10px] py-3 text-body-l-medium whitespace-nowrap select-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40',
   variants: {
     selected: {
       // 선택: key 1.4px 테두리 + orange-10 배경

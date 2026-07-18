@@ -14,7 +14,8 @@ export function useActiveTab() {
 
   const setTab = (next: TabKey) => {
     const target = TABS.find((t) => t.key === next)
-    if (target && target.path !== pathname) navigate(target.path)
+    // viewTransition: 탭 전환 시 View Transition 페이드 (지원 브라우저에서만 발동)
+    if (target && target.path !== pathname) navigate(target.path, { viewTransition: true })
   }
 
   return { tab, setTab }
