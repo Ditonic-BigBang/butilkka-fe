@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
+import { memo, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { createPortal } from 'react-dom'
 import { useKakaoMapsSDK } from '@/shared/lib/useKakaoMapsSDK'
 import { LocationMarker, MapPin, Spinner } from '@/shared/ui'
@@ -53,6 +53,7 @@ type KakaoMapProps = {
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 }
 const DEFAULT_LEVEL = 9
+const FOCUS_ZOOM_MS = 350
 // LocationMarker 의 지름(94px) 절반. 오버레이는 지도 제스처를 막지 않게 클릭을 통과시키고,
 // 지도 클릭 좌표가 이 반경 안에 있을 때만 마커 탭으로 판정한다.
 const MARKER_HIT_RADIUS = 47
@@ -76,7 +77,7 @@ type MarkerOverlayEntry = {
  * 카카오맵 + 구 단위 쇠퇴등급 마커(LocationMarker)를 CustomOverlay 로 표시.
  * 마커 클릭은 portal 로 React 이벤트를 그대로 사용 — kakao 이벤트를 거치지 않는다.
  */
-export default function KakaoMap({
+function KakaoMap({
   markers = NO_MARKERS,
   onMarkerClick,
   outlines = NO_OUTLINES,
@@ -90,6 +91,7 @@ export default function KakaoMap({
   const containerRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<kakao.maps.Map | null>(null)
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null)
+  const focusTimerRef = useRef<number | null>(null)
   // 마커별 portal 컨테이너 — CustomOverlay content 로 붙인 DOM 노드
   const [overlayEls, setOverlayEls] = useState<{ id: string; el: HTMLDivElement }[]>([])
   const markerOverlaysRef = useRef(new Map<string, MarkerOverlayEntry>())
@@ -102,8 +104,31 @@ export default function KakaoMap({
   useImperativeHandle(ref, () => ({
     panTo: (lat, lng, level, offsetY) => {
       if (!map) return
-      if (level !== undefined) map.setLevel(level)
       const target = new kakao.maps.LatLng(lat, lng)
+
+      if (focusTimerRef.current !== null) {
+        window.clearTimeout(focusTimerRef.current)
+        focusTimerRef.current = null
+      }
+
+      // 선택한 원을 anchor로 화면에 유지한 채 확대하고, 확대가 끝난 뒤 중심으로 이동한다.
+      if (level !== undefined && !offsetY) {
+        if (map.getLevel() === level) {
+          map.panTo(target)
+          return
+        }
+        map.setLevel(level, {
+          anchor: target,
+          animate: { duration: FOCUS_ZOOM_MS },
+        })
+        focusTimerRef.current = window.setTimeout(() => {
+          map.panTo(target)
+          focusTimerRef.current = null
+        }, FOCUS_ZOOM_MS)
+        return
+      }
+
+      if (level !== undefined) map.setLevel(level)
       if (!offsetY) {
         map.panTo(target)
         return
@@ -114,6 +139,13 @@ export default function KakaoMap({
       map.panBy(0, offsetY)
     },
   }))
+
+  useEffect(
+    () => () => {
+      if (focusTimerRef.current !== null) window.clearTimeout(focusTimerRef.current)
+    },
+    [],
+  )
 
   // 지도 생성 (SDK 로드 후 1회)
   useEffect(() => {
@@ -368,3 +400,7 @@ export default function KakaoMap({
     </div>
   )
 }
+
+// MapPage 는 검색 타이핑 등으로 리렌더가 잦다 — props(markers/outlines/콜백)는 전부
+// 상위에서 useMemo/useCallback 으로 안정화돼 있어 memo 로 마커 포털 재조정을 차단한다.
+export default memo(KakaoMap)

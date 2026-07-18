@@ -30,7 +30,7 @@ export function Tabs({ options, value, onChange, className }: TabsProps) {
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'flex min-w-px flex-1 items-center justify-center rounded-8 px-2.5 py-1.5 text-body-m-semibold whitespace-nowrap transition-colors',
+              'flex min-w-px flex-1 press items-center justify-center rounded-8 px-2.5 py-1.5 text-body-m-semibold whitespace-nowrap',
               active ? 'bg-white text-gray-900' : 'text-gray-400',
             )}
           >

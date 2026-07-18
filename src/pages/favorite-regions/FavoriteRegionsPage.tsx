@@ -28,7 +28,11 @@ export default function FavoriteRegionsPage() {
   return (
     <MobileLayout showBottomTab={false}>
       <div className="relative flex h-full flex-col">
-        <GNB title="즐겨찾는 지역" showBack={false} onClose={() => navigate('/map')} />
+        <GNB
+          title="즐겨찾는 지역"
+          showBack={false}
+          onClose={() => navigate('/map', { viewTransition: true })}
+        />
 
         <div className="flex flex-col gap-4 p-5">
           {favorites.length > 0 && (

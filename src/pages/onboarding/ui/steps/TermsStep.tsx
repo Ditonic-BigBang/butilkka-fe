@@ -17,7 +17,10 @@ const FOOTNOTE =
  * 전체 동의(26px) + 필수 3 / 선택 1 체크리스트 — 필수 모두 체크 시 CTA 활성.
  */
 export function TermsStep() {
-  const { terms, setTerms, next, draft } = useOnboardingStore()
+  const terms = useOnboardingStore((s) => s.terms)
+  const setTerms = useOnboardingStore((s) => s.setTerms)
+  const next = useOnboardingStore((s) => s.next)
+  const draft = useOnboardingStore((s) => s.draft)
   const allAgreed = TERM_ITEMS.every((item) => terms[item.key])
 
   const toggleAll = () =>

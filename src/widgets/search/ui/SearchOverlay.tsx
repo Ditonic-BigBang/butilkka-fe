@@ -35,7 +35,7 @@ type SearchOverlayProps = {
   className?: string
 }
 
-const ACTION_ROW = 'flex items-center gap-1 px-0.5 text-gray-400'
+const ACTION_ROW = 'press flex items-center gap-1 px-0.5 text-gray-400'
 
 // 안정적 참조(기본값 재생성 방지)
 const NO_RESULTS: SearchResult[] = []
@@ -89,7 +89,7 @@ export function SearchOverlay({
           onWheel={(e) => {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) e.currentTarget.scrollLeft += e.deltaY
           }}
-          className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)] [&::-webkit-scrollbar]:hidden"
+          className="scrollbar-hide flex gap-1.5 overflow-x-auto px-5 drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]"
         >
           {filters.map((f) => (
             <FilterChip
@@ -161,7 +161,7 @@ export function SearchOverlay({
                   onPlaceSelect?.(place)
                   exitSearch()
                 }}
-                className="flex shrink-0 items-center gap-1"
+                className="flex shrink-0 press items-center gap-1"
               >
                 <LocationPin aria-hidden className="size-[22px] shrink-0 text-orange-500" />
                 <span className="text-body-m-medium text-gray-500">{place}</span>
@@ -172,7 +172,7 @@ export function SearchOverlay({
             type="button"
             onMouseDown={keepFocus}
             onClick={onEditPlaces}
-            className="shrink-0 text-body-m-regular text-gray-400"
+            className="shrink-0 press text-body-m-regular text-gray-400"
           >
             편집
           </button>

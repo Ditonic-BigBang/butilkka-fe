@@ -57,6 +57,8 @@ export default function MapPage() {
   // "지도에서 선택" 진입 blur 는 등록 모드를 풀지 않게 구분
   const enteringMapSelect = useRef(false)
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const myLocationRef = useRef<{ lat: number; lng: number } | null>(null)
+  const locatingRef = useRef(false)
   // 조회 분기 — null 이면 최신 분기(기본)
   const [quarter, setQuarter] = useState<string | null>(null)
   const [quarterSheetOpen, setQuarterSheetOpen] = useState(false)
@@ -264,12 +266,36 @@ export default function MapPage() {
   }, [location.state, location.pathname, navigate])
 
   const handleMyLocation = () => {
-    navigator.geolocation?.getCurrentPosition((pos) => {
-      const point = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-      setMyLocation(point)
-      // 줌 레벨은 건드리지 않고 현 위치로 이동만
-      mapRef.current?.panTo(point.lat, point.lng)
-    })
+    const cached = myLocationRef.current
+    // 첫 조회 이후에는 위치 API 응답을 다시 기다리지 않고 저장된 좌표로 즉시 이동한다.
+    if (cached) mapRef.current?.panTo(cached.lat, cached.lng)
+
+    const geolocation = navigator.geolocation
+    if (!geolocation) {
+      if (!cached) showToast('이 브라우저에서는 현재 위치를 사용할 수 없어요.')
+      return
+    }
+    // 연속 탭은 저장된 위치 이동만 수행하고 진행 중인 위치 조회를 중복 생성하지 않는다.
+    if (locatingRef.current) return
+    locatingRef.current = true
+
+    geolocation.getCurrentPosition(
+      ({ coords }) => {
+        locatingRef.current = false
+        const point = { lat: coords.latitude, lng: coords.longitude }
+        myLocationRef.current = point
+        setMyLocation((current) =>
+          current?.lat === point.lat && current.lng === point.lng ? current : point,
+        )
+        // 줌 레벨은 건드리지 않고 최신 현 위치로 이동만 한다.
+        mapRef.current?.panTo(point.lat, point.lng)
+      },
+      () => {
+        locatingRef.current = false
+        if (!myLocationRef.current) showToast('현재 위치를 불러오지 못했어요.')
+      },
+      { maximumAge: 30_000, timeout: 10_000 },
+    )
   }
 
   return (
@@ -314,7 +340,7 @@ export default function MapPage() {
               if (representative) selectDistrict(district, representative.regionCode)
               else panToDistrict(district)
             }}
-            onEditPlaces={() => navigate('/map/favorites')}
+            onEditPlaces={() => navigate('/map/favorites', { viewTransition: true })}
             onAddPlace={() => setRegisterMode(true)}
             registerMode={registerMode}
             onSelectFromMap={handleSelectFromMap}

@@ -8,6 +8,7 @@ import {
 } from '@/entities/region'
 import type { TrendPoint } from '@/shared/ui'
 import { DIRECTION_UI, METRIC_CONFIG, type MapCategory } from './mapCategory'
+import { formatDecimal, formatNumber } from '@/shared/lib/formatNumber'
 
 // TrendGraph grade 변형 값 축 (A=5 … E=1)
 const GRADE_VALUE: Record<RegionGrade, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 }
@@ -34,7 +35,7 @@ const yearTicks = (quarters: string[]) =>
 
 function formatTruncatedPercent(value: number) {
   const truncated = Math.trunc(Math.abs(value) * 100) / 100
-  return `${truncated.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}%`
+  return `${formatDecimal(truncated)}%`
 }
 
 /** 쇠퇴등급 상세 시트(GradeBody) 뷰모델 */
@@ -110,7 +111,7 @@ export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): M
     subtitle: `서울 ${d.district}`,
     district: d.district,
     quarterLabel: shortQuarter(d.quarter),
-    value: config.toDisplayValue(summary.value).toLocaleString(),
+    value: formatNumber(config.toDisplayValue(summary.value)),
     unit: config.unit,
     comparison: {
       label: '이전 분기 대비',

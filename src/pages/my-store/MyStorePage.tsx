@@ -98,7 +98,7 @@ export default function MyStorePage() {
               category={store.categoryName}
               primary={store.isPrimary}
               onSelect={store.isPrimary ? undefined : () => selectAsPrimary(store.storeId)}
-              onEdit={() => navigate(`/my/store/${store.storeId}/edit`)}
+              onEdit={() => navigate(`/my/store/${store.storeId}/edit`, { viewTransition: true })}
               onDelete={store.isPrimary ? undefined : () => setDeleteTarget(store)}
             />
           </li>

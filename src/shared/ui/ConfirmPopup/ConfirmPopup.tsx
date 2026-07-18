@@ -44,10 +44,10 @@ export function ConfirmPopup({
       >
         <p className="w-full text-center text-body-m-medium text-gray-500">{children}</p>
         <div className="flex items-center gap-4 text-body-m-medium text-key">
-          <button type="button" onClick={onCancel} className="px-1 py-0.5">
+          <button type="button" onClick={onCancel} className="press px-1 py-0.5 active:opacity-60">
             {cancelLabel}
           </button>
-          <button type="button" onClick={onConfirm} className="px-1 py-0.5">
+          <button type="button" onClick={onConfirm} className="press px-1 py-0.5 active:opacity-60">
             {confirmLabel}
           </button>
         </div>

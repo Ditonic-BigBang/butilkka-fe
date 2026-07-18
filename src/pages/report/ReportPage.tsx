@@ -1,12 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import Download from '~icons/ci/download'
 import { MobileLayout } from '@/widgets/mobile-layout'
-import { ReportOverview, ReportOverviewSkeleton } from '@/widgets/report-overview'
+import {
+  ReportOverview,
+  ReportOverviewSkeleton,
+  useReportPdfDownload,
+} from '@/widgets/report-overview'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { formatQuarter } from '@/shared/lib/quarter'
-import { ErrorRetry } from '@/shared/ui'
-import { ReportLinkButton, downloadReport } from '@/entities/report'
+import { ErrorRetry, Spinner, Toast } from '@/shared/ui'
+import { ReportLinkButton } from '@/entities/report'
 import { useAuthStore } from '@/entities/session'
 import { useLatestReport, useReportHistory } from './model/useLatestReport'
 
@@ -22,6 +26,7 @@ export default function ReportPage() {
   const locked = !user?.isReportPro
   const report = useLatestReport()
   const history = useReportHistory()
+  const pdf = useReportPdfDownload(report.data, { locked })
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
   useThemeColor(THEME_COLORS.surfaceGray)
 
@@ -45,14 +50,18 @@ export default function ReportPage() {
               quarter={formatQuarter(previous.quarter)}
               grade={previous.grade}
               // 지난 리포트는 PRO 혜택 — 구독 전엔 구독 플랜 확인으로 유도
-              onClick={() => navigate(locked ? '/my/subscription' : '/report/history')}
+              onClick={() =>
+                navigate(locked ? '/my/subscription' : '/report/history', { viewTransition: true })
+              }
             />
           )
         }
         locked={locked}
-        onUpgrade={() => navigate('/my/subscription')}
-        onViewAllCases={() => navigate(`/report/${report.data.reportId}/cases`)}
-        onViewMap={() => navigate('/map')}
+        onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
+        onViewAllCases={() =>
+          navigate(`/report/${report.data.reportId}/cases`, { viewTransition: true })
+        }
+        onViewMap={() => navigate('/map', { viewTransition: true })}
       />
     )
   }
@@ -64,10 +73,19 @@ export default function ReportPage() {
         <ReportHeader
           region={report.data?.regionName}
           category={report.data?.categoryName}
-          onDownload={downloadReport}
+          // PDF 다운로드는 PRO 혜택 — 구독 전에는 버튼 자체를 숨긴다
+          onDownload={locked ? undefined : pdf.download}
+          downloading={pdf.downloading}
         />
         {content}
       </div>
+      {pdf.toast && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 mx-auto flex max-w-[430px] justify-center px-5">
+          <Toast className={pdf.closing ? 'animate-toast-out' : 'animate-toast-in'}>
+            {pdf.toast}
+          </Toast>
+        </div>
+      )}
     </MobileLayout>
   )
 }
@@ -77,10 +95,14 @@ function ReportHeader({
   region,
   category,
   onDownload,
+  downloading = false,
 }: {
   region?: string
   category?: string
-  onDownload: () => void
+  /** 없으면 다운로드 버튼 미노출 (구독 전 — PDF 는 PRO 혜택) */
+  onDownload?: () => void
+  /** PDF 생성 중 — 버튼을 스피너로 바꾸고 중복 클릭 방지 */
+  downloading?: boolean
 }) {
   return (
     // items-end: 다운로드 버튼(37)이 타이틀 블록 하단에 맞춰짐 (Figma)
@@ -95,14 +117,22 @@ function ReportHeader({
           </div>
         )}
       </div>
-      <button
-        type="button"
-        onClick={onDownload}
-        aria-label="리포트 다운로드"
-        className="flex size-[37px] shrink-0 items-center justify-center rounded-8 bg-white text-gray-600 transition active:scale-95"
-      >
-        <Download aria-hidden className="size-6" />
-      </button>
+      {onDownload && (
+        <button
+          type="button"
+          onClick={onDownload}
+          disabled={downloading}
+          aria-label="리포트 다운로드"
+          aria-busy={downloading}
+          className="flex size-[37px] shrink-0 items-center justify-center rounded-8 bg-white text-gray-600 transition active:scale-95"
+        >
+          {downloading ? (
+            <Spinner aria-label="PDF 생성 중" className="size-5" />
+          ) : (
+            <Download aria-hidden className="size-6" />
+          )}
+        </button>
+      )}
     </header>
   )
 }

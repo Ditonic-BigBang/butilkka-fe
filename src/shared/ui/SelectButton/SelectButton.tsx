@@ -1,7 +1,7 @@
 import { tv, type VariantProps } from '@/shared/lib/tv'
 
 const selectButton = tv({
-  base: 'inline-flex h-[50px] w-[169px] items-center justify-center rounded-8 border bg-white px-11 py-2 text-body-l-medium whitespace-nowrap transition-colors disabled:pointer-events-none',
+  base: 'press inline-flex h-[50px] w-[169px] items-center justify-center rounded-8 border bg-white px-11 py-2 text-body-l-medium whitespace-nowrap disabled:pointer-events-none',
   variants: {
     selected: {
       // 선택: key 2px 테두리 + gray-900 텍스트
