@@ -3,6 +3,7 @@ import { Tabs, Spinner, ErrorRetry } from '@/shared/ui'
 import { DistrictRankRow } from '@/entities/district'
 import { GradeBody, MetricBody, PeriodSection } from '@/widgets/district-sheet'
 import { cn } from '@/shared/lib/cn'
+import { formatDecimal, formatNumber } from '@/shared/lib/formatNumber'
 import type { RankingOrder } from '@/entities/region'
 import type { RankingRow } from '../model/useRanking'
 import type { SheetDetailView } from '../model/useRegionDetail'
@@ -39,14 +40,11 @@ function renderDetail(view: SheetDetailView) {
       trend={view.trend}
       trendTicks={view.trendTicks}
       trendUnit={view.trendUnit}
-      trendTooltip={(p) =>
-        `${p.value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${trendValueUnit}`
-      }
+      trendTooltip={(p) => `${formatDecimal(p.value)}${trendValueUnit}`}
       // y축 눈금은 도메인 보간이라 소수가 나온다 — 지표별 축약 라벨 우선, %만 소수 1자리, 나머지는 정수
       yFormatter={
         view.trendAxisLabel ??
-        ((v) =>
-          view.unit === '%' ? String(Math.round(v * 10) / 10) : Math.round(v).toLocaleString())
+        ((v) => (view.unit === '%' ? String(Math.round(v * 10) / 10) : formatNumber(Math.round(v))))
       }
       averagePeriod={view.averagePeriod}
     />

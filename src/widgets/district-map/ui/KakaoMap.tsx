@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
+import { memo, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { createPortal } from 'react-dom'
 import { useKakaoMapsSDK } from '@/shared/lib/useKakaoMapsSDK'
 import { LocationMarker, MapPin, Spinner } from '@/shared/ui'
@@ -77,7 +77,7 @@ type MarkerOverlayEntry = {
  * 카카오맵 + 구 단위 쇠퇴등급 마커(LocationMarker)를 CustomOverlay 로 표시.
  * 마커 클릭은 portal 로 React 이벤트를 그대로 사용 — kakao 이벤트를 거치지 않는다.
  */
-export default function KakaoMap({
+function KakaoMap({
   markers = NO_MARKERS,
   onMarkerClick,
   outlines = NO_OUTLINES,
@@ -400,3 +400,7 @@ export default function KakaoMap({
     </div>
   )
 }
+
+// MapPage 는 검색 타이핑 등으로 리렌더가 잦다 — props(markers/outlines/콜백)는 전부
+// 상위에서 useMemo/useCallback 으로 안정화돼 있어 memo 로 마커 포털 재조정을 차단한다.
+export default memo(KakaoMap)

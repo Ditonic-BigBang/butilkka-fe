@@ -42,27 +42,39 @@ export function useAppHeight() {
       const height = getAppViewportHeight()
       document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`)
     }
+    // 이벤트(특히 visualViewport scroll)는 프레임마다 연발된다 — rAF 로 프레임당 1회로 병합.
+    // 초기 측정과 settle 타이머는 그대로 동기 set 을 쓴다 (첫 페인트 높이 확정이 우선).
+    let frame: number | null = null
+    const scheduleSet = () => {
+      if (frame !== null) return
+      frame = requestAnimationFrame(() => {
+        frame = null
+        set()
+      })
+    }
+
     set()
     // 첫 페인트 후 한 번 더 — standalone 전체화면(black-translucent) 확장이 끝난 높이를 반영
     const raf = requestAnimationFrame(set)
     const timers = SETTLE_DELAYS_MS.map((ms) => window.setTimeout(set, ms))
 
-    window.addEventListener('resize', set)
-    window.addEventListener('orientationchange', set)
+    window.addEventListener('resize', scheduleSet)
+    window.addEventListener('orientationchange', scheduleSet)
     // bfcache 복귀·앱 전환 복귀 시 재측정
-    window.addEventListener('pageshow', set)
-    window.addEventListener('visibilitychange', set)
-    window.visualViewport?.addEventListener('resize', set)
-    window.visualViewport?.addEventListener('scroll', set)
+    window.addEventListener('pageshow', scheduleSet)
+    window.addEventListener('visibilitychange', scheduleSet)
+    window.visualViewport?.addEventListener('resize', scheduleSet)
+    window.visualViewport?.addEventListener('scroll', scheduleSet)
     return () => {
       cancelAnimationFrame(raf)
+      if (frame !== null) cancelAnimationFrame(frame)
       for (const timer of timers) clearTimeout(timer)
-      window.removeEventListener('resize', set)
-      window.removeEventListener('orientationchange', set)
-      window.removeEventListener('pageshow', set)
-      window.removeEventListener('visibilitychange', set)
-      window.visualViewport?.removeEventListener('resize', set)
-      window.visualViewport?.removeEventListener('scroll', set)
+      window.removeEventListener('resize', scheduleSet)
+      window.removeEventListener('orientationchange', scheduleSet)
+      window.removeEventListener('pageshow', scheduleSet)
+      window.removeEventListener('visibilitychange', scheduleSet)
+      window.visualViewport?.removeEventListener('resize', scheduleSet)
+      window.visualViewport?.removeEventListener('scroll', scheduleSet)
     }
   }, [])
 }

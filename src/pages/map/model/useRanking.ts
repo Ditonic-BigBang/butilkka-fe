@@ -8,6 +8,7 @@ import {
   type RegionRankingResponse,
 } from '@/entities/region'
 import { DIRECTION_UI, METRIC_CONFIG, type MapCategory, type MetricConfig } from './mapCategory'
+import { formatNumber } from '@/shared/lib/formatNumber'
 
 /** 랭킹 바텀시트 행 뷰모델 — 값(등급 문자/표시 값) + 단위 */
 export type RankingRow = {
@@ -46,7 +47,7 @@ function toMetricView(data: RegionMetricRankingResponse, config: MetricConfig): 
       rank: r.rank,
       regionCode: r.regionCode,
       name: r.regionName,
-      value: config.toCompactValue(r.value).toLocaleString(),
+      value: formatNumber(config.toCompactValue(r.value)),
       unit: config.compactUnit,
       direction: DIRECTION_UI[r.direction] ?? 'same',
     })),

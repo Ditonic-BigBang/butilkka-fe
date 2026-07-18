@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import confetti from 'canvas-confetti'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
@@ -11,13 +10,13 @@ import successIllust from './assets/success.svg'
 // 성공 일러스트(success.svg) 팔레트 그대로 — 오렌지·하늘색·노랑
 const CONFETTI_COLORS = ['#ff621b', '#ff9058', '#ffbe81', '#8bdaff', '#ffe68c']
 
+// @types/canvas-confetti 는 `export =` 모듈이라 typeof import 가 곧 함수 타입이다
+type ConfettiFn = typeof import('canvas-confetti')
+
 /**
  * 진입 시 폭죽 발사 — 성공 일러스트 중앙에서 위로 터진다 (온보딩 완료 스텝과 동일 패턴).
- * 모션 최소화 설정 사용자는 건너뛴다.
  */
-function fireConfetti(img: HTMLImageElement | null): ReturnType<typeof setTimeout> | undefined {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
-
+function fireConfetti(confetti: ConfettiFn, img: HTMLImageElement | null) {
   const rect = img?.getBoundingClientRect()
   const origin = rect
     ? {
@@ -102,9 +101,20 @@ export default function SubscriptionCompletePage() {
   const illustRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
+    // 모션 최소화 설정 사용자는 폭죽 생략 — 라이브러리 로드도 하지 않는다
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // 라이브러리는 발사 시점에만 동적 로드 — 페이지 초기 청크에서 제외
     // StrictMode(dev)에선 마운트가 2회라 두 번 터질 수 있음 — 무해, prod 는 1회
-    const timer = fireConfetti(illustRef.current)
-    return () => clearTimeout(timer)
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    void import('canvas-confetti').then(({ default: confetti }) => {
+      if (cancelled) return
+      timer = fireConfetti(confetti, illustRef.current)
+    })
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [])
 
   const goHome = () => navigate('/', { replace: true })

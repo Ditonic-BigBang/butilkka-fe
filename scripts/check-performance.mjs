@@ -4,8 +4,9 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const DIST_DIR = fileURLToPath(new URL('../dist/', import.meta.url))
-const ENTRY_GZIP_BUDGET = 180 * 1024
-const PRECACHE_BUDGET = 500 * 1024
+// 실측 대비 여유를 좁게 잡아 회귀를 조기에 잡는다 (엔트리 실측 ~95KB, 프리캐시 ~418KiB).
+const ENTRY_GZIP_BUDGET = 120 * 1024
+const PRECACHE_BUDGET = 460 * 1024
 
 function formatKb(bytes) {
   return `${(bytes / 1024).toFixed(1)}KB`

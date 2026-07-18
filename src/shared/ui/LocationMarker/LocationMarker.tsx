@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { cn } from '@/shared/lib/cn'
 
 type LocationMarkerProps = Omit<React.ComponentProps<'div'>, 'title'> & {
@@ -11,7 +12,12 @@ type LocationMarkerProps = Omit<React.ComponentProps<'div'>, 'title'> & {
  * 지도 위치 마커 (Figma: Location container 336:7579).
  * gray-900 원형 + 흰 텍스트(지역명 + 보조값). 지도 위에 올려 지역/지표를 표시.
  */
-export function LocationMarker({ title, caption, className, ...props }: LocationMarkerProps) {
+export const LocationMarker = memo(function LocationMarker({
+  title,
+  caption,
+  className,
+  ...props
+}: LocationMarkerProps) {
   return (
     <div
       className={cn(
@@ -24,4 +30,4 @@ export function LocationMarker({ title, caption, className, ...props }: Location
       {caption && <span className="text-body-m-medium">{caption}</span>}
     </div>
   )
-}
+})
