@@ -61,7 +61,7 @@ export function topValueRegionByDistrict(
   return top
 }
 
-/** metricMap 응답(상권 단위) → 구 단위 지도 마커 — 캡션은 표시 단위 값 (예: "789만원") */
+/** metricMap 응답(상권 단위) → 구 단위 지도 마커 — 캡션은 표시 단위 값 (예: "10,000만원") */
 export function buildMetricGuMarkers(
   regions: RegionMetricMapItem[],
   centroids: Map<string, LatLngPoint>,

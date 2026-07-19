@@ -19,13 +19,13 @@ const detail: RegionDetailResponse = {
     ],
   },
   rentRatio: {
-    value: 7_890_000,
+    value: 78_900_000,
     changeRate: 5,
     direction: 'DOWN',
     trend: [
-      { quarter: '2025Q3', value: 7_600_000 },
-      { quarter: '2025Q4', value: 7_500_000 },
-      { quarter: '2026Q1', value: 7_890_000 },
+      { quarter: '2025Q3', value: 76_000_000 },
+      { quarter: '2025Q4', value: 75_000_000 },
+      { quarter: '2026Q1', value: 78_900_000 },
     ],
   },
   footTraffic: metric,
@@ -56,32 +56,45 @@ describe('toGradeSheetView', () => {
     ])
     expect(view.trendTicks).toEqual(['2026'])
   })
+
+  it('선택 분기의 등급과 이전 등급을 trend 에서 찾아 표시한다', () => {
+    const view = toGradeSheetView(detail, '2025Q4')
+
+    expect(view.quarterLabel).toBe('25년 4분기')
+    expect(view.grade).toBe('B')
+    expect(view.status).toBe('양호')
+    expect(view.lastGrade).toBe('B등급')
+    expect(view.trend).toEqual([
+      { label: '2025Q3', value: 4 },
+      { label: '2025Q4', value: 4 },
+    ])
+  })
 })
 
 describe('toMetricSheetView', () => {
-  it('상단 임대료는 원 단위, 추이 그래프는 천만원 단위로 변환한다', () => {
+  it('상단 임대료는 만원, 추이 그래프는 천만원 단위로 변환한다', () => {
     const view = toMetricSheetView(detail, 'rentRatio')
 
     expect(view.kind).toBe('metric')
     expect(view.subtitle).toBe('서울 서대문구')
     expect(view.quarterLabel).toBe('26년 1분기')
-    expect(view.value).toBe('7,890,000')
-    expect(view.unit).toBe('원')
+    expect(view.value).toBe('7,890')
+    expect(view.unit).toBe('만원')
     expect(view.comparison).toEqual({
       label: '이전 분기 대비',
       percent: '5%',
       direction: 'down',
     })
     expect(view.trend).toEqual([
-      { label: '2025Q3', value: 0.76 },
-      { label: '2025Q4', value: 0.75 },
-      { label: '2026', value: 0.789 },
+      { label: '2025Q3', value: 7.6 },
+      { label: '2025Q4', value: 7.5 },
+      { label: '2026', value: 7.89 },
     ])
     expect(view.trendTicks).toEqual(['2026'])
     expect(view.trendUnit).toBe('(천만원)')
   })
 
-  it('유동인구 추이 그래프는 만명 단위로 변환한다', () => {
+  it('유동인구 상단값과 추이 그래프를 만명 단위로 변환한다', () => {
     const view = toMetricSheetView(
       {
         ...detail,
@@ -98,8 +111,8 @@ describe('toMetricSheetView', () => {
       'footTraffic',
     )
 
-    expect(view.value).toBe('125,000')
-    expect(view.unit).toBe('명')
+    expect(view.value).toBe('13')
+    expect(view.unit).toBe('만명')
     expect(view.trend).toEqual([
       { label: '2025Q4', value: 12 },
       { label: '2026', value: 12.5 },
@@ -118,6 +131,22 @@ describe('toMetricSheetView', () => {
     )
 
     expect(view.comparison.percent).toBe('5.67%')
+  })
+
+  it('선택 분기의 값·증감률·방향을 trend 에서 계산하고 이후 분기는 그래프에서 제외한다', () => {
+    const view = toMetricSheetView(detail, 'rentRatio', '2025Q4')
+
+    expect(view.quarterLabel).toBe('25년 4분기')
+    expect(view.value).toBe('7,500')
+    expect(view.comparison).toEqual({
+      label: '이전 분기 대비',
+      percent: '1.31%',
+      direction: 'down',
+    })
+    expect(view.trend).toEqual([
+      { label: '2025Q3', value: 7.6 },
+      { label: '2025Q4', value: 7.5 },
+    ])
   })
 
   it('점포수는 changeRate 가 없어 추이 마지막 두 분기로 증감률(%)을 계산한다', () => {
@@ -156,6 +185,12 @@ describe('toMetricSheetView', () => {
     const view = toMetricSheetView(detail, 'closureRate')
 
     expect(view.averagePeriod).toEqual({ label: '서울 서대문구', years: '3.2' })
+  })
+
+  it('과거 분기 평균 영업 기간은 분기별 데이터가 없으므로 최신값을 대신 표시하지 않는다', () => {
+    const view = toMetricSheetView(detail, 'closureRate', '2025Q4')
+
+    expect(view.averagePeriod).toBeUndefined()
   })
 
   it('평균 영업 기간이 없는 지표는 averagePeriod 를 만들지 않는다', () => {

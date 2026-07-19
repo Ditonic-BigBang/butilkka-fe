@@ -11,7 +11,7 @@ export type SearchFilter = {
 export const MAP_FILTERS: SearchFilter[] = [
   { key: 'period', label: '기간', caret: true },
   { key: 'grade', label: '쇠퇴등급' },
-  { key: 'sales', label: '매출/임대료' },
+  { key: 'sales', label: '분기매출' },
   { key: 'stores', label: '점포수' },
   { key: 'population', label: '유동인구' },
   { key: 'vacancy', label: '공실률' },

@@ -52,7 +52,7 @@ function renderDetail(view: SheetDetailView) {
 }
 
 type RankingSheetProps = {
-  /** 시트 헤더 제목 (예: "쇠퇴 등급" · "매출 대비 임대료") */
+  /** 시트 헤더 제목 (예: "쇠퇴 등급" · "점포당 평균 분기매출") */
   title: string
   /** 정렬 탭 라벨 [top, bottom] (예: ["위험 높은 순", "안전한 순"]) */
   tabs: [string, string]

@@ -62,6 +62,7 @@ export default defineConfig({
           'index.html',
           'registerSW.js',
           'assets/index-*.js',
+          'assets/react-*.js',
           'assets/jsx-runtime-*.js',
           'assets/rolldown-runtime-*.js',
           'assets/preload-helper-*.js',

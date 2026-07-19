@@ -4,11 +4,12 @@ import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import {
   ReportOverview,
   ReportOverviewSkeleton,
+  ReportPdfLoadingOverlay,
   useReportPdfDownload,
 } from '@/widgets/report-overview'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
-import { ErrorRetry, Spinner, Toast } from '@/shared/ui'
+import { ErrorRetry, Toast } from '@/shared/ui'
 import { useReportDetail } from './model/useReportDetail'
 
 /**
@@ -57,13 +58,9 @@ export default function ReportDetailPage() {
               disabled={pdf.downloading}
               aria-label="리포트 다운로드"
               aria-busy={pdf.downloading}
-              className="transition active:scale-95"
+              className="transition active:scale-95 disabled:opacity-60"
             >
-              {pdf.downloading ? (
-                <Spinner aria-label="PDF 생성 중" className="size-5" />
-              ) : (
-                <Download aria-hidden className="size-6 shrink-0 text-gray-300" />
-              )}
+              <Download aria-hidden className="size-6 shrink-0 text-gray-300" />
             </button>
           }
         />
@@ -76,6 +73,7 @@ export default function ReportDetailPage() {
           </Toast>
         </div>
       )}
+      {pdf.downloading && <ReportPdfLoadingOverlay />}
     </MobileLayout>
   )
 }

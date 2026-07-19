@@ -28,11 +28,11 @@ export function MobileLayout({
   const { tab, setTab } = useActiveTab()
 
   return (
-    <div className="flex h-[var(--app-height,100dvh)] justify-center overflow-hidden bg-gray-100">
+    <div className="mt-[var(--app-offset-top,0px)] flex h-[var(--app-height,100dvh)] justify-center overflow-hidden bg-gray-100">
       {/* pt-safe-top: PWA(standalone)에서 viewport-fit=cover 로 노치 밑까지 확장될 때
           GNB 가 상태바에 깔리지 않게 — 일반 브라우저에선 env()=0 이라 영향 없음.
-          높이는 --app-height(useAppHeight 가 window.innerHeight 로 갱신) — iOS PWA 의 dvh 첫 렌더
-          어긋남으로 in-flow 하단 탭이 위로 뜨는 문제를 막는다. 변수 없으면 100dvh 폴백. */}
+          높이·상단 offset은 useAppHeight 가 현재 visual viewport 로 갱신 — iOS PWA 의 dvh 첫 렌더와
+          키보드 복귀 후 viewport 이동을 함께 보정한다. 변수 없으면 100dvh/0px 폴백. */}
       <div
         className={cn(
           'relative flex h-full w-full max-w-[430px] flex-col overflow-hidden bg-white pt-safe-top shadow-xl',

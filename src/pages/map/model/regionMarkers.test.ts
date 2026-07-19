@@ -38,9 +38,9 @@ describe('buildGuMarkers', () => {
 
 describe('buildMetricGuMarkers', () => {
   const regions: RegionMetricMapItem[] = [
-    { regionCode: '1', regionName: '신촌', district: '서대문구', value: 6_120_000 },
-    { regionCode: '2', regionName: '이대역', district: '서대문구', value: 7_890_000 },
-    { regionCode: '3', regionName: '홍대입구', district: '마포구', value: 4_310_000 },
+    { regionCode: '1', regionName: '신촌', district: '서대문구', value: 75_000_000 },
+    { regionCode: '2', regionName: '이대역', district: '서대문구', value: 100_000_000 },
+    { regionCode: '3', regionName: '홍대입구', district: '마포구', value: 50_000_000 },
   ]
 
   it('구 단위로 묶고 값이 가장 큰 상권으로 대표한다 — 캡션은 표시 단위 값', () => {
@@ -48,8 +48,20 @@ describe('buildMetricGuMarkers', () => {
 
     expect(markers).toHaveLength(2)
     const seodaemun = markers.find((m) => m.id === '서대문구')
-    expect(seodaemun?.caption).toBe('789만원')
-    expect(markers.find((m) => m.id === '마포구')?.caption).toBe('431만원')
+    expect(seodaemun?.caption).toBe('10,000만원')
+    expect(markers.find((m) => m.id === '마포구')?.caption).toBe('5,000만원')
+  })
+
+  it('유동인구는 큰 원시값을 만명 단위로 줄여 표시한다', () => {
+    const populationRegions: RegionMetricMapItem[] = [
+      { regionCode: '1', regionName: '신촌', district: '서대문구', value: 150_000_000 },
+      { regionCode: '2', regionName: '홍대입구', district: '마포구', value: 30_000_000 },
+    ]
+
+    const markers = buildMetricGuMarkers(populationRegions, centroids, METRIC_CONFIG.footTraffic)
+
+    expect(markers.find((m) => m.id === '서대문구')?.caption).toBe('15,000만명')
+    expect(markers.find((m) => m.id === '마포구')?.caption).toBe('3,000만명')
   })
 
   it('대표 상권 맵은 구 선택 상세 조회용 regionCode 를 준다', () => {

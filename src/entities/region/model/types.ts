@@ -109,7 +109,7 @@ export interface DeclineGradeSummary {
   trend: GradeTrendPoint[]
 }
 
-/** 수치 지표 요약 (매출 대비 임대료·유동인구·공실률) */
+/** 수치 지표 요약 (점포당 평균 분기매출·유동인구·공실률) */
 export interface MetricSummary {
   value: number
   changeRate: number

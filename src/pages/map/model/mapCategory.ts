@@ -12,7 +12,7 @@ export const DIRECTION_UI: Record<RegionDirection, 'up' | 'down' | 'same'> = {
 }
 
 export type MetricConfig = {
-  /** 시트 헤더 제목 (예: "매출 대비 임대료") */
+  /** 시트 헤더 제목 (예: "점포당 평균 분기매출") */
   title: string
   /** 상세 상단 표시 단위 (예: "원") */
   unit: string
@@ -34,9 +34,9 @@ const axisDecimal = formatDecimal
 
 export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
   rentRatio: {
-    title: '매출 대비 임대료',
-    unit: '원',
-    toDisplayValue: rounded,
+    title: '점포당 평균 분기매출',
+    unit: '만원',
+    toDisplayValue: (value) => Math.round(value / 10_000),
     compactUnit: '만원',
     toCompactValue: (value) => Math.round(value / 10_000),
     trendUnit: '천만원',
@@ -45,10 +45,10 @@ export const METRIC_CONFIG: Record<MetricKey, MetricConfig> = {
   },
   footTraffic: {
     title: '유동인구',
-    unit: '명',
-    toDisplayValue: rounded,
-    compactUnit: '명',
-    toCompactValue: rounded,
+    unit: '만명',
+    toDisplayValue: (value) => Math.round(value / 10_000),
+    compactUnit: '만명',
+    toCompactValue: (value) => Math.round(value / 10_000),
     trendUnit: '만명',
     toTrendValue: (value) => value / 10_000,
     toAxisLabel: axisDecimal,

@@ -103,6 +103,15 @@ export default function MapPage() {
     if (!latestQuarter && dataQuarter) setLatestQuarter(dataQuarter)
   }, [latestQuarter, dataQuarter])
 
+  // 분기·카테고리 변경으로 구 대표 코드가 달라지면 선택된 구의 상세 조회도 같은 기준으로 맞춘다.
+  useEffect(() => {
+    if (!selectedDistrict || !regionByDistrict) return
+    const nextRegionCode = regionByDistrict.get(selectedDistrict)?.regionCode
+    if (nextRegionCode) {
+      setDetailRegionCode((current) => (current === nextRegionCode ? current : nextRegionCode))
+    }
+  }, [selectedDistrict, regionByDistrict])
+
   // 기간 칩 — 선택 시 라벨을 "2025년 3분기"로 바꾸고 선택 스타일 (쇠퇴등급 칩과 동시 선택)
   const filters = useMemo(
     () =>

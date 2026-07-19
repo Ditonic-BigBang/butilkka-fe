@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 import { computeGuCentroids, type LatLngPoint } from '../lib/guCentroids'
 
 // public/seoul-gu.geojson — 서울 자치구 경계 (southkorea/seoul-maps kostat 2013 simple)
@@ -58,13 +58,15 @@ async function fetchGuGeometry({ signal }: { signal: AbortSignal }): Promise<GuG
 }
 
 /** 경계와 중심점을 같은 56KB 정적 geometry에서 한 번만 계산하고 세션 동안 유지한다. */
+export const guGeometryQueryOptions = queryOptions({
+  queryKey: ['district', 'gu-geometry'] as const,
+  queryFn: fetchGuGeometry,
+  staleTime: Infinity,
+  gcTime: Infinity,
+})
+
 export function useGuGeometry() {
-  const query = useQuery({
-    queryKey: ['district', 'gu-geometry'] as const,
-    queryFn: fetchGuGeometry,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  })
+  const query = useQuery(guGeometryQueryOptions)
 
   return {
     ...query,
