@@ -99,7 +99,7 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
     districtName: '강남구',
     quarter: '2026Q2',
     grade: 'C',
-    declineType: '쇠퇴형',
+    declineType: '쇠퇴',
     score: 64,
     briefing:
       '현재 상권은 회복보다 쇠퇴 신호가 강하게 나타나고\n있어요. 지금 바로 대응이 필요해요.',
@@ -135,45 +135,45 @@ export function makeReportMock(recommendation: ReportRecommendation = '이동'):
       },
     ],
     decision: REPORT_DECISIONS[recommendation],
+    aiRecommendation: {
+      badgeType: 'AI 추천',
+      title: recommendation === '버티기' ? '현 위치 유지를 추천드려요' : '이동을 추천드려요',
+      reasonTitle: REPORT_DECISIONS[recommendation].title,
+      reasonDetail: REPORT_DECISIONS[recommendation].description,
+    },
     alternativeRegions: [
       {
         rank: 1,
-        regionCode: '3110021',
-        regionName: '망원동',
-        reason: '2026년 1분기부터 2분기까지 유동인구 증가율이 88% 증가했어요.',
-        stat: '유동인구 +88%',
-        stats: [
-          { label: '점포수', value: '+12개', direction: 'UP', note: '증가' },
-          { label: '유동인구', value: '+8,420', direction: 'UP', note: '명/일' },
-          { label: '공실', value: '-3건', direction: 'DOWN', note: '감소' },
-        ],
-        referenceDate: '26.03',
+        regionCode: '11440',
+        regionName: '마포구',
+        aiMessage:
+          '마포구는 현재보다 양호한 상권으로 유동인구가 꾸준히 증가하고 있어 안정적인 매출이 기대됩니다.',
+        storeCount: 1_240,
+        floatingPopulation: 68_420_000,
+        vacancy: 3.1,
+        baseDate: '2026Q2',
       },
       {
         rank: 2,
-        regionCode: '3110022',
-        regionName: '성수동',
-        reason: '유동인구 증가율이 82% 상승했으며, 최근 성수동 공실률이 3.7%로 낮은 편이에요.',
-        stat: '유동인구 +82%',
-        stats: [
-          { label: '점포수', value: '+9개', direction: 'UP', note: '증가' },
-          { label: '유동인구', value: '+6,180', direction: 'UP', note: '명/일' },
-          { label: '공실', value: '-2건', direction: 'DOWN', note: '감소' },
-        ],
-        referenceDate: '26.03',
+        regionCode: '11200',
+        regionName: '성동구',
+        aiMessage:
+          '성동구는 낮은 공실률을 유지하고 있으며 유동인구도 안정적으로 늘고 있어 대안 상권으로 적합합니다.',
+        storeCount: 980,
+        floatingPopulation: 61_800_000,
+        vacancy: 3.7,
+        baseDate: '2026Q2',
       },
       {
         rank: 3,
-        regionCode: '3110023',
-        regionName: '한남동',
-        reason: '유동인구 증가율이 79% 상승했으며, 2025년 1분기부터 꾸준히 증가 추세에요.',
-        stat: '유동인구 +79%',
-        stats: [
-          { label: '점포수', value: '+5개', direction: 'UP', note: '증가' },
-          { label: '유동인구', value: '+4,930', direction: 'UP', note: '명/일' },
-          { label: '공실', value: '-1건', direction: 'DOWN', note: '감소' },
-        ],
-        referenceDate: '26.03',
+        regionCode: '11170',
+        regionName: '용산구',
+        aiMessage:
+          '용산구는 점포 수와 유동인구가 안정적으로 유지되고 있어 장기적인 영업을 검토하기 좋습니다.',
+        storeCount: 840,
+        floatingPopulation: 49_300_000,
+        vacancy: 4.2,
+        baseDate: '2026Q2',
       },
     ],
   }
@@ -202,6 +202,13 @@ export function makeReportDetailMock(item: ReportHistoryItem): ReportResponse {
     // 예측도 등급과 어긋나지 않게 — 좋은 등급은 유지, 나쁜 등급은 한 단계 악화 전망
     predictedTrend: recommendation === '버티기' ? '유지' : '쇠퇴',
     predictedNextGrade: recommendation === '버티기' ? item.grade : WORSE_GRADE[item.grade],
+    // 과거에 생성된 리포트는 신규 AI 추천 상세 필드가 비어 있을 수 있다.
+    aiRecommendation: {
+      badgeType: 'AI 추천',
+      title: null,
+      reasonTitle: null,
+      reasonDetail: null,
+    },
   }
 }
 

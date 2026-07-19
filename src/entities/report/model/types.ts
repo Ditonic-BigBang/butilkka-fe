@@ -1,5 +1,5 @@
 export type ReportGrade = 'A' | 'B' | 'C' | 'D' | 'E'
-export type ReportDeclineType = '성장형' | '순환형' | '쇠퇴형' | '정체형'
+export type ReportDeclineType = '성장' | '쇠퇴' | '유지'
 /** 다음 분기 예측 추이 (2026-07-14 백엔드 추가) */
 export type ReportPredictedTrend = '성장' | '유지' | '쇠퇴'
 export type ReportCauseLevel = '높음' | '중간' | '낮음'
@@ -24,33 +24,30 @@ export interface ReportSimilarCase {
   period: { startYear: number; endYear: number }
 }
 
-/** 대체 상권 상세 지표 (Dropdown_L 펼침 스탯 타일 — 명세 미반영 선규격) */
-export interface ReportRegionStat {
-  /** 지표명 (예: "점포수") */
-  label: string
-  /** 표시 값 (예: "-4개", "+1,240") */
-  value: string
-  /** 증감 방향 — 화살표 색(▲빨강/▼파랑) */
-  direction: 'UP' | 'DOWN'
-  /** 화살표 옆 표기 (예: "감소"·"명/일"·"증가") */
-  note: string
+export interface ReportAlternativeRegion {
+  /** 순위 (1부터 시작하며 응답 내에서 고유) */
+  rank: number
+  /** 5자리 자치구 코드 */
+  regionCode: string
+  regionName: string
+  /** AI가 생성한 추천 문구. 과거 리포트는 비어 있을 수 있다. */
+  aiMessage: string | null
+  /** 점포 수 (개) */
+  storeCount: number | null
+  /** 분기 유동인구 합계 (명) */
+  floatingPopulation: number | null
+  /** 공실률 (%) */
+  vacancy: number | null
+  /** 지표 기준 분기 (YYYYQN) */
+  baseDate: string | null
 }
 
-export interface ReportAlternativeRegion {
-  /** 순위 — 실서버 미제공, 뷰에서 배열 순서로 대체 */
-  rank?: number
-  regionCode?: string
-  /** 실서버가 스네이크케이스로 내려줌 — regionCode 통일 요청 중(백엔드) */
-  region_code?: string
-  /** 상권 이름 — 실서버 미제공(백엔드 추가 요청 중), 오기 전까진 코드로 폴백 표시 */
-  regionName?: string
-  reason: string
-  /** 핵심 지표 한 줄 (예: "유동인구 +6.2%") — stats 없을 때 타일 1개로 폴백 */
-  stat: string
-  /** 펼침 스탯 타일 3개(점포수·유동인구·공실) — 명세 미반영 선규격(백엔드 협의 필요) */
-  stats?: ReportRegionStat[]
-  /** 지표 기준 시점 (예: "26.03") — 명세 미반영 선규격 */
-  referenceDate?: string
+export interface ReportAiRecommendation {
+  badgeType: string
+  /** 과거 리포트에는 AI 추천 상세가 없을 수 있다. */
+  title: string | null
+  reasonTitle: string | null
+  reasonDetail: string | null
 }
 
 export interface ReportResponse {
@@ -63,7 +60,7 @@ export interface ReportResponse {
   quarter: string
   grade: ReportGrade
   declineType: ReportDeclineType
-  /** 상권 점수 0~100 (가로 막대그래프용) */
+  /** 백엔드 산출 상권 점수 0~100 (현재 FE 게이지는 등급별 고정 위치를 사용) */
   score: number
   /** AI 한 줄 브리핑 */
   briefing: string
@@ -78,6 +75,7 @@ export interface ReportResponse {
   similarCases: ReportSimilarCase[]
   /** AI 의사결정 지원 */
   decision: { recommendation: ReportRecommendation; title: string; description: string }
+  aiRecommendation: ReportAiRecommendation
   alternativeRegions: ReportAlternativeRegion[]
 }
 
