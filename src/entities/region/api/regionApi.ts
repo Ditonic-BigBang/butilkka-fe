@@ -80,7 +80,8 @@ export function searchRegions(keyword: string, signal?: AbortSignal): Promise<Re
 
 /**
  * GET /api/v1/districts/{regionCode} — 특정 상권 상세 (URI 명칭과 달리 path 는 상권코드).
- * quarter 는 FE 선규격 파라미터(스웨거 미정의) — 조회 분기 기준 상세, 미지정 시 최신.
+ * quarter 는 향후 서버 지원을 위한 호환 파라미터다. 현재 응답은 최신 대표값과 전체 trend 를 반환하므로
+ * 선택 분기 표시는 useRegionDetail 에서 trend 를 기준으로 계산한다.
  */
 export function fetchRegionDetail(
   regionCode: string,

@@ -50,7 +50,7 @@ describe('RankingSheet', () => {
   it('지표 카테고리는 제목·탭·값 단위가 바뀐다', () => {
     render(
       <RankingSheet
-        title="매출 대비 임대료"
+        title="점포당 평균 분기매출"
         tabs={['상위 5위', '하위 5위']}
         order="top"
         onOrderChange={() => {}}
@@ -58,7 +58,7 @@ describe('RankingSheet', () => {
       />,
     )
 
-    expect(screen.getByText('매출 대비 임대료')).toBeInTheDocument()
+    expect(screen.getByText('점포당 평균 분기매출')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '상위 5위' })).toBeInTheDocument()
     expect(screen.getByText('789')).toBeInTheDocument()
     expect(screen.getByText('만원')).toBeInTheDocument()
@@ -82,7 +82,7 @@ describe('RankingSheet', () => {
     }
     render(
       <RankingSheet
-        title="매출 대비 임대료"
+        title="점포당 평균 분기매출"
         tabs={['상위 5위', '하위 5위']}
         order="top"
         onOrderChange={() => {}}

@@ -38,6 +38,21 @@ function formatTruncatedPercent(value: number) {
   return `${formatDecimal(truncated)}%`
 }
 
+function selectedTrendIndex<T extends { quarter: string }>(trend: T[], quarter?: string) {
+  return quarter ? trend.findIndex((point) => point.quarter === quarter) : -1
+}
+
+function directionBetween(current: number, previous: number): 'up' | 'down' | 'same' {
+  if (current > previous) return 'up'
+  if (current < previous) return 'down'
+  return 'same'
+}
+
+function percentBetween(current: number, previous: number) {
+  if (previous === 0) return current === 0 ? '0%' : '-'
+  return formatTruncatedPercent(((current - previous) / Math.abs(previous)) * 100)
+}
+
 /** 쇠퇴등급 상세 시트(GradeBody) 뷰모델 */
 export type GradeSheetView = {
   kind: 'grade'
@@ -75,8 +90,15 @@ export type MetricSheetView = {
 
 export type SheetDetailView = GradeSheetView | MetricSheetView
 
-export function toGradeSheetView(d: RegionDetailResponse): GradeSheetView {
-  const trend = d.declineGrade.trend.map((p) => ({
+export function toGradeSheetView(d: RegionDetailResponse, quarter?: string): GradeSheetView {
+  const selectedIndex = selectedTrendIndex(d.declineGrade.trend, quarter)
+  const selected = selectedIndex >= 0 ? d.declineGrade.trend[selectedIndex] : undefined
+  const previous = selectedIndex > 0 ? d.declineGrade.trend[selectedIndex - 1] : undefined
+  const visibleTrend =
+    selectedIndex >= 0 ? d.declineGrade.trend.slice(0, selectedIndex + 1) : d.declineGrade.trend
+  const grade = selected?.grade ?? d.declineGrade.current
+  const displayQuarter = selected?.quarter ?? d.quarter
+  const trend = visibleTrend.map((p) => ({
     label: trendLabel(p.quarter),
     value: GRADE_VALUE[p.grade] ?? 3,
   }))
@@ -85,48 +107,65 @@ export function toGradeSheetView(d: RegionDetailResponse): GradeSheetView {
     kind: 'grade',
     subtitle: `서울 ${d.district}`,
     district: d.district,
-    quarterLabel: shortQuarter(d.quarter),
-    grade: d.declineGrade.current,
-    status: GRADE_STATUS[d.declineGrade.current] ?? '주의',
-    lastGrade: `${d.declineGrade.previous}등급`,
+    quarterLabel: shortQuarter(displayQuarter),
+    grade,
+    status: GRADE_STATUS[grade] ?? '주의',
+    lastGrade: `${previous?.grade ?? d.declineGrade.previous}등급`,
     trend,
-    trendTicks: yearTicks(d.declineGrade.trend.map((p) => p.quarter)),
+    trendTicks: yearTicks(visibleTrend.map((p) => p.quarter)),
   }
 }
 
-export function toMetricSheetView(d: RegionDetailResponse, metric: MetricKey): MetricSheetView {
+export function toMetricSheetView(
+  d: RegionDetailResponse,
+  metric: MetricKey,
+  quarter?: string,
+): MetricSheetView {
   const config = METRIC_CONFIG[metric]
   const summary = d[metric]
+  const selectedIndex = selectedTrendIndex(summary.trend, quarter)
+  const selected = selectedIndex >= 0 ? summary.trend[selectedIndex] : undefined
+  const previous = selectedIndex > 0 ? summary.trend[selectedIndex - 1] : undefined
+  const visibleTrend =
+    selectedIndex >= 0 ? summary.trend.slice(0, selectedIndex + 1) : summary.trend
+  const value = selected?.value ?? summary.value
+  const displayQuarter = selected?.quarter ?? d.quarter
   // 디자인은 증감칩이 전부 % 표기 — 점포수만 changeRate 가 없어(changeCount) 추이 마지막 두 분기로 계산
-  const prev = summary.trend.at(-2)?.value
+  const latestPrevious = summary.trend.at(-2)?.value
   const percent =
-    'changeRate' in summary
-      ? formatTruncatedPercent(summary.changeRate)
-      : prev
-        ? formatTruncatedPercent((Math.abs(summary.value - prev) / prev) * 100)
-        : `${Math.abs(summary.changeCount)}${config.unit}`
+    selected && previous
+      ? percentBetween(selected.value, previous.value)
+      : 'changeRate' in summary
+        ? formatTruncatedPercent(summary.changeRate)
+        : latestPrevious !== undefined
+          ? percentBetween(summary.value, latestPrevious)
+          : `${Math.abs(summary.changeCount)}${config.unit}`
+  const direction =
+    selected && previous
+      ? directionBetween(selected.value, previous.value)
+      : (DIRECTION_UI[summary.direction] ?? 'same')
 
   return {
     kind: 'metric',
     subtitle: `서울 ${d.district}`,
     district: d.district,
-    quarterLabel: shortQuarter(d.quarter),
-    value: formatNumber(config.toDisplayValue(summary.value)),
+    quarterLabel: shortQuarter(displayQuarter),
+    value: formatNumber(config.toDisplayValue(value)),
     unit: config.unit,
     comparison: {
       label: '이전 분기 대비',
       percent,
-      direction: DIRECTION_UI[summary.direction] ?? 'same',
+      direction,
     },
-    trend: summary.trend.map((p) => ({
+    trend: visibleTrend.map((p) => ({
       label: trendLabel(p.quarter),
       value: config.toTrendValue(p.value),
     })),
-    trendTicks: yearTicks(summary.trend.map((p) => p.quarter)),
+    trendTicks: yearTicks(visibleTrend.map((p) => p.quarter)),
     trendUnit: `(${config.trendUnit})`,
     trendAxisLabel: config.toAxisLabel,
     averagePeriod:
-      'avgOperatingYears' in summary
+      'avgOperatingYears' in summary && (!quarter || quarter === d.quarter)
         ? { label: `서울 ${d.district}`, years: String(summary.avgOperatingYears) }
         : undefined,
   }
@@ -147,7 +186,7 @@ export function useRegionDetail(
     queryFn: ({ signal }) => fetchRegionDetail(regionCode as string, quarter, signal),
     enabled: regionCode !== null,
     select: (d: RegionDetailResponse): SheetDetailView =>
-      category === 'grade' ? toGradeSheetView(d) : toMetricSheetView(d, category),
+      category === 'grade' ? toGradeSheetView(d, quarter) : toMetricSheetView(d, category, quarter),
     placeholderData: keepPreviousData,
   })
 }

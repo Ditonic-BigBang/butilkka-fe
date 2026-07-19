@@ -88,7 +88,7 @@ const METRIC_ROWS: RankingRow[] = [
     rank: 1,
     regionCode: '3110002',
     name: '서울 서대문구',
-    value: '789',
+    value: '10,000',
     unit: '만원',
     direction: 'up',
   },
@@ -96,7 +96,7 @@ const METRIC_ROWS: RankingRow[] = [
     rank: 2,
     regionCode: '3110003',
     name: '서울 광진구',
-    value: '742',
+    value: '9,000',
     unit: '만원',
     direction: 'down',
   },
@@ -104,7 +104,7 @@ const METRIC_ROWS: RankingRow[] = [
     rank: 3,
     regionCode: '3110004',
     name: '서울 노원구',
-    value: '718',
+    value: '8,000',
     unit: '만원',
     direction: 'up',
   },
@@ -112,7 +112,7 @@ const METRIC_ROWS: RankingRow[] = [
     rank: 4,
     regionCode: '3110005',
     name: '서울 용산구',
-    value: '695',
+    value: '7,000',
     unit: '만원',
     direction: 'same',
   },
@@ -120,7 +120,7 @@ const METRIC_ROWS: RankingRow[] = [
     rank: 5,
     regionCode: '3110006',
     name: '서울 강서구',
-    value: '660',
+    value: '6,000',
     unit: '만원',
     direction: 'down',
   },
@@ -158,10 +158,10 @@ type Story = StoryObj<typeof meta>
 /** 기본 (접힘 상태 — 핸들/헤더 탭으로 펼침). */
 export const Default: Story = { name: '기본' }
 
-/** 지표 카테고리 (매출 대비 임대료) — 상위/하위 5위 탭 + 값·단위 행. */
+/** 지표 카테고리 (점포당 평균 분기매출) — 상위/하위 5위 탭 + 값·단위 행. */
 export const Metric: Story = {
-  name: '지표 (매출 대비 임대료)',
-  args: { title: '매출 대비 임대료', tabs: ['상위 5위', '하위 5위'], rows: METRIC_ROWS },
+  name: '지표 (점포당 평균 분기매출)',
+  args: { title: '점포당 평균 분기매출', tabs: ['상위 5위', '하위 5위'], rows: METRIC_ROWS },
 }
 
 function InteractiveDemo() {

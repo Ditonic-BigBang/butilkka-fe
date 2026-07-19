@@ -490,39 +490,39 @@ type MetricSeed = { value: number; direction: RegionDirection }
  * 구 대표(최댓값) 기준 상위 5위가 디자인 Top5 순서(서대문 > 광진 > 노원 > 용산 > 강서)가 되게 배치.
  */
 const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
-  // 매출 대비 임대료(원) — 서대문구 대표 789만원
+  // 점포당 평균 분기매출(원) — 시연용 1,200만원~1억원 분포, 서대문구 대표 1억원
   rentRatio: {
-    '3110001': { value: 6_120_000, direction: 'DOWN' }, // 신촌
-    '3110002': { value: 7_890_000, direction: 'UP' }, // 이대역 → 서대문구 대표
-    '3110003': { value: 7_420_000, direction: 'DOWN' }, // 건대입구(광진구)
-    '3110004': { value: 7_180_000, direction: 'UP' }, // 노원역
-    '3110005': { value: 6_950_000, direction: 'FLAT' }, // 이태원(용산구)
-    '3110006': { value: 6_600_000, direction: 'DOWN' }, // 화곡역(강서구)
-    '3110007': { value: 4_310_000, direction: 'DOWN' }, // 홍대입구(마포구)
-    '3110008': { value: 3_950_000, direction: 'FLAT' }, // 가로수길(강남구)
-    '3110009': { value: 4_480_000, direction: 'UP' }, // 명동(중구)
-    '3110010': { value: 5_240_000, direction: 'UP' }, // 종로3가
-    '3110011': { value: 5_760_000, direction: 'UP' }, // 서울대입구(관악구)
-    '3110012': { value: 5_020_000, direction: 'DOWN' }, // 왕십리(성동구)
-    '3110013': { value: 3_620_000, direction: 'UP' }, // 잠실(송파구)
-    '3110014': { value: 3_140_000, direction: 'FLAT' }, // 서초역
+    '3110001': { value: 75_000_000, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 100_000_000, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 90_000_000, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 80_000_000, direction: 'UP' }, // 노원역
+    '3110005': { value: 70_000_000, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 60_000_000, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 50_000_000, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 25_000_000, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 35_000_000, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 40_000_000, direction: 'UP' }, // 종로3가
+    '3110011': { value: 55_000_000, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 45_000_000, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 30_000_000, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 12_000_000, direction: 'FLAT' }, // 서초역
   },
-  // 유동인구(명) — 서대문구 대표 134,302명
+  // 유동인구(명) — 시연용 6천만 명대 데이터, 서대문구 대표 67,150,000명
   footTraffic: {
-    '3110001': { value: 121_940, direction: 'DOWN' }, // 신촌
-    '3110002': { value: 134_302, direction: 'UP' }, // 이대역 → 서대문구 대표
-    '3110003': { value: 128_450, direction: 'DOWN' }, // 건대입구(광진구)
-    '3110004': { value: 122_780, direction: 'UP' }, // 노원역
-    '3110005': { value: 118_630, direction: 'FLAT' }, // 이태원(용산구)
-    '3110006': { value: 112_940, direction: 'DOWN' }, // 화곡역(강서구)
-    '3110007': { value: 96_210, direction: 'DOWN' }, // 홍대입구(마포구)
-    '3110008': { value: 74_380, direction: 'FLAT' }, // 가로수길(강남구)
-    '3110009': { value: 81_020, direction: 'UP' }, // 명동(중구)
-    '3110010': { value: 88_760, direction: 'UP' }, // 종로3가
-    '3110011': { value: 102_540, direction: 'UP' }, // 서울대입구(관악구)
-    '3110012': { value: 91_830, direction: 'DOWN' }, // 왕십리(성동구)
-    '3110013': { value: 78_150, direction: 'UP' }, // 잠실(송파구)
-    '3110014': { value: 68_930, direction: 'FLAT' }, // 서초역
+    '3110001': { value: 61_200_000, direction: 'DOWN' }, // 신촌
+    '3110002': { value: 67_150_000, direction: 'UP' }, // 이대역 → 서대문구 대표
+    '3110003': { value: 65_240_000, direction: 'DOWN' }, // 건대입구(광진구)
+    '3110004': { value: 63_390_000, direction: 'UP' }, // 노원역
+    '3110005': { value: 61_860_000, direction: 'FLAT' }, // 이태원(용산구)
+    '3110006': { value: 60_670_000, direction: 'DOWN' }, // 화곡역(강서구)
+    '3110007': { value: 59_740_000, direction: 'DOWN' }, // 홍대입구(마포구)
+    '3110008': { value: 56_230_000, direction: 'FLAT' }, // 가로수길(강남구)
+    '3110009': { value: 57_410_000, direction: 'UP' }, // 명동(중구)
+    '3110010': { value: 58_180_000, direction: 'UP' }, // 종로3가
+    '3110011': { value: 60_120_000, direction: 'UP' }, // 서울대입구(관악구)
+    '3110012': { value: 59_280_000, direction: 'DOWN' }, // 왕십리(성동구)
+    '3110013': { value: 56_840_000, direction: 'UP' }, // 잠실(송파구)
+    '3110014': { value: 55_460_000, direction: 'FLAT' }, // 서초역
   },
   // 공실률(%) — 서대문구 대표 13%
   vacancyRate: {
@@ -579,8 +579,8 @@ const METRIC_SEEDS: Partial<Record<MetricKey, Record<string, MetricSeed>>> = {
 
 // 시드 미등록 상권 폴백 값 (regionMapMock 에 상권을 추가해도 목이 깨지지 않게)
 const METRIC_SEED_FALLBACK: Record<string, MetricSeed> = {
-  rentRatio: { value: 5_000_000, direction: 'UP' },
-  footTraffic: { value: 100_000, direction: 'UP' },
+  rentRatio: { value: 50_000_000, direction: 'UP' },
+  footTraffic: { value: 60_000_000, direction: 'UP' },
   vacancyRate: { value: 8, direction: 'UP' },
   closureRate: { value: 3, direction: 'UP' },
   storeCount: { value: 400, direction: 'UP' },
@@ -629,8 +629,8 @@ function quartersEnding(quarter: string, count: number): string[] {
 
 // 지표별 값 단위(반올림 스텝) — 추이·분기 이동 계산 공용
 const METRIC_ROUND_TO: Record<MetricKey, number> = {
-  rentRatio: 10_000,
-  footTraffic: 10,
+  rentRatio: 100_000,
+  footTraffic: 10_000,
   vacancyRate: 0.1,
   closureRate: 0.1,
   storeCount: 1,

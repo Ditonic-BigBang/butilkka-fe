@@ -45,11 +45,27 @@ function formatGradeTooltip(point: TrendPoint) {
 const KEY = 'var(--color-key)'
 const GRID = 'var(--color-gray-100)'
 const AXIS_TEXT = 'var(--color-gray-300)'
-const Y_AXIS_WIDTH = 30
+const MIN_Y_AXIS_WIDTH = 32
+const Y_AXIS_LABEL_GAP = 8
+const Y_AXIS_RIGHT_INSET = 4
 const LEFT_MARGIN = 8
-const RIGHT_MARGIN = 8
+const RIGHT_MARGIN = 9
 const VALUE_INTERVAL_COUNT = 4
 const NICE_STEP_MULTIPLIERS = [1, 2, 2.5, 4, 5, 10]
+
+// 12px 축 폰트의 글자별 최대 폭을 넉넉히 잡아 iOS/Android 폰트 차이에서도 잘리지 않게 한다.
+function estimateTickLabelWidth(label: string) {
+  return [...label].reduce((width, character) => {
+    if (/\d/.test(character)) return width + 8
+    if (/[.,-]/.test(character)) return width + 5
+    return width + 12
+  }, 0)
+}
+
+function getYAxisWidth(labels: string[]) {
+  const labelWidth = Math.max(0, ...labels.map(estimateTickLabelWidth))
+  return Math.max(MIN_Y_AXIS_WIDTH, Math.ceil(labelWidth + Y_AXIS_LABEL_GAP + Y_AXIS_RIGHT_INSET))
+}
 
 function getNiceStep(minimumStep: number) {
   const magnitude = 10 ** Math.floor(Math.log10(minimumStep))
@@ -158,6 +174,9 @@ export function TrendGraph({
   const valueScale = useMemo(() => getValueScale(data), [data])
   const valueDomain = valueScale.domain
   const yTicks = grade ? GRADE_TICKS : valueScale.ticks
+  const formatYTick = (value: number) =>
+    grade ? (GRADE_LABEL[value] ?? '') : (yFormatter?.(value) ?? String(value))
+  const yAxisWidth = getYAxisWidth(yTicks.map(formatYTick))
   const horizontalGridCoordinates = ({ offset }: { offset: { top: number; height: number } }) =>
     getUniformGridCoordinates(offset, yTicks.length)
 
@@ -177,7 +196,7 @@ export function TrendGraph({
     const handleTap = (e: MouseEvent) => {
       if (data.length < 2) return
       const rect = target.getBoundingClientRect()
-      const plotWidth = rect.width - LEFT_MARGIN - Y_AXIS_WIDTH - RIGHT_MARGIN
+      const plotWidth = rect.width - LEFT_MARGIN - yAxisWidth - RIGHT_MARGIN
       if (plotWidth <= 0) return
       const ratio = (e.clientX - rect.left - LEFT_MARGIN) / plotWidth
       const idx = Math.round(ratio * (data.length - 1))
@@ -186,7 +205,7 @@ export function TrendGraph({
 
     target.addEventListener('click', handleTap)
     return () => target.removeEventListener('click', handleTap)
-  }, [data.length, interactive])
+  }, [data.length, interactive, yAxisWidth])
 
   return (
     <div className={cn('flex w-full flex-col gap-2', className)}>
@@ -201,7 +220,10 @@ export function TrendGraph({
         data-testid="trend-graph-touch-target"
       >
         {unit && (
-          <span className="absolute top-0 right-[18px] z-10 translate-x-1/2 text-caption-l-medium text-gray-300">
+          <span
+            className="absolute top-0 z-10 text-right text-caption-l-medium text-gray-300"
+            style={{ right: RIGHT_MARGIN + Y_AXIS_RIGHT_INSET }}
+          >
             {unit}
           </span>
         )}
@@ -242,11 +264,18 @@ export function TrendGraph({
               tickLine={false}
               interval={0}
               minTickGap={0}
-              width={30}
-              tick={{ fontSize: 12, fill: AXIS_TEXT }}
+              width={yAxisWidth}
+              tickSize={0}
+              tickMargin={0}
+              tick={{
+                dx: yAxisWidth - Y_AXIS_RIGHT_INSET,
+                fontSize: 12,
+                fill: AXIS_TEXT,
+                textAnchor: 'end',
+              }}
               domain={grade ? [1, 5] : valueDomain}
               ticks={yTicks}
-              tickFormatter={grade ? (v: number) => GRADE_LABEL[v] ?? '' : yFormatter}
+              tickFormatter={formatYTick}
             />
             <Area
               type="linear"

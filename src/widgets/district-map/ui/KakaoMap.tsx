@@ -371,7 +371,10 @@ function KakaoMap({
           <img
             src={iconGps}
             alt="현재 위치"
-            className="pointer-events-none w-[50px] max-w-none -translate-x-1/2 -translate-y-1/2"
+            width={50}
+            height={50}
+            draggable={false}
+            className="pointer-events-none block size-[50px] max-w-none -translate-x-1/2 -translate-y-1/2"
           />,
           myLocationEl,
         )}
