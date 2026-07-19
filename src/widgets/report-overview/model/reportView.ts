@@ -1,12 +1,24 @@
 import { formatQuarter } from '@/shared/lib/quarter'
-import type { ReportAlternativeRegion, ReportResponse } from '@/entities/report'
+import { formatDecimal, formatNumber } from '@/shared/lib/formatNumber'
+import type { ReportAlternativeRegion, ReportGrade, ReportResponse } from '@/entities/report'
 import {
   alternativesTitle,
   GRADE_STATUS,
-  parseStat,
   RECOMMENDATION_TITLES,
   type RegionStat,
 } from '../lib/reportFormat'
+
+/**
+ * 상권 점수 카드의 게이지는 연속 점수가 아니라 A~E 등급을 시각화한다.
+ * 백엔드 score 값과 무관하게 개발·배포 환경에서 같은 위치를 사용한다.
+ */
+export const GRADE_GAUGE_PROGRESS: Record<ReportGrade, number> = {
+  A: 0.16,
+  B: 0.38,
+  C: 0.64,
+  D: 0.91,
+  E: 1,
+}
 
 /** AI 리포트 본문에 필요한 데이터 묶음 (뷰모델) — 최신/지난 리포트 화면이 공유 */
 export type ReportView = {
@@ -23,13 +35,15 @@ export type ReportView = {
   grade: string
   /** 상태 칩 (예: "주의") */
   status: string
-  /** 위험도 게이지 0~1 */
+  /** A~E 등급에 대응하는 고정 위험도 게이지 0~1 */
   progress: number
   briefing: string
   aiOutlook: string
   causes: { label: string; value: string }[]
   signals: string[]
   similarCases: { caseId: string; region: string; period: string; summary: string }[]
+  /** AI 추천 뱃지. 현재 기본값은 "AI 추천" */
+  recommendationBadge: string
   /** AI 추천 섹션 타이틀 (추천 유형에서 유도) */
   recommendationTitle: string
   /** 추천 이유 카드 (소제목 + 근거) */
@@ -38,25 +52,35 @@ export type ReportView = {
   alternatives: {
     rank: number
     name: string
-    description: string
+    description?: string
     stats: RegionStat[]
     /** 지표 기준 시점 표시 (예: "26.03 기준") */
     referenceDate?: string
   }[]
 }
 
-// 상세 지표(stats·선규격)가 있으면 타일 3개, 없으면 핵심 지표 한 줄(stat)을 타일 1개로 폴백
+/** API 원시 수치를 대안 상권 카드의 표시 단위로 변환한다. null인 지표는 숨긴다. */
 function toRegionStats(r: ReportAlternativeRegion): RegionStat[] {
-  if (r.stats?.length) {
-    return r.stats.map((s) => ({
-      label: s.label,
-      value: s.value,
-      direction: s.direction === 'UP' ? 'up' : 'down',
-      change: s.note,
-    }))
+  const stats: RegionStat[] = []
+
+  if (r.storeCount != null) {
+    stats.push({ label: '점포 수', value: `${formatNumber(r.storeCount)}개` })
   }
-  const parsed = parseStat(r.stat)
-  return parsed ? [parsed] : []
+  if (r.floatingPopulation != null) {
+    stats.push({
+      label: '유동인구',
+      value: `${formatDecimal(r.floatingPopulation / 10_000)}만명`,
+    })
+  }
+  if (r.vacancy != null) {
+    stats.push({ label: '공실률', value: `${formatDecimal(r.vacancy)}%` })
+  }
+
+  return stats
+}
+
+function nonEmpty(value: string | null, fallback: string): string {
+  return value?.trim() || fallback
 }
 
 /** 리포트 응답(DTO) → 본문 뷰모델. react-query `select` 로 쓴다. */
@@ -70,7 +94,7 @@ export function toReportView(d: ReportResponse): ReportView {
     declineType: d.declineType,
     grade: `${d.grade}등급`,
     status: GRADE_STATUS[d.grade],
-    progress: Math.min(Math.max(d.score / 100, 0), 1),
+    progress: GRADE_GAUGE_PROGRESS[d.grade],
     briefing: d.briefing,
     aiOutlook: d.aiOutlook,
     causes: d.causes.map((c) => ({ label: c.title, value: c.level })),
@@ -81,16 +105,22 @@ export function toReportView(d: ReportResponse): ReportView {
       period: `${c.period.startYear}~${c.period.endYear}`,
       summary: c.summary,
     })),
-    recommendationTitle: RECOMMENDATION_TITLES[d.decision.recommendation],
-    reason: { title: d.decision.title, description: d.decision.description },
+    recommendationBadge: d.aiRecommendation.badgeType,
+    recommendationTitle: nonEmpty(
+      d.aiRecommendation.title,
+      RECOMMENDATION_TITLES[d.decision.recommendation],
+    ),
+    reason: {
+      title: nonEmpty(d.aiRecommendation.reasonTitle, d.decision.title),
+      description: nonEmpty(d.aiRecommendation.reasonDetail, d.decision.description),
+    },
     alternativesTitle: alternativesTitle(d.decision.recommendation, d.quarter),
-    // rank 는 실서버 미제공이라 배열 순서로, 이름은 regionName 도착 전까지 코드로 폴백
-    alternatives: d.alternativeRegions.map((r, i) => ({
-      rank: r.rank ?? i + 1,
-      name: r.regionName ?? r.regionCode ?? r.region_code ?? '',
-      description: r.reason,
+    alternatives: d.alternativeRegions.map((r) => ({
+      rank: r.rank,
+      name: r.regionName,
+      description: r.aiMessage?.trim() || undefined,
       stats: toRegionStats(r),
-      referenceDate: r.referenceDate ? `${r.referenceDate} 기준` : undefined,
+      referenceDate: r.baseDate ? `${formatQuarter(r.baseDate)} 기준` : undefined,
     })),
   }
 }

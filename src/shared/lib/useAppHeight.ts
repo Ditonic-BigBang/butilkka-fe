@@ -4,60 +4,65 @@ import { isIOS, isStandalone } from './platform'
 // iOS standalone 은 시작 직후 뷰포트 높이가 수백 ms 늦게 확정되면서 resize 를 안 쏘기도 한다
 // → 첫 2.5초 동안 몇 번 재측정해 따라잡는다 (하단 탭이 위로 떠 보이는 문제의 원인).
 const SETTLE_DELAYS_MS = [50, 150, 300, 600, 1000, 1600, 2500]
+const MAX_STABLE_STANDALONE_GAP = 220
+const VIEWPORT_SHIFT_THRESHOLD = 1
 
 type AppViewportMetrics = {
   innerHeight: number
   clientHeight: number
   visualHeight: number
+  visualOffsetTop: number
   screenWidth: number
   screenHeight: number
   isIOSDevice: boolean
   isStandaloneMode: boolean
-  allowInitialScreenFallback: boolean
 }
 
 export function resolveAppViewportHeight({
   innerHeight,
   clientHeight,
   visualHeight,
+  visualOffsetTop,
   screenWidth,
   screenHeight,
   isIOSDevice,
   isStandaloneMode,
-  allowInitialScreenFallback,
 }: AppViewportMetrics) {
-  // iOS 는 키보드·주소창 전환 뒤 layout viewport 값이 실제 보이는 영역보다 크게 남을 수 있다.
-  // 이때에만 visualViewport 를 우선하고, 다른 플랫폼의 기존 높이 선택은 유지한다.
-  const viewportHeight =
-    isIOSDevice && visualHeight > 0
-      ? visualHeight
-      : Math.max(innerHeight, clientHeight, visualHeight)
-
-  if (!allowInitialScreenFallback || !isIOSDevice || !isStandaloneMode) return viewportHeight
+  const layoutViewportHeight = Math.max(innerHeight, clientHeight, visualHeight)
+  if (!isIOSDevice || visualHeight <= 0) return layoutViewportHeight
+  if (!isStandaloneMode) return visualHeight
 
   const isPortrait = screenHeight >= screenWidth
-  const isPhoneWidth = Math.min(screenWidth, innerHeight) <= 480
-  const screenGap = screenHeight - viewportHeight
+  const isPhoneWidth = screenWidth <= 480
+  const screenGap = screenHeight - visualHeight
+  const viewportShifted = visualOffsetTop > VIEWPORT_SHIFT_THRESHOLD
+  const stableStandaloneViewport =
+    isPortrait &&
+    isPhoneWidth &&
+    !viewportShifted &&
+    screenGap > 0 &&
+    screenGap <= MAX_STABLE_STANDALONE_GAP
 
-  // 첫 실행 직후에만 screen.height 를 임시 fallback 으로 쓴다. 실제 뷰포트 이벤트가
-  // 한 번이라도 발생한 뒤에는 visualViewport 로 전환해 키보드 복귀 후 잘림을 막는다.
-  if (isPortrait && isPhoneWidth && screenGap > 0 && screenGap <= 220) return screenHeight
+  // iOS 홈 화면 PWA는 키보드가 없어도 visualViewport.height를 전체 화면보다 작게 보고할 수 있다.
+  // 정상 상태에서는 screen.height를 유지하고, 키보드로 크게 줄었거나 viewport가 위로 이동한
+  // 경우에만 visualViewport를 사용해 CTA·토스트가 보이는 영역 안에 남게 한다.
+  if (stableStandaloneViewport) return screenHeight
 
-  return viewportHeight
+  return visualHeight
 }
 
-export function getAppViewportHeight(allowInitialScreenFallback = false) {
+export function getAppViewportHeight() {
   const screenHeight = Math.max(window.screen.height, window.screen.availHeight || 0)
 
   return resolveAppViewportHeight({
     innerHeight: window.innerHeight,
     clientHeight: document.documentElement.clientHeight,
     visualHeight: window.visualViewport?.height ?? 0,
+    visualOffsetTop: window.visualViewport?.offsetTop ?? 0,
     screenWidth: window.screen.width,
     screenHeight,
     isIOSDevice: isIOS(),
     isStandaloneMode: isStandalone(),
-    allowInitialScreenFallback,
   })
 }
 
@@ -69,17 +74,15 @@ function getAppViewportOffsetTop() {
 /**
  * iOS PWA(standalone)에서 100dvh/vh 가 첫 렌더에 부정확하게 잡히는 문제 회피.
  * 실제 뷰포트 높이를 CSS 변수 `--app-height` 에 넣고 갱신한다.
- * - iOS 는 실제 표시 영역인 `visualViewport.height` 를 우선한다.
- * - iOS 홈화면 PWA 첫 실행 중에만 screen height 를 임시 fallback 으로 쓴다.
+ * - iOS 홈 화면 PWA의 정상 상태는 screen height를 유지해 하단 탭이 뜨지 않게 한다.
+ * - 키보드로 크게 줄거나 offsetTop이 생긴 상태만 visualViewport를 사용한다.
  * - 시작 직후 2.5초간 재측정 + resize·orientationchange·visualViewport·pageshow 에 갱신.
  * 소비처(MobileLayout 등)는 `h-[var(--app-height,100dvh)]` 로 쓴다 — JS 로드 전에는 100dvh 폴백.
  */
 export function useAppHeight() {
   useLayoutEffect(() => {
-    let allowInitialScreenFallback = true
-
     const set = () => {
-      const height = getAppViewportHeight(allowInitialScreenFallback)
+      const height = getAppViewportHeight()
       document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`)
       document.documentElement.style.setProperty(
         '--app-offset-top',
@@ -90,8 +93,6 @@ export function useAppHeight() {
     // 초기 측정과 settle 타이머는 그대로 동기 set 을 쓴다 (첫 페인트 높이 확정이 우선).
     let frame: number | null = null
     const scheduleSet = () => {
-      // 실제 viewport 이벤트가 한 번이라도 오면 초기 screen fallback 역할은 끝난다.
-      allowInitialScreenFallback = false
       if (frame !== null) return
       frame = requestAnimationFrame(() => {
         frame = null

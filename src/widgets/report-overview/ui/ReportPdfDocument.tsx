@@ -112,7 +112,7 @@ export function ReportPdfDocument({
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 text-key">
                   <Sparkle className="size-[17px] shrink-0" />
-                  <span className="text-body-m-semibold">AI 추천</span>
+                  <span className="text-body-m-semibold">{view.recommendationBadge}</span>
                 </div>
                 <h2 className="text-title-s-semibold text-gray-900">{view.recommendationTitle}</h2>
               </div>

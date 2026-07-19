@@ -143,7 +143,7 @@ export function ReportOverview({
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 text-key">
                   <Sparkle className="size-[17px] shrink-0" />
-                  <span className="text-body-m-semibold">AI 추천</span>
+                  <span className="text-body-m-semibold">{data.recommendationBadge}</span>
                 </div>
                 <h2 className="text-title-s-semibold text-gray-900">{data.recommendationTitle}</h2>
               </div>
@@ -155,22 +155,24 @@ export function ReportOverview({
               />
             </div>
 
-            <div className="flex flex-col gap-4">
-              <h2 className="text-title-s-semibold text-gray-800">{data.alternativesTitle}</h2>
-              <div className="flex flex-col gap-3">
-                {data.alternatives.map((region) => (
-                  <RankedDistrictCard
-                    key={region.rank}
-                    rank={region.rank}
-                    name={region.name}
-                    description={region.description}
-                    stats={region.stats}
-                    referenceDate={region.referenceDate}
-                    onViewMap={onViewMap}
-                  />
-                ))}
+            {data.alternatives.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-title-s-semibold text-gray-800">{data.alternativesTitle}</h2>
+                <div className="flex flex-col gap-3">
+                  {data.alternatives.map((region) => (
+                    <RankedDistrictCard
+                      key={region.rank}
+                      rank={region.rank}
+                      name={region.name}
+                      description={region.description}
+                      stats={region.stats}
+                      referenceDate={region.referenceDate}
+                      onViewMap={onViewMap}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </section>
         </>
       )}
