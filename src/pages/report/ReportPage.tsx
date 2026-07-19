@@ -4,12 +4,13 @@ import { MobileLayout } from '@/widgets/mobile-layout'
 import {
   ReportOverview,
   ReportOverviewSkeleton,
+  ReportPdfLoadingOverlay,
   useReportPdfDownload,
 } from '@/widgets/report-overview'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { formatQuarter } from '@/shared/lib/quarter'
-import { ErrorRetry, Spinner, Toast } from '@/shared/ui'
+import { ErrorRetry, Toast } from '@/shared/ui'
 import { ReportLinkButton } from '@/entities/report'
 import { useAuthStore } from '@/entities/session'
 import { useLatestReport, useReportHistory } from './model/useLatestReport'
@@ -86,6 +87,7 @@ export default function ReportPage() {
           </Toast>
         </div>
       )}
+      {pdf.downloading && <ReportPdfLoadingOverlay />}
     </MobileLayout>
   )
 }
@@ -101,7 +103,7 @@ function ReportHeader({
   category?: string
   /** 없으면 다운로드 버튼 미노출 (구독 전 — PDF 는 PRO 혜택) */
   onDownload?: () => void
-  /** PDF 생성 중 — 버튼을 스피너로 바꾸고 중복 클릭 방지 */
+  /** PDF 생성 중 — 버튼 중복 클릭 방지 */
   downloading?: boolean
 }) {
   return (
@@ -124,13 +126,9 @@ function ReportHeader({
           disabled={downloading}
           aria-label="리포트 다운로드"
           aria-busy={downloading}
-          className="flex size-[37px] shrink-0 items-center justify-center rounded-8 bg-white text-gray-600 transition active:scale-95"
+          className="flex size-[37px] shrink-0 items-center justify-center rounded-8 bg-white text-gray-600 transition active:scale-95 disabled:opacity-60"
         >
-          {downloading ? (
-            <Spinner aria-label="PDF 생성 중" className="size-5" />
-          ) : (
-            <Download aria-hidden className="size-6" />
-          )}
+          <Download aria-hidden className="size-6" />
         </button>
       )}
     </header>
