@@ -5,7 +5,7 @@ import type { ReportView } from './reportView'
 /**
  * 리포트 PDF 다운로드 버튼 상태 — 생성 중 플래그 + 실패 토스트.
  * 캡처·조립 모듈(downloadReportPdf)은 클릭 시점에 lazy-load 한다.
- * 렌더 쪽: 버튼에 `downloading`, 페이지에 `{toast && <Toast …>}` (useTransientToast 관례).
+ * 렌더 쪽: 버튼 비활성화 + 페이지 중앙 로딩 오버레이, 실패 시 Toast 를 표시한다.
  */
 export function useReportPdfDownload(view: ReportView | undefined, { locked = false } = {}) {
   const [downloading, setDownloading] = useState(false)

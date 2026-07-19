@@ -8,32 +8,37 @@ import {
   type ReactNode,
 } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { dashboardKeys, fetchDashboard } from '@/entities/dashboard'
 import { useAuthStore } from '@/entities/session'
 import { PwaInstallGate } from '@/widgets/pwa-install'
+import { queryClient } from '@/shared/api/queryClient'
 import { useAppHeight } from '@/shared/lib/useAppHeight'
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry'
 import { Spinner } from '@/shared/ui/Spinner/Spinner'
+import { routeImports, schedulePrefetch } from './prefetch'
 
-const HomePage = lazy(() => import('@/pages/home/HomePage'))
-const MapPage = lazy(() => import('@/pages/map/MapPage'))
-const FavoriteRegionsPage = lazy(() => import('@/pages/favorite-regions/FavoriteRegionsPage'))
-const LoginPage = lazy(() => import('@/pages/login/LoginPage'))
-const AuthCallbackPage = lazy(() => import('@/pages/auth-callback/AuthCallbackPage'))
-const OnboardingPage = lazy(() => import('@/pages/onboarding/OnboardingPage'))
-const OnboardingGuidePage = lazy(() => import('@/pages/onboarding-guide/OnboardingGuidePage'))
-const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage'))
-const ReportPage = lazy(() => import('@/pages/report/ReportPage'))
-const ReportHistoryPage = lazy(() => import('@/pages/report-history/ReportHistoryPage'))
-const ReportDetailPage = lazy(() => import('@/pages/report-detail/ReportDetailPage'))
-const ReportCasesPage = lazy(() => import('@/pages/report-cases/ReportCasesPage'))
-const MyPage = lazy(() => import('@/pages/my/MyPage'))
-const MyStorePage = lazy(() => import('@/pages/my-store/MyStorePage'))
-const MyStoreEditPage = lazy(() => import('@/pages/my-store-edit/MyStoreEditPage'))
-const MyCategoryPage = lazy(() => import('@/pages/my-category/MyCategoryPage'))
-const SubscriptionPage = lazy(() => import('@/pages/subscription/SubscriptionPage'))
-const SubscriptionCompletePage = lazy(
-  () => import('@/pages/subscription-complete/SubscriptionCompletePage'),
-)
+// 홈 청크를 부팅 즉시 킥오프 — SessionGate 의 세션 확인 fetch 와 병렬 다운로드
+// (세션 확인 → 홈 청크 → 홈 데이터 3단 직렬이던 콜드 스타트의 1단계 제거).
+void routeImports.home()
+
+const HomePage = lazy(routeImports.home)
+const MapPage = lazy(routeImports.map)
+const FavoriteRegionsPage = lazy(routeImports.favoriteRegions)
+const LoginPage = lazy(routeImports.login)
+const AuthCallbackPage = lazy(routeImports.authCallback)
+const OnboardingPage = lazy(routeImports.onboarding)
+const OnboardingGuidePage = lazy(routeImports.onboardingGuide)
+const NotificationsPage = lazy(routeImports.notifications)
+const ReportPage = lazy(routeImports.report)
+const ReportHistoryPage = lazy(routeImports.reportHistory)
+const ReportDetailPage = lazy(routeImports.reportDetail)
+const ReportCasesPage = lazy(routeImports.reportCases)
+const MyPage = lazy(routeImports.my)
+const MyStorePage = lazy(routeImports.myStore)
+const MyStoreEditPage = lazy(routeImports.myStoreEdit)
+const MyCategoryPage = lazy(routeImports.myCategory)
+const SubscriptionPage = lazy(routeImports.subscription)
+const SubscriptionCompletePage = lazy(routeImports.subscriptionComplete)
 
 const SPINNER_DELAY_MS = 200
 
@@ -92,9 +97,18 @@ function AuthBootstrap() {
     if (location.pathname === '/auth/kakao') return
     if (status !== 'idle') return
 
-    void restoreSession().catch(() => {
-      // 세션 확인 실패는 비로그인 상태로 처리한다. 상세 에러는 API 계층에서 필요 시 확장한다.
-    })
+    void restoreSession()
+      .then(() => {
+        // 세션 확정 즉시 홈 데이터를 미리 요청 — HomePage 마운트를 기다리는 직렬 단계 제거.
+        if (useAuthStore.getState().status !== 'authenticated') return
+        void queryClient.prefetchQuery({
+          queryKey: dashboardKeys.detail(),
+          queryFn: fetchDashboard,
+        })
+      })
+      .catch(() => {
+        // 세션 확인 실패는 비로그인 상태로 처리한다. 상세 에러는 API 계층에서 필요 시 확장한다.
+      })
   }, [location.pathname, status, restoreSession])
 
   return null
@@ -158,6 +172,11 @@ function AppRoutes() {
 export default function App() {
   // iOS PWA 뷰포트 높이 안정화 (100dvh 첫 렌더 어긋남 → 하단 탭 위로 뜨는 문제 방지)
   useAppHeight()
+
+  // 첫 페인트 이후 idle 에 나머지 라우트 청크·카카오 SDK·geojson·recharts 선로드
+  useEffect(() => {
+    schedulePrefetch(queryClient)
+  }, [])
 
   return (
     <BrowserRouter>

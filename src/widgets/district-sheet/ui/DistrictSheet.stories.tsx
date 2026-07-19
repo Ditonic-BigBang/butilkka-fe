@@ -134,7 +134,7 @@ export const Metric: Story = {
   name: 'Graph (값)',
   render: () => (
     <Demo
-      title="매출 대비 임대료"
+      title="점포당 평균 분기매출"
       subtitle="서울 서대문구"
       content={{
         type: 'metric',
@@ -157,7 +157,7 @@ export const MetricWithPeriod: Story = {
   name: 'Graph_Period (값+기간)',
   render: () => (
     <Demo
-      title="매출 대비 임대료"
+      title="점포당 평균 분기매출"
       subtitle="서울 서대문구"
       content={{
         type: 'metric',

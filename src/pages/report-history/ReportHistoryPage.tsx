@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
-import { ReportCard, reportKeys, type ReportHistoryResponse } from '@/entities/report'
+import { ReportCard, fetchReport, reportKeys, type ReportHistoryResponse } from '@/entities/report'
 import { SORT_LABELS, useReportHistoryList, type SortOrder } from './model/useReportHistoryList'
 
 /**
@@ -27,6 +27,11 @@ export default function ReportHistoryPage() {
   // 상세로 이동하며 캐시도 읽음 처리 — 목록에 돌아왔을 때 강조가 바로 사라진다.
   // (서버(목)도 상세 조회 시 읽음 처리하므로 이후 재조회와도 일치)
   const openReport = (reportId: number) => {
+    // 상세 데이터를 페이지 전환과 병렬로 미리 요청 — 상세 진입 스켈레톤 노출 최소화.
+    void queryClient.prefetchQuery({
+      queryKey: reportKeys.detail(reportId),
+      queryFn: () => fetchReport(reportId),
+    })
     queryClient.setQueryData<ReportHistoryResponse>(reportKeys.history(), (prev) =>
       prev
         ? {
