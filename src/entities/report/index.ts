@@ -17,6 +17,7 @@ export {
   fetchReportHistory,
 } from './model/reportQueries'
 export type {
+  ReportAiRecommendation,
   ReportAlternativeRegion,
   ReportCaseDto,
   ReportCasesResponse,

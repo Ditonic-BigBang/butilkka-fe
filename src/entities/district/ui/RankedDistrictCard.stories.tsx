@@ -3,9 +3,9 @@ import { expect, waitFor } from 'storybook/test'
 import { RankedDistrictCard } from './RankedDistrictCard'
 
 const STATS = [
-  { label: '점포수', value: '-4개', direction: 'down' as const, change: '감소' },
-  { label: '유동인구', value: '-1,240', direction: 'down' as const, change: '명/일' },
-  { label: '공실', value: '+2건', direction: 'up' as const, change: '증가' },
+  { label: '점포 수', value: '1,240개' },
+  { label: '유동인구', value: '6,842만명' },
+  { label: '공실률', value: '3.1%' },
 ]
 
 /** 순위 지역 드롭다운 카드. Figma: Dropdown_L 267:5750. */
@@ -20,7 +20,7 @@ const meta = {
           '순위 지역 드롭다운 카드 (펼침/접힘). **Figma:** `267:5750`',
           '',
           '- **접힘**: 순위 뱃지 + 지역명 + 설명 + 펼침 화살표',
-          '- 헤더 탭 → **펼침**: 스탯 타일(값 + `ChangeIndicator` ▲빨강/▼파랑) + 기준일 + [접기 · 지도에서 확인하기]',
+          '- 헤더 탭 → **펼침**: 점포 수·유동인구·공실률 스탯 타일 + 기준 분기 + [접기 · 지도에서 확인하기]',
         ].join('\n'),
       },
     },
@@ -34,10 +34,11 @@ const meta = {
   ],
   args: {
     rank: 1,
-    name: '망원동',
-    description: '2026년 1분기부터 2분기까지 유동인구 증가율이 88% 증가했어요.',
+    name: '마포구',
+    description:
+      '마포구는 현재보다 양호한 상권으로 유동인구가 꾸준히 증가하고 있어 안정적인 매출이 기대됩니다.',
     stats: STATS,
-    referenceDate: '26.03 기준',
+    referenceDate: '2026년 2분기 기준',
     onViewMap: () => {},
   },
 } satisfies Meta<typeof RankedDistrictCard>
@@ -64,10 +65,10 @@ export const Interaction: Story = {
   play: async ({ canvas, userEvent }) => {
     const header = canvas.getByRole('button', { expanded: false })
     // 펼침 애니메이션(grid-rows)을 위해 항상 마운트 — 접힘은 invisible 로 숨김
-    await expect(canvas.getByText('점포수')).not.toBeVisible()
+    await expect(canvas.getByText('점포 수')).not.toBeVisible()
     await userEvent.click(header)
     // 펼침 전환(opacity) 완료를 기다린 뒤 확인
-    await waitFor(() => expect(canvas.getByText('점포수')).toBeVisible())
+    await waitFor(() => expect(canvas.getByText('점포 수')).toBeVisible())
     await expect(canvas.getByRole('button', { name: '지도에서 확인하기' })).toBeInTheDocument()
   },
 }

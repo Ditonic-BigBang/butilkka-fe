@@ -6,12 +6,11 @@ import { cn } from '@/shared/lib/cn'
 type Stat = {
   /** 지표명 (예: "점포수") */
   label: string
-  /** 값 (예: "-4개") */
+  /** 값 (예: "1,234개") */
   value: string
-  /** 증감 방향 — 화살표 색(▲빨강/▼파랑) */
-  direction: 'up' | 'down' | 'same'
-  /** 화살표 옆 텍스트 (예: "감소"·"명/일"·"증가") */
-  change: string
+  /** 증감형 데이터를 함께 쓰는 기존 화면을 위한 선택 필드 */
+  direction?: 'up' | 'down' | 'same'
+  change?: string
 }
 
 // 안정 참조(기본값 재생성 방지)
@@ -21,7 +20,7 @@ type RankedDistrictCardProps = {
   /** 순위 */
   rank: number
   name: string
-  description: string
+  description?: string
   /** 펼침 시 스탯 타일 (점포수·유동인구·공실 등) */
   stats?: Stat[]
   /** 기준일 (예: "26.03 기준") */
@@ -39,7 +38,7 @@ type RankedDistrictCardProps = {
 /**
  * 순위 지역 드롭다운 카드 (Figma: Dropdown_L 267:5750).
  * 접힘: 순위 뱃지 + 지역명 + 설명 + 펼침 화살표. 헤더 탭 → 펼침.
- * 펼침: 스탯 타일(값 + ChangeIndicator 화살표) + 기준일 + [접기 · 지도에서 확인하기].
+ * 펼침: 스탯 타일 + 기준일 + [접기 · 지도에서 확인하기].
  * 펼침/접힘은 grid-rows 전환으로 부드럽게 — 닫힌 콘텐츠는 inert 로 포커스·조작 차단.
  */
 export function RankedDistrictCard({
@@ -83,7 +82,7 @@ export function RankedDistrictCard({
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-body-l-semibold text-gray-900">{name}</span>
-          <span className="text-body-m-regular text-gray-700">{description}</span>
+          {description && <span className="text-body-m-regular text-gray-700">{description}</span>}
         </span>
         {!readOnly && (
           <ChevronDown
@@ -116,10 +115,12 @@ export function RankedDistrictCard({
                     <span className="text-body-m-regular text-gray-400">{s.label}</span>
                     <span className="flex flex-col gap-1">
                       <span className="text-body-l-semibold text-gray-900">{s.value}</span>
-                      <span className="flex items-center gap-1">
-                        <ChangeIndicator direction={s.direction} />
-                        <span className="text-caption-l-regular text-gray-500">{s.change}</span>
-                      </span>
+                      {s.direction && s.change && (
+                        <span className="flex items-center gap-1">
+                          <ChangeIndicator direction={s.direction} />
+                          <span className="text-caption-l-regular text-gray-500">{s.change}</span>
+                        </span>
+                      )}
                     </span>
                   </div>
                 ))}
