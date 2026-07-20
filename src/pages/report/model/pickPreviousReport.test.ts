@@ -2,12 +2,18 @@ import { describe, expect, it } from 'vitest'
 import type { ReportHistoryItem } from '@/entities/report'
 import { pickPreviousReport } from './pickPreviousReport'
 
-const item = (reportId: number, quarter: string, regionCode?: string): ReportHistoryItem => ({
+const item = (
+  reportId: number,
+  quarter: string,
+  regionCode?: string,
+  regionName?: string,
+): ReportHistoryItem => ({
   reportId,
   quarter,
   grade: 'B',
   briefing: '',
   regionCode,
+  regionName,
 })
 
 describe('pickPreviousReport', () => {
@@ -39,6 +45,29 @@ describe('pickPreviousReport', () => {
     expect(pickPreviousReport(history, { quarter: '2026Q3', regionCode: '11440' })?.reportId).toBe(
       2,
     )
+  })
+
+  it('코드 체계가 달라 코드가 안 맞아도 자치구명이 같으면 같은 구로 본다', () => {
+    // 히스토리는 자치구 코드(11440), 리포트 상세는 상권 코드(3110001)일 수 있다
+    const history = [item(2, '2026Q2', '11440', '마포구')]
+    expect(
+      pickPreviousReport(history, {
+        quarter: '2026Q3',
+        regionCode: '3110001',
+        districtName: '마포구',
+      })?.reportId,
+    ).toBe(2)
+  })
+
+  it('자치구명이 다르면 코드가 안 맞을 때 고르지 않는다', () => {
+    const history = [item(9, '2026Q2', '11170', '용산구')]
+    expect(
+      pickPreviousReport(history, {
+        quarter: '2026Q3',
+        regionCode: '3110001',
+        districtName: '마포구',
+      }),
+    ).toBeUndefined()
   })
 
   it('이전 분기가 없으면 undefined', () => {

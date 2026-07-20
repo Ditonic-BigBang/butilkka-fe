@@ -6,11 +6,12 @@ const base: ReportLoadingSignals = {
   reportError: false,
   historyEmpty: false,
   historySettled: true,
-  regionChanged: false,
+  generationResumed: false,
   graceElapsed: false,
   slowElapsed: false,
   generatingShown: false,
   minExposureDone: false,
+  generationDisproved: false,
 }
 
 describe('resolveReportLoadingView', () => {
@@ -39,16 +40,21 @@ describe('resolveReportLoadingView', () => {
     expect(resolveReportLoadingView({ ...base, reportPending: true })).toBe('skeleton')
   })
 
-  it('pending + 히스토리 0개 → 생성 연출 (신규 가입 확정 생성)', () => {
+  it('pending + 히스토리 0건 → 생성 연출 (그 구에 리포트가 없다 = 확정 생성)', () => {
     expect(resolveReportLoadingView({ ...base, reportPending: true, historyEmpty: true })).toBe(
       'generating',
     )
   })
 
-  it('pending + 구 변경 플래그 → 생성 연출', () => {
-    expect(resolveReportLoadingView({ ...base, reportPending: true, regionChanged: true })).toBe(
-      'generating',
-    )
+  it('생성 중 다른 화면에 다녀와도 유예 없이 바로 연출로 복귀', () => {
+    expect(
+      resolveReportLoadingView({
+        ...base,
+        reportPending: true,
+        historySettled: false,
+        generationResumed: true,
+      }),
+    ).toBe('generating')
   })
 
   it('pending + 시간 경과 폴백 → 생성 연출', () => {
@@ -70,6 +76,12 @@ describe('resolveReportLoadingView', () => {
   it('최소 노출을 채우면 본문 전환', () => {
     expect(
       resolveReportLoadingView({ ...base, generatingShown: true, minExposureDone: true }),
+    ).toBe('content')
+  })
+
+  it('생성이 아니었다고 응답이 알려주면(generated=false) 최소 노출을 건너뛰고 본문', () => {
+    expect(
+      resolveReportLoadingView({ ...base, generatingShown: true, generationDisproved: true }),
     ).toBe('content')
   })
 

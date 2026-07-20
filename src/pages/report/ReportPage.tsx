@@ -46,6 +46,7 @@ export default function ReportPage() {
     reportError: report.isError,
     historyEmpty: history.isSuccess && history.data.length === 0,
     historySettled: history.isSuccess || history.isError,
+    generated: report.data?.generated,
   })
 
   let content

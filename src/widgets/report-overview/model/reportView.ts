@@ -25,6 +25,12 @@ export type ReportView = {
   /** 리포트 아이디 — 유사 사례 전체 보기 등 하위 라우팅용 */
   reportId: number
   regionName: string
+  /** 상권 코드 — 히스토리에서 같은 상권의 지난 분기를 찾을 때 비교용 */
+  regionCode: string
+  /** 자치구명 (예: "마포구") — 리포트는 구 단위라 히스토리 항목과 대조하는 데 쓴다 */
+  districtName: string
+  /** 이번 요청에서 새로 생성됐는지 — 생성 연출을 잘못 띄웠을 때 거두는 신호 */
+  generated?: boolean
   categoryName: string
   /** 분기 원문 ("2026Q2") — 히스토리에서 이전 리포트를 찾을 때 비교용 */
   quarter: string
@@ -89,6 +95,9 @@ export function toReportView(d: ReportResponse): ReportView {
   return {
     reportId: d.reportId,
     regionName: d.regionName,
+    regionCode: d.regionCode,
+    districtName: d.districtName,
+    generated: d.generated,
     categoryName: d.categoryName,
     quarter: d.quarter,
     period: formatQuarter(d.quarter),
