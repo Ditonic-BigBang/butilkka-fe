@@ -5,7 +5,9 @@ const base: ReportLoadingSignals = {
   reportPending: false,
   reportError: false,
   historyEmpty: false,
+  historySettled: true,
   regionChanged: false,
+  graceElapsed: false,
   slowElapsed: false,
   generatingShown: false,
   minExposureDone: false,
@@ -16,7 +18,24 @@ describe('resolveReportLoadingView', () => {
     expect(resolveReportLoadingView(base)).toBe('content')
   })
 
-  it('pending + 판별 신호 없음 → 스켈레톤', () => {
+  it('pending + 히스토리 도착 전(유예 중) → 판별 유예 (스켈레톤 번쩍임 방지)', () => {
+    expect(resolveReportLoadingView({ ...base, reportPending: true, historySettled: false })).toBe(
+      'deciding',
+    )
+  })
+
+  it('pending + 유예 시간 경과 → 히스토리가 늦어도 스켈레톤', () => {
+    expect(
+      resolveReportLoadingView({
+        ...base,
+        reportPending: true,
+        historySettled: false,
+        graceElapsed: true,
+      }),
+    ).toBe('skeleton')
+  })
+
+  it('pending + 히스토리 있음(판별 끝) → 스켈레톤', () => {
     expect(resolveReportLoadingView({ ...base, reportPending: true })).toBe('skeleton')
   })
 

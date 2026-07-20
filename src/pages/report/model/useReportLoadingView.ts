@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { consumeReportGenerating } from '@/entities/report'
 import {
+  DECISION_GRACE_MS,
   MIN_EXPOSURE_MS,
   SLOW_FALLBACK_MS,
   resolveReportLoadingView,
@@ -15,24 +16,31 @@ export function useReportLoadingView(input: {
   reportPending: boolean
   reportError: boolean
   historyEmpty: boolean
+  historySettled: boolean
 }): ReportLoadingView {
   // lazy initializer 로 마운트 시 1회 소비 — 리렌더에 안정적.
   // StrictMode 이중 실행에선 두 번째가 false 일 수 있으나 dev 한정, 래치·시간 폴백이 커버.
   const [regionChanged] = useState(consumeReportGenerating)
+  const [graceElapsed, setGraceElapsed] = useState(false)
   const [slowElapsed, setSlowElapsed] = useState(false)
   const [generatingShown, setGeneratingShown] = useState(false)
   const [minExposureDone, setMinExposureDone] = useState(false)
 
-  // 시간 폴백 — pending 인 동안만 (종료 시 cleanup 으로 해제)
+  // 판별 유예·시간 폴백 타이머 — pending 인 동안만 (종료 시 cleanup 으로 해제)
   useEffect(() => {
     if (!input.reportPending) return
-    const timer = setTimeout(() => setSlowElapsed(true), SLOW_FALLBACK_MS)
-    return () => clearTimeout(timer)
+    const grace = setTimeout(() => setGraceElapsed(true), DECISION_GRACE_MS)
+    const slow = setTimeout(() => setSlowElapsed(true), SLOW_FALLBACK_MS)
+    return () => {
+      clearTimeout(grace)
+      clearTimeout(slow)
+    }
   }, [input.reportPending])
 
   const view = resolveReportLoadingView({
     ...input,
     regionChanged,
+    graceElapsed,
     slowElapsed,
     generatingShown,
     minExposureDone,

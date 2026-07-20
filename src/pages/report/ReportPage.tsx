@@ -48,11 +48,14 @@ export default function ReportPage() {
     reportPending: report.isPending,
     reportError: report.isError,
     historyEmpty: history.isSuccess && history.data.length === 0,
+    historySettled: history.isSuccess || history.isError,
   })
 
   let content
   if (view === 'generating') {
     content = <ReportGenerating />
+  } else if (view === 'deciding') {
+    content = null // 판별 유예 — 스켈레톤을 미뤄 스켈레톤→연출 번쩍임 방지 (빈 배경 유지)
   } else if (view === 'error') {
     content = <ErrorRetry message="리포트를 불러오지 못했어요" onRetry={() => report.refetch()} />
   } else if (view === 'skeleton' || !report.data) {
