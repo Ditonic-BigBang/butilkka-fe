@@ -289,6 +289,8 @@ export const reportHistoryMock: ReportHistoryResponse = {
     {
       reportId: 17,
       quarter: '2026Q2',
+      regionCode: '11680',
+      regionName: '강남구',
       grade: 'C',
       briefing: '상권 점수는 C등급이며,\n유동인구가 18% 감소했어요.',
       isRead: false,
@@ -296,6 +298,8 @@ export const reportHistoryMock: ReportHistoryResponse = {
     {
       reportId: 12,
       quarter: '2026Q1',
+      regionCode: '11680',
+      regionName: '강남구',
       grade: 'B',
       briefing: '상권 점수는 B등급이며,\n유동인구가 1.4% 증가했어요.',
       isRead: true,
@@ -303,6 +307,8 @@ export const reportHistoryMock: ReportHistoryResponse = {
     {
       reportId: 8,
       quarter: '2025Q4',
+      regionCode: '11680',
+      regionName: '강남구',
       grade: 'B',
       briefing: '상권 점수는 B등급이며,\n연말 특수로 유동인구가 일시 회복했어요.',
       isRead: true,
@@ -310,6 +316,8 @@ export const reportHistoryMock: ReportHistoryResponse = {
     {
       reportId: 5,
       quarter: '2025Q3',
+      regionCode: '11680',
+      regionName: '강남구',
       grade: 'A',
       briefing: '상권 점수는 A등급이며,\n상권 활력이 높게 유지되고 있어요.',
       isRead: true,
@@ -317,6 +325,8 @@ export const reportHistoryMock: ReportHistoryResponse = {
     {
       reportId: 3,
       quarter: '2025Q2',
+      regionCode: '11680',
+      regionName: '강남구',
       grade: 'A',
       briefing: '상권 점수는 A등급이며,\n신규 점포 유입이 이어지고 있어요.',
       isRead: true,
@@ -324,6 +334,8 @@ export const reportHistoryMock: ReportHistoryResponse = {
     {
       reportId: 1,
       quarter: '2025Q1',
+      regionCode: '11680',
+      regionName: '강남구',
       grade: 'B',
       briefing: '상권 점수는 B등급이며,\n유동인구가 완만하게 증가했어요.',
       isRead: true,

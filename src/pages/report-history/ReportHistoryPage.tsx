@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
+import { Bone, Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
 import { ReportCard, fetchReport, reportKeys, type ReportHistoryResponse } from '@/entities/report'
 import { SORT_LABELS, useReportHistoryList, type SortOrder } from './model/useReportHistoryList'
 
@@ -121,16 +121,16 @@ export default function ReportHistoryPage() {
 }
 
 /** 로딩 스켈레톤 — 리포트 카드 행 형태 3줄 */
-function HistorySkeleton() {
+export function HistorySkeleton() {
   return (
     <ul className="flex flex-col gap-4 px-5 pt-2">
       {[0, 1, 2].map((i) => (
         <li key={i} className="flex gap-3">
-          <div className="size-7 shrink-0 animate-pulse rounded-lg bg-gray-100" />
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="h-3.5 w-20 animate-pulse rounded bg-gray-100" />
-            <div className="h-4 w-3/5 animate-pulse rounded bg-gray-100" />
-            <div className="h-9 w-3/4 animate-pulse rounded bg-gray-100" />
+          <Bone className="size-7 shrink-0 rounded-8" />
+          <div className="flex flex-1 flex-col gap-2.5 pt-1">
+            <Bone className="h-3.5 w-20" />
+            <Bone className="h-3.5 w-3/5" />
+            <Bone className="h-3.5 w-4/5" />
           </div>
         </li>
       ))}

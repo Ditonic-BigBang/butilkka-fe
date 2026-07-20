@@ -3,7 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { notificationKeys } from '@/entities/notification'
 import { makeNotificationsMock } from '@/shared/api/mocks/fixtures'
-import NotificationsPage from './NotificationsPage'
+import { GNB } from '@/widgets/mobile-layout'
+import NotificationsPage, { NotificationSkeleton } from './NotificationsPage'
 
 // 스토리는 네트워크 없이 렌더 — 알림 목 목록을 쿼리 캐시에 시드하고 refetch 를 끈다.
 function seededClient() {
@@ -34,3 +35,14 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** 로딩 스켈레톤 — 알림 목록 응답 대기 (shimmer). GNB 는 로딩 중에도 실 UI 그대로 */
+export const Skeleton: Story = {
+  name: '로딩 스켈레톤',
+  render: () => (
+    <div className="flex min-h-screen flex-col bg-white">
+      <GNB title="알림" />
+      <NotificationSkeleton />
+    </div>
+  ),
+}

@@ -38,7 +38,9 @@ export default function ReportDetailPage() {
         onViewAllCases={() =>
           navigate(`/report/${report.data.reportId}/cases`, { viewTransition: true })
         }
-        onViewMap={() => navigate('/map', { viewTransition: true })}
+        onViewMap={(district) =>
+          navigate('/map', { viewTransition: true, state: { focusDistrict: district } })
+        }
       />
     )
   }

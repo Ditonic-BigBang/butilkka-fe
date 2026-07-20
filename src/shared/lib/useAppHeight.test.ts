@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveAppViewportHeight } from './useAppHeight'
+import { resolveAppViewportHeight, resolveVisibleViewportHeight } from './useAppHeight'
 
 const baseMetrics = {
   innerHeight: 844,
@@ -60,6 +60,28 @@ describe('resolveAppViewportHeight', () => {
         visualHeight: 760,
         isIOSDevice: false,
         isStandaloneMode: false,
+      }),
+    ).toBe(810)
+  })
+})
+
+describe('resolveVisibleViewportHeight', () => {
+  it('내비바 없는 화면은 iOS에서 실제 보이는 visual viewport 높이를 사용한다', () => {
+    expect(
+      resolveVisibleViewportHeight({
+        innerHeight: 844,
+        clientHeight: 844,
+        visualHeight: 760,
+      }),
+    ).toBe(760)
+  })
+
+  it('visual viewport를 지원하지 않으면 layout viewport 높이로 대체한다', () => {
+    expect(
+      resolveVisibleViewportHeight({
+        innerHeight: 800,
+        clientHeight: 810,
+        visualHeight: 0,
       }),
     ).toBe(810)
   })

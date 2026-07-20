@@ -13,7 +13,7 @@ export const SORT_LABELS: Record<SortOrder, string> = {
 /** 리포트 히스토리 목록 화면의 행 (뷰모델) */
 export type ReportHistoryRow = {
   reportId: number
-  /** 분기 표시 (예: "2026년 1분기") */
+  /** 카드 상단 라벨 — 분기, 다점포면 상권명까지 (예: "2026년 1분기 · 마포구") */
   quarter: string
   /** 카드 제목 (예: "2026년 1분기 분석 리포트") */
   title: string
@@ -26,7 +26,8 @@ function toRow(item: ReportHistoryItem): ReportHistoryRow {
   const quarter = formatQuarter(item.quarter)
   return {
     reportId: item.reportId,
-    quarter,
+    // 리포트는 구 단위라 다점포면 같은 분기 리포트가 여럿 — 상권명으로 구분한다
+    quarter: item.regionName ? `${quarter} · ${item.regionName}` : quarter,
     title: `${quarter} 분석 리포트`,
     summary: item.briefing,
     // isRead 는 선규격 — 백엔드가 안 주면 읽음 취급(강조 없음)

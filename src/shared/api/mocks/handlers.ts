@@ -440,9 +440,25 @@ export const handlers = [
   }),
 
   // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
-  http.get(`${API}/api/v1/reportsHistory`, () =>
-    ok('리포트 히스토리 조회 성공', reportHistoryState),
-  ),
+  // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환).
+  // 항목의 구 식별자는 대표 가게 기준으로 맞춘다 — 실서버처럼 최신 리포트와 같은 regionCode 라야
+  // "이전 리포트" 버튼이 같은 상권의 지난 분기를 찾는다(pickPreviousReport).
+  http.get(`${API}/api/v1/reportsHistory`, () => {
+    const store = primaryStoreSummary()
+    return ok(
+      '리포트 히스토리 조회 성공',
+      store
+        ? {
+            ...reportHistoryState,
+            reports: reportHistoryState.reports.map((r) => ({
+              ...r,
+              regionCode: store.regionCode,
+              regionName: store.district || r.regionName,
+            })),
+          }
+        : reportHistoryState,
+    )
+  }),
 
   // ── 알림 (API명세서 V3 — 서버 미반영이라 목으로 선연동) ──
   // 받은 알림 목록 (offset/limit 은 데모에선 무시하고 전체 반환)

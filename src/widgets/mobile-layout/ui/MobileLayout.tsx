@@ -28,7 +28,14 @@ export function MobileLayout({
   const { tab, setTab } = useActiveTab()
 
   return (
-    <div className="mt-[var(--app-offset-top,0px)] flex h-[var(--app-height,100dvh)] justify-center overflow-hidden bg-gray-100">
+    <div
+      className={cn(
+        'mt-[var(--app-offset-top,0px)] flex justify-center overflow-hidden bg-gray-100',
+        showBottomTab
+          ? 'h-[var(--app-height,100dvh)]'
+          : 'h-[var(--app-visible-height,var(--app-height,100dvh))]',
+      )}
+    >
       {/* pt-safe-top: PWA(standalone)에서 viewport-fit=cover 로 노치 밑까지 확장될 때
           GNB 가 상태바에 깔리지 않게 — 일반 브라우저에선 env()=0 이라 영향 없음.
           높이·상단 offset은 useAppHeight 가 현재 visual viewport 로 갱신 — iOS PWA 의 dvh 첫 렌더와

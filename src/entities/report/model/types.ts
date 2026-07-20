@@ -105,6 +105,10 @@ export interface ReportHistoryItem {
   quarter: string
   grade: ReportGrade
   briefing: string
+  /** 자치구 코드(5자리) — 리포트는 구 단위 생성이라 다점포 구분 키. 구버전 응답 대비 optional */
+  regionCode?: string
+  /** 자치구명 (예: "마포구") — 목록에서 같은 분기 리포트를 구분하는 라벨 */
+  regionName?: string
   /** 열람 여부 — 안 읽음은 목록에서 강조. 명세 미반영 선규격(백엔드 협의 필요), 없으면 읽음 취급 */
   isRead?: boolean
 }
