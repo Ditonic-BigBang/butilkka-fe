@@ -13,13 +13,15 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="min-h-screen bg-gray-70">
-        {/* ReportPage 헤더의 로딩 상태 복제 — 전체 로딩 화면 확인용 (원본: pages/report ReportHeader) */}
+        {/* ReportPage 헤더 복제 — 상권·업종은 세션 가게 요약으로 선표시되므로 텍스트 상태 (원본: pages/report ReportHeader) */}
         <header className="flex items-end gap-2.5 bg-gray-70 px-5 py-4">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h1 className="text-title-s-semibold text-gray-900">AI 리포트</h1>
-            <span className="flex h-[21px] items-center">
-              <span aria-hidden className="block h-3.5 w-36 skeleton rounded-full" />
-            </span>
+            <div className="flex items-center gap-1 text-body-m-regular text-gray-400">
+              <span>가로수길 인근</span>
+              <span aria-hidden className="size-0.5 rounded-full bg-gray-200" />
+              <span>한식음식점</span>
+            </div>
           </div>
         </header>
         <Story />

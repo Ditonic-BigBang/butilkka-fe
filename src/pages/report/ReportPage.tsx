@@ -7,6 +7,7 @@ import {
   ReportPdfLoadingOverlay,
   useReportPdfDownload,
 } from '@/widgets/report-overview'
+import { cn } from '@/shared/lib/cn'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { formatQuarter } from '@/shared/lib/quarter'
@@ -85,17 +86,24 @@ export default function ReportPage() {
   return (
     // className: 프레임(노치 영역 포함) 배경을 gray-70 로 → iOS 노치가 리포트 배경과 이어짐
     <MobileLayout className="bg-gray-70">
-      <div className="min-h-full bg-gray-70">
+      {/* flex 컬럼: 생성 연출이 flex-1 로 헤더 아래 남은 높이를 채워 중앙 정렬되게 */}
+      <div className="flex min-h-full flex-col bg-gray-70">
         <ReportHeader
-          loading={report.isPending}
-          region={report.data?.regionName}
-          category={report.data?.categoryName}
+          // 상권·업종은 세션 대표 가게 요약으로 선표시 (리포트 도착 전에도 같은 값) —
+          // 스켈레톤 줄은 그 폴백조차 없는 드문 경우만 (생성 연출과 shimmer 가 섞이는 어색함 방지)
+          loading={report.isPending && !user?.store}
+          region={report.data?.regionName ?? user?.store?.regionName}
+          category={report.data?.categoryName ?? user?.store?.categoryName}
           // PDF 다운로드는 PRO 혜택 — 구독 전에는 버튼 자체를 숨긴다
           onDownload={locked ? undefined : pdf.download}
           downloading={pdf.downloading}
         />
-        {/* view 전환(스켈레톤→연출→본문)마다 리마운트 + 페이드 — 화면이 뚝 바뀌는 것 방지 */}
-        <div key={view} className="animate-fade-up">
+        {/* view 전환(스켈레톤→연출→본문)마다 리마운트 + 페이드 — 화면이 뚝 바뀌는 것 방지.
+            생성 연출만 flex-1 로 남은 높이를 차지 (본문·스켈레톤은 일반 흐름) */}
+        <div
+          key={view}
+          className={cn('animate-fade-up', view === 'generating' && 'flex flex-1 flex-col')}
+        >
           {content}
         </div>
       </div>
