@@ -9,9 +9,11 @@ const STEPS = [
   'AI가 리포트를 작성하고 있어요',
 ]
 const STEP_INTERVAL_MS = 3000
-/** 생성이 평소(10~15초)보다 길어지면 안심 문구로 교체 */
-const LONG_WAIT_MS = 20000
+/** 안내한 소요 시간(10~15초)을 넘기는 시점 — 단계 문구·소요 시간 안내를 함께 바꾼다 */
+const LONG_WAIT_MS = 15000
 const LONG_WAIT_CAPTION = '거의 다 됐어요. 조금만 더 기다려주세요'
+const DURATION_HINT = '보통 10~15초 정도 걸려요'
+const LONG_WAIT_HINT = '데이터가 많은 지역은 조금 더 걸릴 수 있어요'
 
 /**
  * AI 리포트 생성 연출 — 첫 리포트·구 변경 직후처럼 `/reports/latest` 가 10~15초
@@ -56,7 +58,10 @@ export function ReportGenerating() {
       <div className="mt-9 h-1.5 w-full max-w-60 overflow-hidden rounded-full bg-gray-200/60">
         <div className="h-full w-[90%] animate-generating-progress rounded-full bg-orange-500" />
       </div>
-      <p className="mt-3 text-caption-l-regular text-gray-400">보통 10~15초 정도 걸려요</p>
+      {/* 안내한 시간을 넘기면 소요 시간 문구도 교체 — "10~15초"가 남아 있으면 모순으로 읽힌다 */}
+      <p className="mt-3 text-caption-l-regular text-gray-400">
+        {longWait ? LONG_WAIT_HINT : DURATION_HINT}
+      </p>
     </div>
   )
 }
