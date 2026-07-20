@@ -52,6 +52,11 @@ export interface ReportAiRecommendation {
 
 export interface ReportResponse {
   reportId: number
+  /**
+   * 이번 요청에서 새로 생성된 리포트인지 (기존 리포트 조회면 false).
+   * 생성 연출을 잘못 띄웠을 때 즉시 거두는 용도 — 구버전 응답 대비 optional.
+   */
+  generated?: boolean
   regionCode: string
   regionName: string
   categoryName: string

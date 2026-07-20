@@ -397,7 +397,8 @@ export const handlers = [
   // 주의: 아래 :reportId 핸들러보다 먼저 등록해야 "latest" 가 id 로 매칭되지 않는다.
   http.get(`${API}/api/v1/reports/latest`, () => {
     const store = primaryStoreSummary()
-    const report = makeReportMock()
+    // generated: 이번 요청에서 새로 만들었는지 — 목은 항상 기존 리포트 조회
+    const report = { ...makeReportMock(), generated: false }
     return ok(
       '리포트 조회 성공',
       store
@@ -441,20 +442,16 @@ export const handlers = [
 
   // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환)
   // 리포트 히스토리 목록 (offset/limit 은 데모에선 무시하고 전체 반환).
-  // 항목의 구 식별자는 대표 가게 기준으로 맞춘다 — 실서버처럼 최신 리포트와 같은 regionCode 라야
-  // "이전 리포트" 버튼이 같은 상권의 지난 분기를 찾는다(pickPreviousReport).
+  // 실서버는 현재 대표 가게의 구 리포트만 돌려주므로, 목도 항목의 자치구명을 대표 가게에 맞춘다
+  // (regionCode 는 자치구 5자리 — 가게의 행정동 10자리 코드와 체계가 달라 그대로 둔다).
   http.get(`${API}/api/v1/reportsHistory`, () => {
-    const store = primaryStoreSummary()
+    const district = primaryStoreSummary()?.district
     return ok(
       '리포트 히스토리 조회 성공',
-      store
+      district
         ? {
             ...reportHistoryState,
-            reports: reportHistoryState.reports.map((r) => ({
-              ...r,
-              regionCode: store.regionCode,
-              regionName: store.district || r.regionName,
-            })),
+            reports: reportHistoryState.reports.map((r) => ({ ...r, regionName: district })),
           }
         : reportHistoryState,
     )
