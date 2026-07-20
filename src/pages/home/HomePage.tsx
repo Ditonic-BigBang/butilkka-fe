@@ -44,7 +44,12 @@ export default function HomePage() {
       <ErrorRetry message="대시보드를 불러오지 못했어요" onRetry={() => dashboard.refetch()} />
     )
   } else {
-    content = <DashboardContent data={dashboard.data} />
+    content = (
+      <DashboardContent
+        data={dashboard.data}
+        onViewReport={() => navigate('/report', { viewTransition: true })}
+      />
+    )
   }
 
   return (
@@ -62,16 +67,24 @@ export default function HomePage() {
 }
 
 /** 대시보드 본문 — 현재 상권 카드 + 브리핑 + 지표 그래프. 진입 시 순차 페이드업 */
-function DashboardContent({ data }: { data: HomeDashboard }) {
+function DashboardContent({
+  data,
+  onViewReport,
+}: {
+  data: HomeDashboard
+  /** 지난 분기 등급 pill·AI 브리핑 카드 탭 → AI 리포트 이동 */
+  onViewReport: () => void
+}) {
   return (
     <div className="stagger-fade-up">
       <CurrentDistrictCard
         grade={data.grade}
         lastGrade={data.lastGrade}
+        onViewLast={onViewReport}
         illustration={<img src={storeIllustration} alt="" className="w-[93px]" />}
       />
 
-      <AiBriefingCard message={data.briefing} className="mt-3" />
+      <AiBriefingCard message={data.briefing} onClick={onViewReport} className="mt-3" />
 
       {/* 지표 그래프 — 이전 분기 대비 */}
       <section className="mt-14 flex flex-col gap-4">

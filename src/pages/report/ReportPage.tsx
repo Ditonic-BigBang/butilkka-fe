@@ -31,7 +31,10 @@ export default function ReportPage() {
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
   useThemeColor(THEME_COLORS.surfaceGray)
 
-  // 이전 분기 리포트 (히스토리에서 현재 분기보다 앞선 첫 항목) — 없으면 버튼 숨김
+  // 이전 분기 리포트 (히스토리에서 현재 분기보다 앞선 첫 항목).
+  // 없어도(신규 유저 첫 분기) 버튼은 라벨만 있는 변형으로 항상 노출 — 히스토리/구독 진입점 유지.
+  // 주의: 히스토리는 내 가게 전체의 리포트가 섞여 오는데 항목에 가게 식별자가 없어 분기만 비교한다
+  // — 다점포면 다른 가게의 이전 분기를 집을 수 있음. 백엔드가 storeId/regionCode 주면 같은 가게로 필터할 것.
   const previous = report.data
     ? history.data?.find((r) => r.quarter < report.data.quarter)
     : undefined
@@ -46,23 +49,23 @@ export default function ReportPage() {
       <ReportOverview
         data={report.data}
         afterScore={
-          previous && (
-            <ReportLinkButton
-              quarter={formatQuarter(previous.quarter)}
-              grade={previous.grade}
-              // 지난 리포트는 PRO 혜택 — 구독 전엔 구독 플랜 확인으로 유도
-              onClick={() =>
-                navigate(locked ? '/my/subscription' : '/report/history', { viewTransition: true })
-              }
-            />
-          )
+          <ReportLinkButton
+            quarter={previous && formatQuarter(previous.quarter)}
+            grade={previous?.grade}
+            // 지난 리포트는 PRO 혜택 — 구독 전엔 구독 플랜 확인으로 유도
+            onClick={() =>
+              navigate(locked ? '/my/subscription' : '/report/history', { viewTransition: true })
+            }
+          />
         }
         locked={locked}
         onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
         onViewAllCases={() =>
           navigate(`/report/${report.data.reportId}/cases`, { viewTransition: true })
         }
-        onViewMap={() => navigate('/map', { viewTransition: true })}
+        onViewMap={(district) =>
+          navigate('/map', { viewTransition: true, state: { focusDistrict: district } })
+        }
       />
     )
   }

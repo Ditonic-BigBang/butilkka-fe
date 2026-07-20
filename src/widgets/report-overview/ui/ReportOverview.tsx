@@ -28,8 +28,8 @@ type ReportOverviewProps = {
   onUpgrade?: () => void
   /** 유사 사례 "전체 보기" */
   onViewAllCases: () => void
-  /** 대체 상권 "지도에서 확인하기" */
-  onViewMap: () => void
+  /** 대체 상권 "지도에서 확인하기" — 카드의 구 이름을 넘긴다 (지도 포커싱용) */
+  onViewMap: (district: string) => void
 }
 
 /** 유사 사례 섹션 — 타이틀·전체 보기 + 가로 스크롤 카드 (잠금 상태에선 미리보기로도 쓰임) */
@@ -167,7 +167,7 @@ export function ReportOverview({
                       description={region.description}
                       stats={region.stats}
                       referenceDate={region.referenceDate}
-                      onViewMap={onViewMap}
+                      onViewMap={() => onViewMap(region.name)}
                     />
                   ))}
                 </div>
