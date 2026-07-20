@@ -41,7 +41,7 @@ export default function ReportPage() {
 
   // 생성 판별 — latest 가 없으면 같은 엔드포인트에서 10~15초 동기 생성되므로,
   // 히스토리 0개(확정)·구 변경 플래그·시간 폴백으로 스켈레톤 대신 생성 연출을 띄운다
-  const view = useReportLoadingView({
+  const { view, generatingSince } = useReportLoadingView({
     reportPending: report.isPending,
     reportError: report.isError,
     historyEmpty: history.isSuccess && history.data.length === 0,
@@ -50,7 +50,7 @@ export default function ReportPage() {
 
   let content
   if (view === 'generating') {
-    content = <ReportGenerating />
+    content = <ReportGenerating startedAt={generatingSince} />
   } else if (view === 'deciding') {
     content = null // 판별 유예 — 스켈레톤을 미뤄 스켈레톤→연출 번쩍임 방지 (빈 배경 유지)
   } else if (view === 'error') {
