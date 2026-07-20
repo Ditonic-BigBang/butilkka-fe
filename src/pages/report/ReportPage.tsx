@@ -14,6 +14,7 @@ import { formatQuarter } from '@/shared/lib/quarter'
 import { ErrorRetry, Toast } from '@/shared/ui'
 import { ReportLinkButton } from '@/entities/report'
 import { useAuthStore } from '@/entities/session'
+import { pickPreviousReport } from './model/pickPreviousReport'
 import { useLatestReport, useReportHistory } from './model/useLatestReport'
 import { useReportLoadingView } from './model/useReportLoadingView'
 import { ReportGenerating } from './ui/ReportGenerating'
@@ -34,13 +35,9 @@ export default function ReportPage() {
   // 리포트 배경(gray-70)에 노치·상태바 색을 맞춰 이어 보이게 (Android 상태바 색)
   useThemeColor(THEME_COLORS.surfaceGray)
 
-  // 이전 분기 리포트 (히스토리에서 현재 분기보다 앞선 첫 항목).
+  // 이전 분기 리포트 — 히스토리는 내 가게 전체가 섞여 오므로 같은 상권만 후보로 둔다.
   // 없어도(신규 유저 첫 분기) 버튼은 라벨만 있는 변형으로 항상 노출 — 히스토리/구독 진입점 유지.
-  // 주의: 히스토리는 내 가게 전체의 리포트가 섞여 오는데 항목에 가게 식별자가 없어 분기만 비교한다
-  // — 다점포면 다른 가게의 이전 분기를 집을 수 있음. 백엔드가 storeId/regionCode 주면 같은 가게로 필터할 것.
-  const previous = report.data
-    ? history.data?.find((r) => r.quarter < report.data.quarter)
-    : undefined
+  const previous = report.data ? pickPreviousReport(history.data, report.data) : undefined
 
   // 생성 판별 — latest 가 없으면 같은 엔드포인트에서 10~15초 동기 생성되므로,
   // 히스토리 0개(확정)·구 변경 플래그·시간 폴백으로 스켈레톤 대신 생성 연출을 띄운다

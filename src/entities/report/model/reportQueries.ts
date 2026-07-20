@@ -29,7 +29,11 @@ export function fetchReportCases(reportId: number): Promise<ReportCasesResponse>
   return apiJson<ReportCasesResponse>(`/api/v1/reports/${reportId}/cases`)
 }
 
-/** GET /api/v1/reportsHistory */
+/**
+ * GET /api/v1/reportsHistory
+ * 서버 기본값은 limit=20 인데 목록·이전 리포트 조회 모두 전체를 client 에서 정렬·필터하므로
+ * 한 번에 넉넉히 받는다(무한 스크롤 없음). 100건을 넘길 일이 생기면 페이지네이션 도입.
+ */
 export function fetchReportHistory(): Promise<ReportHistoryResponse> {
-  return apiJson<ReportHistoryResponse>('/api/v1/reportsHistory')
+  return apiJson<ReportHistoryResponse>('/api/v1/reportsHistory?offset=0&limit=100')
 }
