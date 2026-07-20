@@ -57,15 +57,14 @@ export default defineConfig({
         navigateFallback: 'index.html',
         maximumFileSizeToCacheInBytes: 500 * 1024,
         // 앱 진입 셸과 공통 CSS, 단일 56KB 지도 geometry만 설치 시 선캐시한다.
-        // rolldown-runtime·preload-helper: PDF lazy 청크 도입으로 분리된 entry 정적 의존성 (수 KB)
+        // rolldown-runtime: PDF lazy 청크 도입으로 분리된 entry 정적 의존성 (수 KB)
+        // (jsx-runtime·preload-helper 는 의존성 업데이트 후 청크가 더 이상 분리 생성되지 않아 제거)
         globPatterns: [
           'index.html',
           'registerSW.js',
           'assets/index-*.js',
           'assets/react-*.js',
-          'assets/jsx-runtime-*.js',
           'assets/rolldown-runtime-*.js',
-          'assets/preload-helper-*.js',
           'assets/index-*.css',
           'seoul-gu.geojson',
         ],
