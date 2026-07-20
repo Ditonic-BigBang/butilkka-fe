@@ -14,6 +14,8 @@ import { ErrorRetry, Toast } from '@/shared/ui'
 import { ReportLinkButton } from '@/entities/report'
 import { useAuthStore } from '@/entities/session'
 import { useLatestReport, useReportHistory } from './model/useLatestReport'
+import { useReportLoadingView } from './model/useReportLoadingView'
+import { ReportGenerating } from './ui/ReportGenerating'
 
 /**
  * AI 리포트 (Figma: [3] AI 리포트/[3-1] 기본 267:4266·4528 · API: GET /api/v1/reports/latest).
@@ -39,11 +41,21 @@ export default function ReportPage() {
     ? history.data?.find((r) => r.quarter < report.data.quarter)
     : undefined
 
+  // 생성 판별 — latest 가 없으면 같은 엔드포인트에서 10~15초 동기 생성되므로,
+  // 히스토리 0개(확정)·구 변경 플래그·시간 폴백으로 스켈레톤 대신 생성 연출을 띄운다
+  const view = useReportLoadingView({
+    reportPending: report.isPending,
+    reportError: report.isError,
+    historyEmpty: history.isSuccess && history.data.length === 0,
+  })
+
   let content
-  if (report.isPending) {
-    content = <ReportOverviewSkeleton />
-  } else if (report.isError) {
+  if (view === 'generating') {
+    content = <ReportGenerating />
+  } else if (view === 'error') {
     content = <ErrorRetry message="리포트를 불러오지 못했어요" onRetry={() => report.refetch()} />
+  } else if (view === 'skeleton' || !report.data) {
+    content = <ReportOverviewSkeleton />
   } else {
     content = (
       <ReportOverview
@@ -82,7 +94,10 @@ export default function ReportPage() {
           onDownload={locked ? undefined : pdf.download}
           downloading={pdf.downloading}
         />
-        {content}
+        {/* view 전환(스켈레톤→연출→본문)마다 리마운트 + 페이드 — 화면이 뚝 바뀌는 것 방지 */}
+        <div key={view} className="animate-fade-up">
+          {content}
+        </div>
       </div>
       {pdf.toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 mx-auto flex max-w-[430px] justify-center px-5">
