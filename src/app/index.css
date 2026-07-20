@@ -168,6 +168,7 @@
 @layer base {
   :root {
     --app-height: 100dvh;
+    --app-visible-height: 100dvh;
     --app-offset-top: 0px;
   }
 
