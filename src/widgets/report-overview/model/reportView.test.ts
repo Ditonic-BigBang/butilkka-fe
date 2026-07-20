@@ -73,7 +73,7 @@ describe('toReportView', () => {
         rank: 1,
         name: '마포구',
         description: undefined,
-        stats: [{ label: '유동인구', value: '56.79만명' }],
+        stats: [{ label: '유동인구', value: '57만명' }],
         referenceDate: undefined,
       },
     ])

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { EmptyState, ErrorRetry, NotificationItem } from '@/shared/ui'
+import { Bone, EmptyState, ErrorRetry, NotificationItem } from '@/shared/ui'
 import { useNotifications, useMarkNotificationRead } from './model/useNotifications'
 
 /**
@@ -63,16 +63,16 @@ export default function NotificationsPage() {
 }
 
 /** 로딩 스켈레톤 — 알림 행 형태 3줄 */
-function NotificationSkeleton() {
+export function NotificationSkeleton() {
   return (
     <ul className="flex flex-col gap-4 px-5 pt-7">
       {[0, 1, 2].map((i) => (
         <li key={i} className="flex gap-3.5">
-          <div className="size-7 shrink-0 animate-pulse rounded-lg bg-gray-100" />
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="h-3.5 w-20 animate-pulse rounded bg-gray-100" />
-            <div className="h-4 w-3/4 animate-pulse rounded bg-gray-100" />
-            <div className="h-3.5 w-16 animate-pulse rounded bg-gray-100" />
+          <Bone className="size-7 shrink-0 rounded-8" />
+          <div className="flex flex-1 flex-col gap-2.5 pt-1">
+            <Bone className="h-3.5 w-20" />
+            <Bone className="h-3.5 w-3/4" />
+            <Bone className="h-3.5 w-16" />
           </div>
         </li>
       ))}

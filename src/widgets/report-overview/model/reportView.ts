@@ -67,9 +67,10 @@ function toRegionStats(r: ReportAlternativeRegion): RegionStat[] {
     stats.push({ label: '점포 수', value: `${formatNumber(r.storeCount)}개` })
   }
   if (r.floatingPopulation != null) {
+    // 실서버 값은 억 단위(예: 112,084,721)라 소수점은 노이즈 — 지도(mapCategory)와 동일하게 정수 만명
     stats.push({
       label: '유동인구',
-      value: `${formatDecimal(r.floatingPopulation / 10_000)}만명`,
+      value: `${formatNumber(Math.round(r.floatingPopulation / 10_000))}만명`,
     })
   }
   if (r.vacancy != null) {

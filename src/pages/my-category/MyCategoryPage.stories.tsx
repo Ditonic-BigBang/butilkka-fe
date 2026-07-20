@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { storeKeys, FALLBACK_CATEGORIES, type MyStore } from '@/entities/store'
-import MyCategoryPage from './MyCategoryPage'
+import { GNB } from '@/widgets/mobile-layout'
+import MyCategoryPage, { CategorySkeleton } from './MyCategoryPage'
 
 const primaryStore: MyStore = {
   storeId: 1,
@@ -48,3 +49,14 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** 로딩 스켈레톤 — 대표 가게 응답 대기 (shimmer). GNB 는 로딩 중에도 실 UI 그대로 */
+export const Skeleton: Story = {
+  name: '로딩 스켈레톤',
+  render: () => (
+    <div className="flex min-h-screen flex-col bg-white">
+      <GNB title="업종 설정" showSettings={false} />
+      <CategorySkeleton />
+    </div>
+  ),
+}

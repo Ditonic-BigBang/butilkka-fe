@@ -168,6 +168,7 @@
 @layer base {
   :root {
     --app-height: 100dvh;
+    --app-visible-height: 100dvh;
     --app-offset-top: 0px;
   }
 
@@ -375,6 +376,26 @@
 @utility animate-tab-pop {
   animation: tab-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+/* 스켈레톤 shimmer — gray-90 바탕 위로 밝은 띠가 좌→우로 쓸고 지나간다.
+   흰 카드 위 pulse 는 대비가 없어 정지 화면처럼 보여서 배경 이동 방식 사용 (ant-design 계열 패턴) */
+@keyframes shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0% 50%;
+  }
+}
+@utility skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-90) 25%,
+    #fcfcfc 37%,
+    var(--color-gray-90) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
 /* 프레스 피드백 — 누르는 동안 살짝 움츠러드는 공용 인터랙션.
    색 전환도 함께 커버하므로 transition-colors 를 대체한다 (transition-property 는 병합이 아니라
    마지막 선언이 통째로 이겨서, 나눠 선언하면 둘 중 하나가 죽는다).
@@ -436,6 +457,7 @@
   .animate-draw-line,
   .animate-pop-in,
   .animate-tab-pop,
+  .skeleton,
   .stagger-fade-up > * {
     animation: none;
   }

@@ -5,7 +5,7 @@ import { MobileLayout } from '@/widgets/mobile-layout'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { CurrentDistrictCard } from '@/entities/district'
-import { ErrorRetry, MetricTrendCard } from '@/shared/ui'
+import { Bone, ErrorRetry, MetricTrendCard } from '@/shared/ui'
 import { useAuthStore, useIsAuthenticated } from '@/entities/session'
 import { useHomeDashboard, type HomeDashboard } from './model/useHomeDashboard'
 import { HomeHeader } from './ui/HomeHeader'
@@ -44,7 +44,12 @@ export default function HomePage() {
       <ErrorRetry message="대시보드를 불러오지 못했어요" onRetry={() => dashboard.refetch()} />
     )
   } else {
-    content = <DashboardContent data={dashboard.data} />
+    content = (
+      <DashboardContent
+        data={dashboard.data}
+        onViewReport={() => navigate('/report', { viewTransition: true })}
+      />
+    )
   }
 
   return (
@@ -62,16 +67,24 @@ export default function HomePage() {
 }
 
 /** 대시보드 본문 — 현재 상권 카드 + 브리핑 + 지표 그래프. 진입 시 순차 페이드업 */
-function DashboardContent({ data }: { data: HomeDashboard }) {
+function DashboardContent({
+  data,
+  onViewReport,
+}: {
+  data: HomeDashboard
+  /** 지난 분기 등급 pill·AI 브리핑 카드 탭 → AI 리포트 이동 */
+  onViewReport: () => void
+}) {
   return (
     <div className="stagger-fade-up">
       <CurrentDistrictCard
         grade={data.grade}
         lastGrade={data.lastGrade}
+        onViewLast={onViewReport}
         illustration={<img src={storeIllustration} alt="" className="w-[93px]" />}
       />
 
-      <AiBriefingCard message={data.briefing} className="mt-3" />
+      <AiBriefingCard message={data.briefing} onClick={onViewReport} className="mt-3" />
 
       {/* 지표 그래프 — 이전 분기 대비 */}
       <section className="mt-14 flex flex-col gap-4">
@@ -92,15 +105,39 @@ function DashboardContent({ data }: { data: HomeDashboard }) {
   )
 }
 
-/** 로딩 스켈레톤 — 카드 형태의 회색 플레이스홀더 */
-function DashboardSkeleton() {
+/** 로딩 스켈레톤 — 히어로·브리핑·지표 카드의 핵심 요소만 pill 바로 암시 (export 는 스토리 확인용) */
+export function DashboardSkeleton() {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="h-[280px] animate-pulse rounded-16 bg-white" />
-      <div className="h-14 animate-pulse rounded-12 bg-white" />
-      <div className="mt-11 grid grid-cols-2 gap-3">
-        <div className="h-[168px] animate-pulse rounded-12 bg-white" />
-        <div className="h-[168px] animate-pulse rounded-12 bg-white" />
+    <div className="flex flex-col">
+      {/* 현재 상권 히어로 카드 — 제목 2줄 + 등급 + 등급 바 + 지난 분기 pill */}
+      <div className="rounded-16 bg-white p-5">
+        <div className="flex flex-col gap-2">
+          <Bone className="h-4 w-40" />
+          <Bone className="h-4 w-28" />
+        </div>
+        <Bone className="mt-7 h-10 w-24 rounded-10" />
+        <Bone className="mt-9 h-2.5 w-full" />
+        <div className="mt-7 flex justify-center">
+          <Bone className="h-7 w-40 rounded-max" />
+        </div>
+      </div>
+
+      {/* AI 한 줄 브리핑 카드 */}
+      <div className="mt-3 flex flex-col gap-2.5 rounded-12 bg-white px-4 py-3">
+        <Bone className="h-3.5 w-24" />
+        <Bone className="h-3.5 w-4/5" />
+      </div>
+
+      {/* 지표 그래프 — 섹션 타이틀 + 카드 2개 (가로 카드는 폴드 아래라 생략) */}
+      <Bone className="mt-14 h-4 w-32" />
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {[0, 1].map((i) => (
+          <div key={i} className="rounded-12 bg-white p-4">
+            <Bone className="h-3.5 w-16" />
+            <Bone className="mt-3 h-6 w-20" />
+            <Bone className="mt-5 h-14 w-full rounded-8" />
+          </div>
+        ))}
       </div>
     </div>
   )

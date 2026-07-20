@@ -51,6 +51,18 @@ export function resolveAppViewportHeight({
   return visualHeight
 }
 
+/**
+ * 주소창·홈 인디케이터 등 iOS 시스템 UI를 제외하고 현재 실제로 보이는 높이.
+ * 내비바가 없는 화면의 CTA·토스트가 layout viewport 아래로 밀리지 않게 사용한다.
+ */
+export function resolveVisibleViewportHeight({
+  innerHeight,
+  clientHeight,
+  visualHeight,
+}: Pick<AppViewportMetrics, 'innerHeight' | 'clientHeight' | 'visualHeight'>) {
+  return visualHeight > 0 ? visualHeight : Math.max(innerHeight, clientHeight)
+}
+
 export function getAppViewportHeight() {
   const screenHeight = Math.max(window.screen.height, window.screen.availHeight || 0)
 
@@ -63,6 +75,14 @@ export function getAppViewportHeight() {
     screenHeight,
     isIOSDevice: isIOS(),
     isStandaloneMode: isStandalone(),
+  })
+}
+
+export function getVisibleViewportHeight() {
+  return resolveVisibleViewportHeight({
+    innerHeight: window.innerHeight,
+    clientHeight: document.documentElement.clientHeight,
+    visualHeight: window.visualViewport?.height ?? 0,
   })
 }
 
@@ -83,7 +103,12 @@ export function useAppHeight() {
   useLayoutEffect(() => {
     const set = () => {
       const height = getAppViewportHeight()
+      const visibleHeight = getVisibleViewportHeight()
       document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`)
+      document.documentElement.style.setProperty(
+        '--app-visible-height',
+        `${Math.round(visibleHeight)}px`,
+      )
       document.documentElement.style.setProperty(
         '--app-offset-top',
         `${Math.round(getAppViewportOffsetTop())}px`,

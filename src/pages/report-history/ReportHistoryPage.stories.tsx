@@ -3,7 +3,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { reportKeys } from '@/entities/report'
 import { reportHistoryMock } from '@/shared/api/mocks/fixtures'
-import ReportHistoryPage from './ReportHistoryPage'
+import { GNB } from '@/widgets/mobile-layout'
+import { SortTrigger } from '@/shared/ui'
+import ReportHistoryPage, { HistorySkeleton } from './ReportHistoryPage'
 
 // 스토리는 네트워크 없이 렌더 — 히스토리 목 DTO 를 쿼리 캐시에 시드하고 refetch 를 끈다.
 function seededClient() {
@@ -38,3 +40,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** 로딩 스켈레톤 — 히스토리 목록 응답 대기 (shimmer). GNB·정렬은 로딩 중에도 실 UI 그대로 */
+export const Skeleton: Story = {
+  name: '로딩 스켈레톤',
+  render: () => (
+    <div className="flex min-h-screen flex-col bg-white">
+      <GNB title="리포트 상세보기" />
+      <div className="px-5 py-3">
+        <SortTrigger label="최신순" direction="desc" />
+      </div>
+      <HistorySkeleton />
+    </div>
+  ),
+}

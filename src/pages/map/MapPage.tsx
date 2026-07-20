@@ -69,6 +69,8 @@ export default function MapPage() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null)
   // 랭킹 시트 펼침 — 지도 탭으로도 접을 수 있게 페이지가 소유
   const [sheetExpanded, setSheetExpanded] = useState(false)
+  // 리포트 "지도에서 확인하기"로 넘어온 구 — 지도·데이터 준비 후 포커싱
+  const [pendingFocusDistrict, setPendingFocusDistrict] = useState<string | null>(null)
 
   const categoryView = getCategoryView(category)
   const { boundaries: guBoundaries, centroids } = useGuGeometry()
@@ -174,7 +176,7 @@ export default function MapPage() {
   useEffect(() => {
     if (initialFocusDone.current || !mapReady || !primaryStore || !guBoundaries || !centroids)
       return
-    if (selectedDistrict) {
+    if (selectedDistrict || pendingFocusDistrict) {
       initialFocusDone.current = true
       return
     }
@@ -185,7 +187,17 @@ export default function MapPage() {
     initialFocusDone.current = true
     const point = district ? centroids.get(district) : undefined
     if (point) mapRef.current?.panTo(point.lat, point.lng, GU_ZOOM_LEVEL, INITIAL_FOCUS_OFFSET_Y)
-  }, [mapReady, primaryStore, guBoundaries, centroids, selectedDistrict])
+  }, [mapReady, primaryStore, guBoundaries, centroids, selectedDistrict, pendingFocusDistrict])
+
+  // 리포트에서 넘어온 구 포커싱 — 지도·마커 데이터가 준비되면 해당 구 선택+이동
+  useEffect(() => {
+    if (!pendingFocusDistrict || !mapReady || !centroids || !regionByDistrict) return
+    const representative = regionByDistrict.get(pendingFocusDistrict)
+    if (representative) selectDistrict(pendingFocusDistrict, representative.regionCode)
+    // 상권 데이터가 없는 구면 선택 없이 이동만 (즐겨찾기 선택과 동일한 폴백)
+    else panToDistrict(pendingFocusDistrict)
+    setPendingFocusDistrict(null)
+  }, [pendingFocusDistrict, mapReady, centroids, regionByDistrict, selectDistrict, panToDistrict])
 
   // 즐겨찾기 등록 완료 — 검색 화면으로 복귀해 갱신된 목록 + 토스트를 보여준다 (Figma 257:9468)
   const finishRegister = () => {
@@ -265,11 +277,16 @@ export default function MapPage() {
     setPendingSearchFocus(false)
   }, [pendingSearchFocus, mapSelecting])
 
-  // 즐겨찾는 지역 편집의 "추가"로 진입 — 등록 모드 검색 화면을 바로 연다
+  // 라우터 state 진입 — 즐겨찾기 "추가"(registerFavorite)·리포트 "지도에서 확인하기"(focusDistrict)
   useEffect(() => {
-    if (!(location.state as { registerFavorite?: boolean } | null)?.registerFavorite) return
-    setRegisterMode(true)
-    setPendingSearchFocus(true)
+    const state = location.state as { registerFavorite?: boolean; focusDistrict?: string } | null
+    if (!state?.registerFavorite && !state?.focusDistrict) return
+    if (state.registerFavorite) {
+      setRegisterMode(true)
+      setPendingSearchFocus(true)
+    }
+    // 랭킹 행처럼 "서울 강서구" 형태가 와도 geojson 구명("강서구")에 맞춘다
+    if (state.focusDistrict) setPendingFocusDistrict(state.focusDistrict.replace(/^서울\s*/, ''))
     // state 소거 — 새로고침/뒤로가기 시 재진입 방지
     navigate(location.pathname, { replace: true })
   }, [location.state, location.pathname, navigate])

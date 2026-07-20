@@ -14,6 +14,7 @@ import { PwaInstallGate } from '@/widgets/pwa-install'
 import { queryClient } from '@/shared/api/queryClient'
 import { useAppHeight } from '@/shared/lib/useAppHeight'
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry'
+import { Logo } from '@/shared/ui/Logo/Logo'
 import { Spinner } from '@/shared/ui/Spinner/Spinner'
 import { routeImports, schedulePrefetch } from './prefetch'
 
@@ -53,6 +54,15 @@ function FullScreenSpinner({ label = '화면 불러오는 중' }: { label?: stri
   return (
     <div className="flex min-h-[var(--app-height,100dvh)] items-center justify-center bg-white">
       {visible && <Spinner aria-label={label} />}
+    </div>
+  )
+}
+
+/** 앱 부팅(세션 확인) 브랜드 스플래시 — PWA 설치 스플래시(오렌지 배경+화이트 로고)와 동일 톤 */
+function BrandSplash() {
+  return (
+    <div className="flex min-h-[var(--app-height,100dvh)] items-center justify-center bg-key">
+      <Logo variant="white" className="h-12" />
     </div>
   )
 }
@@ -130,7 +140,7 @@ function SessionGate({ children }: { children: ReactNode }) {
   const resolving = status === 'idle' || status === 'checking'
 
   if (resolving && location.pathname !== '/auth/kakao') {
-    return <FullScreenSpinner label="세션 확인 중" />
+    return <BrandSplash />
   }
   return <>{children}</>
 }

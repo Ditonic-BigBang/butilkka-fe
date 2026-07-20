@@ -27,6 +27,17 @@ describe('MobileLayout', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
+  it('하단 탭 유무에 따라 전체 화면 높이와 실제 가시 높이를 분리한다', () => {
+    const withTab = renderWithRouter(<MobileLayout>탭 있음</MobileLayout>)
+    expect(withTab.container.firstElementChild).toHaveClass('h-[var(--app-height,100dvh)]')
+    withTab.unmount()
+
+    const withoutTab = renderWithRouter(<MobileLayout showBottomTab={false}>탭 없음</MobileLayout>)
+    expect(withoutTab.container.firstElementChild).toHaveClass(
+      'h-[var(--app-visible-height,var(--app-height,100dvh))]',
+    )
+  })
+
   it('스크롤 동작은 유지하면서 기본 스크롤바만 숨긴다', () => {
     renderWithRouter(<MobileLayout>x</MobileLayout>)
 

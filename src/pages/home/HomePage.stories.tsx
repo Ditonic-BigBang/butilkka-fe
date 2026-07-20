@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { dashboardKeys } from '@/entities/dashboard'
 import { dashboardMock } from '@/shared/api/mocks/fixtures'
 import { useAuthStore } from '@/entities/session'
-import HomePage from './HomePage'
+import HomePage, { DashboardSkeleton } from './HomePage'
+import { HomeHeader } from './ui/HomeHeader'
 
 // 스토리는 네트워크 없이 렌더 — 대시보드 목 DTO 를 쿼리 캐시에 시드하고 refetch 를 끈다.
 function seededClient() {
@@ -59,3 +60,19 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/**
+ * 로딩 스켈레톤 — 대시보드 응답 대기 (shimmer).
+ * 헤더(홈·위치·알림)는 세션 데이터로 로딩 중에도 실값이 떠 있으므로 실제 화면 그대로 포함.
+ */
+export const Skeleton: Story = {
+  name: '로딩 스켈레톤',
+  render: () => (
+    <div className="min-h-screen bg-gray-70">
+      <HomeHeader location="중구 명동" onBell={() => {}} />
+      <div className="px-5 pt-3 pb-6">
+        <DashboardSkeleton />
+      </div>
+    </div>
+  ),
+}

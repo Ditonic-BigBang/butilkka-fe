@@ -38,3 +38,8 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** 이전 리포트 미발행(신규 유저 첫 분기) — 분기·등급 없이 라벨만 좌측에 두는 변형 */
+export const NoPreviousReport: Story = {
+  args: { quarter: undefined, grade: undefined },
+}

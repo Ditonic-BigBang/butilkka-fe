@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
-import { Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
+import { Bone, Dropdown, DropdownOption, EmptyState, ErrorRetry, SortTrigger } from '@/shared/ui'
 import { SimilarCaseCard } from '@/entities/report'
 import { CASE_SORT_LABELS, useReportCases, type CaseSortOrder } from './model/useReportCases'
 
@@ -98,11 +98,13 @@ export default function ReportCasesPage() {
 }
 
 /** 로딩 스켈레톤 — 유사 사례 카드 형태 4장 */
-function CasesSkeleton() {
+export function CasesSkeleton() {
   return (
     <ul className="flex flex-col gap-3 px-5">
       {[0, 1, 2, 3].map((i) => (
-        <li key={i} className="h-[107px] animate-pulse rounded-12 bg-gray-70" />
+        <li key={i}>
+          <Bone className="h-[107px] w-full rounded-12" />
+        </li>
       ))}
     </ul>
   )
