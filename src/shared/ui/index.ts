@@ -1,4 +1,5 @@
 export { AddressItem } from './AddressItem/AddressItem'
+export { Bone } from './Skeleton/Bone'
 export { BottomSheet } from './BottomSheet/BottomSheet'
 export { CTA } from './CTA/CTA'
 export { Calendar } from './Calendar/Calendar'

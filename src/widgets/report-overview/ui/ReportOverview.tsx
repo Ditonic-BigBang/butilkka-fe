@@ -9,6 +9,7 @@ import {
   Sparkle,
 } from '@/entities/report'
 import { RankedDistrictCard } from '@/entities/district'
+import { Bone } from '@/shared/ui'
 import { pickAnalysisIcon } from '../lib/analysisIcons'
 import type { ReportView } from '../model/reportView'
 
@@ -180,14 +181,42 @@ export function ReportOverview({
   )
 }
 
-/** 로딩 스켈레톤 — 본문 카드 형태의 회색 플레이스홀더 */
+/** 로딩 스켈레톤 — 카드별 핵심 요소만 pill 바(공용 Bone)로 암시한다 */
 export function ReportOverviewSkeleton() {
   return (
     <div className="flex flex-col gap-3 px-5 pt-1 pb-6">
-      <div className="h-[188px] animate-pulse rounded-14 bg-white" />
-      <div className="h-[232px] animate-pulse rounded-14 bg-white" />
-      <div className="h-[158px] animate-pulse rounded-12 bg-white" />
-      <div className="h-[158px] animate-pulse rounded-12 bg-white" />
+      {/* 상권 점수 카드 — 라벨 + 등급 자리 + 게이지 + 브리핑 */}
+      <div className="rounded-14 bg-white p-5">
+        <Bone className="h-3.5 w-24" />
+        <Bone className="mt-6 h-9 w-28 rounded-10" />
+        <Bone className="mt-8 h-2 w-full" />
+        <div className="mt-6 flex flex-col gap-2.5">
+          <Bone className="h-3.5 w-full" />
+          <Bone className="h-3.5 w-3/5" />
+        </div>
+      </div>
+
+      {/* AI 종합 전망 카드 — 라벨 + 문단 */}
+      <div className="rounded-14 bg-white p-5">
+        <Bone className="h-3.5 w-20" />
+        <div className="mt-5 flex flex-col gap-2.5">
+          <Bone className="h-3.5 w-full" />
+          <Bone className="h-3.5 w-full" />
+          <Bone className="h-3.5 w-1/2" />
+        </div>
+      </div>
+
+      {/* 원인 분석 · 선행 신호 카드 */}
+      {[0, 1].map((i) => (
+        <div key={i} className="rounded-12 bg-white p-4 pb-5">
+          <Bone className="h-3.5 w-16" />
+          <div className="mt-5 flex flex-col gap-3.5">
+            <Bone className="h-3.5 w-full" />
+            <Bone className="h-3.5 w-5/6" />
+            <Bone className="h-3.5 w-2/3" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

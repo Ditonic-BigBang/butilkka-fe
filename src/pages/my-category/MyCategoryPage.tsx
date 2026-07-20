@@ -1,5 +1,6 @@
 import { Navigate, useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
+import { Bone } from '@/shared/ui'
 import { CategorySelect, useMyStores, type Category } from '@/entities/store'
 import { useUpdateStoreCategory } from './model/useUpdateStoreCategory'
 
@@ -48,14 +49,14 @@ export default function MyCategoryPage() {
 }
 
 /** 로딩 스켈레톤 — 타이틀 + 현재 업종 + 업종 그리드 자리 */
-function CategorySkeleton() {
+export function CategorySkeleton() {
   return (
     <div className="flex flex-col gap-4 p-5">
-      <div className="h-9 w-44 animate-pulse rounded bg-gray-100" />
-      <div className="mt-6 h-14 w-full animate-pulse rounded-12 bg-gray-100" />
+      <Bone className="h-6 w-44" />
+      <Bone className="mt-6 h-14 w-full rounded-12" />
       <div className="grid grid-cols-2 gap-3">
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-          <div key={i} className="h-14 animate-pulse rounded-8 bg-gray-100" />
+          <Bone key={i} className="h-14 rounded-8" />
         ))}
       </div>
     </div>

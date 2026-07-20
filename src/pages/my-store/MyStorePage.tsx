@@ -4,7 +4,7 @@ import Compass from '~icons/ci/compass'
 import Search from '~icons/ci/search'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { StoreLocationPicker } from '@/widgets/store-location-picker'
-import { ConfirmPopup, EmptyState, ErrorRetry, Toast, ToastHost } from '@/shared/ui'
+import { Bone, ConfirmPopup, EmptyState, ErrorRetry, Toast, ToastHost } from '@/shared/ui'
 import {
   StoreCard,
   useMyStores,
@@ -165,17 +165,17 @@ export default function MyStorePage() {
 }
 
 /** 로딩 스켈레톤 — 가게 카드 형태 2줄 */
-function StoreListSkeleton() {
+export function StoreListSkeleton() {
   return (
     <ul className="flex flex-col">
       {[0, 1].map((i) => (
         <li key={i} className="flex gap-3 border-b border-gray-100 px-5 py-4">
-          <div className="size-6 shrink-0 animate-pulse rounded-lg bg-gray-100" />
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="h-3.5 w-24 animate-pulse rounded bg-gray-100" />
-            <div className="h-4 w-3/5 animate-pulse rounded bg-gray-100" />
-            <div className="h-3.5 w-4/5 animate-pulse rounded bg-gray-100" />
-            <div className="mt-2 h-7 w-24 animate-pulse rounded bg-gray-100" />
+          <Bone className="size-6 shrink-0 rounded-8" />
+          <div className="flex flex-1 flex-col gap-2.5">
+            <Bone className="h-3.5 w-24" />
+            <Bone className="h-3.5 w-3/5" />
+            <Bone className="h-3.5 w-4/5" />
+            <Bone className="mt-2 h-7 w-24 rounded-max" />
           </div>
         </li>
       ))}

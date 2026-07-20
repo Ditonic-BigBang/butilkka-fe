@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { storeKeys, type MyStore } from '@/entities/store'
-import MyStorePage from './MyStorePage'
+import Compass from '~icons/ci/compass'
+import Search from '~icons/ci/search'
+import { GNB } from '@/widgets/mobile-layout'
+import MyStorePage, { StoreListSkeleton } from './MyStorePage'
 
 // Figma 예시처럼 대표 가게 1개 + 일반 가게 2개
 const storesMock: MyStore[] = [1, 2, 3].map((id) => ({
@@ -68,4 +71,25 @@ export const WithToast: Story = {
       </MemoryRouter>
     ),
   ],
+}
+
+/** 로딩 스켈레톤 — 가게 목록 응답 대기 (shimmer). GNB·주소 검색바는 로딩 중에도 실 UI 그대로 */
+export const Skeleton: Story = {
+  name: '로딩 스켈레톤',
+  render: () => (
+    <div className="flex min-h-screen flex-col bg-white">
+      <GNB title="내 가게 설정" showSettings={false} />
+      <div className="flex flex-col gap-4 px-5 py-3">
+        <div className="flex h-12 w-full items-center gap-2.5 rounded-8 bg-gray-70 px-4">
+          <Search aria-hidden className="size-6 shrink-0 text-gray-300" />
+          <span className="text-body-l-regular text-gray-300">도로명 또는 지번 입력</span>
+        </div>
+        <div className="flex items-center gap-1.5 self-start">
+          <Compass aria-hidden className="size-5 text-gray-600" />
+          <span className="text-body-m-regular text-gray-600">현위치로 설정하기</span>
+        </div>
+      </div>
+      <StoreListSkeleton />
+    </div>
+  ),
 }

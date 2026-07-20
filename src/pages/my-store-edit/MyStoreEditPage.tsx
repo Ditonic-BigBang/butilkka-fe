@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { StoreLocationPicker, LocationPreviewMap } from '@/widgets/store-location-picker'
-import { CTA, TextField, DatePicker } from '@/shared/ui'
+import { Bone, CTA, TextField, DatePicker } from '@/shared/ui'
 import {
   lookupRegion,
   CategorySelect,
@@ -285,14 +285,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 /** 로딩 스켈레톤 — 지도 + 필드 3개 */
-function EditSkeleton() {
+export function EditSkeleton() {
   return (
     <div className="flex flex-col gap-6 p-5">
-      <div className="h-[124px] w-full animate-pulse bg-gray-100" />
+      <Bone className="h-[124px] w-full rounded-8" />
       {[0, 1, 2].map((i) => (
-        <div key={i} className="flex flex-col gap-2">
-          <div className="h-5 w-20 animate-pulse rounded bg-gray-100" />
-          <div className="h-12 w-full animate-pulse rounded-8 bg-gray-100" />
+        <div key={i} className="flex flex-col gap-2.5">
+          <Bone className="h-4 w-20" />
+          <Bone className="h-12 w-full rounded-8" />
         </div>
       ))}
     </div>

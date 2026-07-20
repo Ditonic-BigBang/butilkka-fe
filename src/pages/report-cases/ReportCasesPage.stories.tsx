@@ -3,7 +3,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { reportKeys } from '@/entities/report'
 import { reportCasesMock } from '@/shared/api/mocks/fixtures'
-import ReportCasesPage from './ReportCasesPage'
+import { GNB } from '@/widgets/mobile-layout'
+import { SortTrigger } from '@/shared/ui'
+import ReportCasesPage, { CasesSkeleton } from './ReportCasesPage'
 
 const REPORT_ID = 17
 
@@ -42,3 +44,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** 로딩 스켈레톤 — 유사 사례 목록 응답 대기 (shimmer). GNB·정렬은 로딩 중에도 실 UI 그대로 */
+export const Skeleton: Story = {
+  name: '로딩 스켈레톤',
+  render: () => (
+    <div className="flex min-h-screen flex-col bg-white">
+      <GNB title="유사 사례" showSettings={false} />
+      <div className="px-5 py-3">
+        <SortTrigger label="최신순" direction="desc" />
+      </div>
+      <CasesSkeleton />
+    </div>
+  ),
+}

@@ -75,6 +75,7 @@ export default function ReportPage() {
     <MobileLayout className="bg-gray-70">
       <div className="min-h-full bg-gray-70">
         <ReportHeader
+          loading={report.isPending}
           region={report.data?.regionName}
           category={report.data?.categoryName}
           // PDF 다운로드는 PRO 혜택 — 구독 전에는 버튼 자체를 숨긴다
@@ -97,11 +98,14 @@ export default function ReportPage() {
 
 /** 상단 헤더 — "AI 리포트" 타이틀 + 상권·업종 + 우측 다운로드 버튼 (Figma: 1501:14285) */
 function ReportHeader({
+  loading = false,
   region,
   category,
   onDownload,
   downloading = false,
 }: {
+  /** 리포트 로딩 중 — 상권·업종 줄 자리에 스켈레톤 표시 (레이아웃 시프트 방지) */
+  loading?: boolean
   region?: string
   category?: string
   /** 없으면 다운로드 버튼 미노출 (구독 전 — PDF 는 PRO 혜택) */
@@ -114,6 +118,11 @@ function ReportHeader({
     <header className="flex items-end gap-2.5 bg-gray-70 px-5 py-4">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h1 className="text-title-s-semibold text-gray-900">AI 리포트</h1>
+        {loading && (
+          <span className="flex h-[21px] items-center">
+            <span aria-hidden className="block h-3.5 w-36 skeleton rounded-full" />
+          </span>
+        )}
         {region && category && (
           <div className="flex items-center gap-1 text-body-m-regular text-gray-400">
             <span>{region} 인근</span>
