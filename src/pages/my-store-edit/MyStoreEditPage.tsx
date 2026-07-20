@@ -157,6 +157,8 @@ function StoreForm({ mode, store, initialLocation, initialRegionCode }: StoreFor
       update.mutate(
         {
           storeId: store.storeId,
+          // 구가 바뀌면 리포트/대시보드 캐시 정리 + 생성 연출 예고 (useUpdateStore)
+          prevRegionCode: store.regionCode,
           payload: {
             storeName: name.trim(),
             storeOpenDate: foundedDate,
