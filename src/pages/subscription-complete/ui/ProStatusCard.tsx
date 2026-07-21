@@ -1,7 +1,7 @@
 type ProStatusCardProps = {
   /** 다음 결제일 (예: 2026년 8월 9일) */
   nextBilling: string
-  /** 결제금액 (예: 8,000원) */
+  /** 결제금액 (예: 790,000원) */
   price: string
 }
 

@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
-import { useSubscribe, type PlanKey } from './model/useSubscribe'
+import { useSubscribe } from './model/useSubscribe'
 import { BenefitCard } from './ui/BenefitCard'
 import { PlanCard } from './ui/PlanCard'
 import { ComparisonTable } from './ui/ComparisonTable'
@@ -44,14 +44,13 @@ const AT_BOTTOM_EPSILON = 16
 
 /**
  * 구독 플랜 확인하기 (Figma: [4-9] 요금제 과정 1248:14758).
- * 마이페이지 "리포트 업그레이드 하기"·리포트 잠금 카드 → 진입. 헤더 + 구독 혜택 4종 +
- * 일반 vs 구독 비교표 + 연간/월간 플랜 선택 + "구독 시작하기" CTA.
+ * 마이페이지 "리포트 업그레이드 하기"·리포트/지도 잠금 카드 → 진입. 헤더 + 구독 혜택 4종 +
+ * 일반 vs 구독 비교표 + 1년 구독 플랜(단일) + "구독 시작하기" CTA.
  * CTA 는 하단 플로팅(sticky) — 맨 밑이 아니면 탭 시 끝까지 스크롤, 맨 밑에서 탭하면
- * 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 리포트 잠금이 풀린다.
+ * 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 잠금이 풀린다.
  */
 export default function SubscriptionPage() {
   const navigate = useNavigate()
-  const [plan, setPlan] = useState<PlanKey>('annual')
   const subscription = useSubscribe()
   const rootRef = useRef<HTMLDivElement>(null)
   // 상단 그라데이션 시작색을 노치·상태바까지 이어 보이게 (Android 상태바 색)
@@ -67,8 +66,8 @@ export default function SubscriptionPage() {
         return
       }
     }
-    subscription.mutate(plan, {
-      onSuccess: () => navigate('/my/subscription/complete', { state: { plan } }),
+    subscription.mutate(undefined, {
+      onSuccess: () => navigate('/my/subscription/complete'),
     })
   }
 
@@ -130,29 +129,13 @@ export default function SubscriptionPage() {
             <ComparisonTable />
           </section>
 
-          {/* 플랜 선택 */}
+          {/* 플랜 — 1년 단일 상품이라 선택 없이 한 장만 보여준다 */}
           <section className="flex flex-col items-center gap-7">
             <SectionHeading
-              title={'나에게 맞는 플랜을\n선택해 보세요'}
-              subtitle="연간 플랜으로 20% 더 저렴하게 이용해보세요"
+              title={'1년 동안\n제한 없이 이용하세요'}
+              subtitle="1년 구독 하나로 모든 프리미엄 기능을 열 수 있어요"
             />
-            <div className="flex w-full flex-col gap-3">
-              <PlanCard
-                name="연간"
-                price="76,800원"
-                pricePrefix="연"
-                subPrice="월 6,400원"
-                badge="약 20% 절약"
-                selected={plan === 'annual'}
-                onSelect={() => setPlan('annual')}
-              />
-              <PlanCard
-                name="월간"
-                price="8,000원"
-                selected={plan === 'monthly'}
-                onSelect={() => setPlan('monthly')}
-              />
-            </div>
+            <PlanCard name="연간" price="790,000원" pricePrefix="연" />
           </section>
         </div>
 
