@@ -8,17 +8,13 @@ type PaywallLockProps = {
    * 없으면 뒤에 이미 그려진 화면을 backdrop-blur 로 흐린다 (지도).
    */
   children?: ReactNode
-  /** 잠금 카드 타이틀 — 화면별 카피 (기본은 리포트용) */
-  title?: string
-  /** 잠금 카드 안내문 — 화면별 카피 (기본은 리포트용) */
-  description?: string
   /** "확인하러 가기" — 구독 요금제 화면 이동 */
   onUpgrade?: () => void
   className?: string
 }
 
 /**
- * 구독(리포트 PRO) 전 화면 잠금 레이어 — 리포트·지도가 공유한다.
+ * 구독(리포트 PRO) 전 화면 잠금 레이어 — 리포트·지도가 같은 내용으로 공유한다.
  * 콘텐츠를 통째로 블러로 덮고 가운데에 결제 유도 카드를 띄운다.
  * 오버레이가 포인터 이벤트를 모두 흡수하므로 아래 지도 제스처·스크롤도 함께 막힌다.
  *
@@ -26,13 +22,7 @@ type PaywallLockProps = {
  * - `children` 있으면 그 내용을 자체 filter 로 흐린다 (블러 가장자리가 투명해지지 않게 살짝 확대)
  * - `children` 없으면 이미 그려진 아래 화면을 backdrop-filter 로 흐린다
  */
-export function PaywallLock({
-  children,
-  title,
-  description,
-  onUpgrade,
-  className,
-}: PaywallLockProps) {
+export function PaywallLock({ children, onUpgrade, className }: PaywallLockProps) {
   return (
     <div className={cn('relative isolate overflow-hidden', className)}>
       {children ? (
@@ -62,7 +52,7 @@ export function PaywallLock({
       ) : null}
       {/* 카드 — 잠금 영역이 카드보다 짧아도 잘리지 않게 자체 스크롤 */}
       <div className="absolute inset-0 scrollbar-hide flex items-center justify-center overflow-y-auto px-5 py-8">
-        <ReportPaywallCard title={title} description={description} onConfirm={onUpgrade} />
+        <ReportPaywallCard onConfirm={onUpgrade} />
       </div>
     </div>
   )

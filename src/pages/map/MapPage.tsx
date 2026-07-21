@@ -442,8 +442,6 @@ export default function MapPage() {
         {locked && (
           <PaywallLock
             className="absolute inset-0 z-40"
-            title={'서울 상권 지도를\n확인해보세요'}
-            description={'PRO에서 상권별 쇠퇴 지표와\n랭킹을 모두 볼 수 있어요.'}
             onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
           />
         )}

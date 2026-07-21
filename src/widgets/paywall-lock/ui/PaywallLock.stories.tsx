@@ -59,11 +59,7 @@ export const WithContent: Story = {
 /** 지도 잠금 — 배경 없이 아래 화면을 backdrop-blur 로 흐린다 */
 export const Backdrop: Story = {
   name: '지도 (backdrop 블러)',
-  args: {
-    className: 'absolute inset-0',
-    title: '서울 상권 지도를\n확인해보세요',
-    description: 'PRO에서 상권별 쇠퇴 지표와\n랭킹을 모두 볼 수 있어요.',
-  },
+  args: { className: 'absolute inset-0' },
   decorators: [
     (Story) => (
       <div className="relative h-screen bg-gradient-to-br from-gray-100 to-gray-300">
