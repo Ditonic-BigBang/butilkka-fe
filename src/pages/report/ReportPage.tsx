@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import Download from '~icons/ci/download'
 import { MobileLayout } from '@/widgets/mobile-layout'
+import { PaywallLock } from '@/widgets/paywall-lock'
 import {
   ReportOverview,
   ReportOverviewSkeleton,
@@ -19,11 +20,18 @@ import { useLatestReport, useReportHistory } from './model/useLatestReport'
 import { useReportLoadingView } from './model/useReportLoadingView'
 import { ReportGenerating } from './ui/ReportGenerating'
 
+/** 잠금 배경으로만 깔리는 본문의 콜백 — 블러 뒤라 조작이 닿지 않는다 */
+const noop = () => {}
+
 /**
  * AI 리포트 (Figma: [3] AI 리포트/[3-1] 기본 267:4266·4528 · API: GET /api/v1/reports/latest).
  * 헤더(상권·업종) + 리포트 본문(ReportOverview 위젯) — 점수 카드 아래에
  * "이전 리포트 확인하러 가기" 버튼(히스토리 이동)을 끼운다. 하단 탭 있음.
- * 리포트 PRO 구독 전이면 유사 사례부터 잠그고 결제 유도 카드를 띄운다.
+ *
+ * 리포트 PRO 구독 전이면 헤더만 남기고 본문 전체를 PaywallLock 으로 덮는다.
+ * 잠금 카드는 진입 순간부터 고정이고 뒤 배경만 스켈레톤 → 실제 본문 블러로 조용히 바뀐다
+ * (강한 블러라 교체가 눈에 띄지 않는다). 리포트 요청은 잠금 중에도 계속 돌기 때문에,
+ * 구독으로 잠금이 풀린 시점에 아직 생성 중이면 그때부터 생성 연출이 이어진다.
  */
 export default function ReportPage() {
   const navigate = useNavigate()
@@ -49,6 +57,8 @@ export default function ReportPage() {
     generated: report.data?.generated,
   })
 
+  const goSubscription = () => navigate('/my/subscription', { viewTransition: true })
+
   let content
   if (view === 'generating') {
     content = <ReportGenerating startedAt={generatingSince} />
@@ -66,14 +76,9 @@ export default function ReportPage() {
           <ReportLinkButton
             quarter={previous && formatQuarter(previous.quarter)}
             grade={previous?.grade}
-            // 지난 리포트는 PRO 혜택 — 구독 전엔 구독 플랜 확인으로 유도
-            onClick={() =>
-              navigate(locked ? '/my/subscription' : '/report/history', { viewTransition: true })
-            }
+            onClick={() => navigate('/report/history', { viewTransition: true })}
           />
         }
-        locked={locked}
-        onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
         onViewAllCases={() =>
           navigate(`/report/${report.data.reportId}/cases`, { viewTransition: true })
         }
@@ -99,14 +104,28 @@ export default function ReportPage() {
           onDownload={locked ? undefined : pdf.download}
           downloading={pdf.downloading}
         />
-        {/* view 전환(스켈레톤→연출→본문)마다 리마운트 + 페이드 — 화면이 뚝 바뀌는 것 방지.
-            생성 연출만 flex-1 로 남은 높이를 차지 (본문·스켈레톤은 일반 흐름) */}
-        <div
-          key={view}
-          className={cn('animate-fade-up', view === 'generating' && 'flex flex-1 flex-col')}
-        >
-          {content}
-        </div>
+        {locked ? (
+          // 헤더 아래 남은 높이를 정확히 채워(min-h-full + flex-1) 스크롤로 훔쳐볼 여지를 없앤다
+          <PaywallLock className="min-h-0 flex-1" onUpgrade={goSubscription}>
+            {/* 배경 교체(스켈레톤→본문)만 리마운트 페이드 — 카드는 그대로 떠 있다 */}
+            <div key={report.data ? 'report' : 'skeleton'} className="animate-fade-up">
+              {report.data ? (
+                <ReportOverview data={report.data} onViewAllCases={noop} onViewMap={noop} />
+              ) : (
+                <ReportOverviewSkeleton />
+              )}
+            </div>
+          </PaywallLock>
+        ) : (
+          /* view 전환(스켈레톤→연출→본문)마다 리마운트 + 페이드 — 화면이 뚝 바뀌는 것 방지.
+             생성 연출만 flex-1 로 남은 높이를 차지 (본문·스켈레톤은 일반 흐름) */
+          <div
+            key={view}
+            className={cn('animate-fade-up', view === 'generating' && 'flex flex-1 flex-col')}
+          >
+            {content}
+          </div>
+        )}
       </div>
       {pdf.toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 mx-auto flex max-w-[430px] justify-center px-5">

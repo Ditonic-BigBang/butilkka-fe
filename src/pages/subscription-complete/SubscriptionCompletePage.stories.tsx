@@ -12,24 +12,11 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** 기본(월간) — state 없이 진입하면 월간으로 표시 */
-export const Monthly: Story = {
+/** 1년 단일 상품 — 연간 790,000원, 다음 결제일은 오늘로부터 +1년 */
+export const Default: Story = {
   decorators: [
     (Story) => (
       <MemoryRouter initialEntries={['/my/subscription/complete']}>
-        <Story />
-      </MemoryRouter>
-    ),
-  ],
-}
-
-/** 연간 — 구독 시작하기에서 넘어온 연간 플랜(state) */
-export const Annual: Story = {
-  decorators: [
-    (Story) => (
-      <MemoryRouter
-        initialEntries={[{ pathname: '/my/subscription/complete', state: { plan: 'annual' } }]}
-      >
         <Story />
       </MemoryRouter>
     ),

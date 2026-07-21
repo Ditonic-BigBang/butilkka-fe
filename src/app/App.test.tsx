@@ -47,6 +47,25 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
+  it('미구독 사용자가 지난 리포트 URL 로 직접 들어오면 구독 화면으로 보낸다', async () => {
+    // 리포트 본문·지도는 잠금 오버레이로 덮지만, 화면 전체가 유료인 라우트는 라우터가 막는다
+    window.history.replaceState(null, '', '/report/history')
+    server.use(
+      http.get(`${API}/api/v1/users/me`, () =>
+        HttpResponse.json({
+          code: 200,
+          status: 'OK',
+          message: '사용자 정보 조회 성공',
+          data: { id: 1, name: '테스트유저', isOnboarded: true, isReportPro: false, store: null },
+        }),
+      ),
+    )
+    renderApp()
+    expect(
+      await screen.findByText('구독 플랜 확인하기', undefined, { timeout: 10000 }),
+    ).toBeInTheDocument()
+  })
+
   it('온보딩을 마친 사용자는 홈을 렌더링한다', async () => {
     server.use(
       http.get(`${API}/api/v1/users/me`, () =>

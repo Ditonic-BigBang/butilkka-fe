@@ -1,26 +1,24 @@
 import { useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '@/entities/session'
-import { subscribe, type SubscriptionPlan } from '@/entities/subscription'
-
-/** 화면의 플랜 선택값 → API plan (명세 미반영 선규격) */
-const PLAN_CODES = { annual: 'ANNUAL', monthly: 'MONTHLY' } as const satisfies Record<
-  string,
-  SubscriptionPlan
->
-
-export type PlanKey = keyof typeof PLAN_CODES
+import { subscribe } from '@/entities/subscription'
 
 /**
- * 구독 확정 뮤테이션.
- * 성공하면 세션 user 를 재조회해 isReportPro 를 반영한다 —
- * 리포트 잠금 해제·마이페이지 "이용중" 카드가 별도 처리 없이 따라온다.
+ * 구독 확정 뮤테이션 — 플랜은 1년 단일(ANNUAL)이라 인자가 없다.
+ *
+ * 성공 응답의 isReportPro 를 세션에 **즉시** 반영한다 — 리포트·지도 잠금 해제와
+ * 마이페이지 "이용중" 카드가 별도 처리 없이 따라온다. 이어지는 refreshUser 는
+ * 나머지 필드(구독 만료일 등)를 맞추는 동기화일 뿐이라, 느리거나 실패해도
+ * 결제한 사용자가 잠금 화면에 남지 않는다.
  */
 export function useSubscribe() {
+  const setUser = useAuthStore((s) => s.setUser)
   const refreshUser = useAuthStore((s) => s.refreshUser)
 
   return useMutation({
-    mutationFn: (plan: PlanKey) => subscribe(PLAN_CODES[plan]),
-    onSuccess: () => {
+    mutationFn: () => subscribe('ANNUAL'),
+    onSuccess: ({ isReportPro }) => {
+      const user = useAuthStore.getState().user
+      if (user) setUser({ ...user, isReportPro })
       void refreshUser()
     },
   })

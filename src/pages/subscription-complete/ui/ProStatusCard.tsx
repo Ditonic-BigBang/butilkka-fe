@@ -1,7 +1,7 @@
 type ProStatusCardProps = {
   /** 다음 결제일 (예: 2026년 8월 9일) */
   nextBilling: string
-  /** 결제금액 (예: 8,000원) */
+  /** 결제금액 (예: 790,000원) */
   price: string
 }
 
@@ -13,7 +13,7 @@ export function ProStatusCard({ nextBilling, price }: ProStatusCardProps) {
   return (
     <div className="flex flex-col gap-3 rounded-12 border border-gray-100 p-4">
       <div className="flex items-center gap-2">
-        <span className="text-body-l-semibold text-gray-900">리포트 PRO</span>
+        <span className="text-body-l-semibold text-gray-900">1년 구독</span>
         <span className="rounded-max border border-gray-100 px-2 py-1 text-caption-l-medium text-gray-500">
           이용중
         </span>

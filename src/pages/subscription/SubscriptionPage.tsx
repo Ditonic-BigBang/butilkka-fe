@@ -1,14 +1,11 @@
-import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { THEME_COLORS } from '@/shared/lib/themeColors'
 import { useThemeColor } from '@/shared/lib/useThemeColor'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
-import { useSubscribe, type PlanKey } from './model/useSubscribe'
+import { useSubscribe } from './model/useSubscribe'
 import { BenefitCard } from './ui/BenefitCard'
-import { PlanCard } from './ui/PlanCard'
-import { ComparisonTable } from './ui/ComparisonTable'
 import ticketIcon from './assets/pro-ticket.svg'
 
 const BENEFITS = [
@@ -39,43 +36,32 @@ const BENEFITS = [
   },
 ]
 
-// 이 이내로 하단에 붙어 있으면 "맨 밑" 으로 판정 — 모바일 소수점 scrollTop 오차 흡수
-const AT_BOTTOM_EPSILON = 16
-
 /**
  * 구독 플랜 확인하기 (Figma: [4-9] 요금제 과정 1248:14758).
- * 마이페이지 "리포트 업그레이드 하기"·리포트 잠금 카드 → 진입. 헤더 + 구독 혜택 4종 +
- * 일반 vs 구독 비교표 + 연간/월간 플랜 선택 + "구독 시작하기" CTA.
- * CTA 는 하단 플로팅(sticky) — 맨 밑이 아니면 탭 시 끝까지 스크롤, 맨 밑에서 탭하면
- * 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 리포트 잠금이 풀린다.
+ * 마이페이지 "리포트 업그레이드 하기"·리포트/지도 잠금 카드 → 진입.
+ * 헤더 + 결제 혜택 4종 + 금액이 박힌 결제 CTA.
+ * CTA 는 하단 플로팅(sticky) — 한 번 누르면 바로 구독 확정(POST, 선규격) 후
+ * 완료 화면으로 이동하고, 세션 갱신으로 리포트·지도 잠금이 풀린다.
+ *
+ * 비교표(ComparisonTable)·플랜 카드(PlanCard)는 화면에서 내렸지만 다시 쓸 수 있어
+ * 컴포넌트는 `ui/` 에 그대로 남겨둔다.
  */
 export default function SubscriptionPage() {
   const navigate = useNavigate()
-  const [plan, setPlan] = useState<PlanKey>('annual')
   const subscription = useSubscribe()
-  const rootRef = useRef<HTMLDivElement>(null)
   // 상단 그라데이션 시작색을 노치·상태바까지 이어 보이게 (Android 상태바 색)
   useThemeColor(THEME_COLORS.subscriptionWarm)
 
   const handleCtaClick = () => {
-    // 스크롤러는 MobileLayout 의 main — 페이지 루트의 부모
-    const scroller = rootRef.current?.parentElement
-    if (scroller) {
-      const remaining = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
-      if (remaining > AT_BOTTOM_EPSILON) {
-        scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
-        return
-      }
-    }
-    subscription.mutate(plan, {
-      onSuccess: () => navigate('/my/subscription/complete', { state: { plan } }),
+    subscription.mutate(undefined, {
+      onSuccess: () => navigate('/my/subscription/complete'),
     })
   }
 
   return (
     // className: 프레임(노치 영역 포함) 배경을 그라데이션 시작색으로 → iOS 노치가 헤더와 이어짐
     <MobileLayout showBottomTab={false} className="bg-subscription-warm">
-      <div ref={rootRef} className="relative flex min-h-full flex-col bg-white">
+      <div className="relative flex min-h-full flex-col bg-white">
         {/* 상단 웜 그라데이션 (헤더 배경) — Gradation/3 */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[442px] bg-gradation-3" />
 
@@ -91,14 +77,14 @@ export default function SubscriptionPage() {
           <header className="flex flex-col items-center gap-4 text-center">
             <span className="flex items-center gap-2 rounded-max bg-white px-3 py-1">
               <img src={ticketIcon} alt="" aria-hidden className="size-6" />
-              <span className="text-body-m-semibold text-key">Pro 구독</span>
+              <span className="text-body-m-semibold text-key">데이터 구독</span>
             </span>
             <div className="flex flex-col gap-2">
               <h1 className="text-headline-bold whitespace-pre-line text-gray-900">
                 {'더 깊은 데이터로\n더 정확한 의사결정을'}
               </h1>
               <p className="text-body-l-medium whitespace-pre-line text-gray-600">
-                {'Pro에서 제공하는\n프리미엄 분석 기능을 만나보세요.'}
+                {'데이터를 연간 구독하고\n프리미엄 분석 기능을 만나보세요.'}
               </p>
             </div>
           </header>
@@ -106,52 +92,13 @@ export default function SubscriptionPage() {
           {/* 구독 혜택 */}
           <section className="flex flex-col items-center gap-7">
             <SectionHeading
-              title="구독 혜택"
+              title="결제 혜택"
               subtitle="한 단계 더 깊은 상권 분석을 경험해보세요."
             />
             <div className="flex w-full flex-col gap-2">
               {BENEFITS.map((benefit) => (
                 <BenefitCard key={benefit.label} {...benefit} />
               ))}
-            </div>
-          </section>
-
-          {/* 실제 혜택 비교 */}
-          <section className="flex flex-col items-center gap-7">
-            <div className="flex flex-col items-center gap-3">
-              <span className="rounded-max bg-orange-50 px-3 py-1 text-body-m-semibold text-key">
-                실제 혜택 비교
-              </span>
-              <SectionHeading
-                title="일반 회원 vs 구독 회원"
-                subtitle={'구독 회원에게만 제공되는\n프리미엄 기능을 확인해보세요.'}
-              />
-            </div>
-            <ComparisonTable />
-          </section>
-
-          {/* 플랜 선택 */}
-          <section className="flex flex-col items-center gap-7">
-            <SectionHeading
-              title={'나에게 맞는 플랜을\n선택해 보세요'}
-              subtitle="연간 플랜으로 20% 더 저렴하게 이용해보세요"
-            />
-            <div className="flex w-full flex-col gap-3">
-              <PlanCard
-                name="연간"
-                price="76,800원"
-                pricePrefix="연"
-                subPrice="월 6,400원"
-                badge="약 20% 절약"
-                selected={plan === 'annual'}
-                onSelect={() => setPlan('annual')}
-              />
-              <PlanCard
-                name="월간"
-                price="8,000원"
-                selected={plan === 'monthly'}
-                onSelect={() => setPlan('monthly')}
-              />
             </div>
           </section>
         </div>
@@ -164,7 +111,7 @@ export default function SubscriptionPage() {
             </p>
           )}
           <CTA transparent disabled={subscription.isPending} onClick={handleCtaClick}>
-            {subscription.isPending ? '구독 처리 중…' : '구독 시작하기'}
+            {subscription.isPending ? '구독 처리 중…' : '790,000원 결제하기'}
           </CTA>
         </div>
       </div>
