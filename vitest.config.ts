@@ -21,6 +21,14 @@ const isPwaPlugin = (p: unknown): boolean =>
 const merged = mergeConfig(
   viteConfig,
   defineConfig({
+    // main.tsx 는 테스트 그래프에 없어 초기 의존성 스캔에서 빠지는데, vite 가 뒤늦게
+    // index.html→main.tsx 를 스캔하며 이 의존성을 추가하면 실행 도중 재최적화가 걸린다
+    // ("optimized dependencies changed. reloading"). 그 순간 돌고 있던 브라우저 테스트는
+    // 러너를 잃어 import 단계에서 죽거나 영영 안 끝난다 (CI 에서만 재현되는 레이스).
+    // 미리 포함해 런 중 재최적화를 없앤다 — vitest 경고가 안내하는 해법.
+    optimizeDeps: {
+      include: ['@tanstack/react-query-devtools'],
+    },
     test: {
       projects: [
         {
