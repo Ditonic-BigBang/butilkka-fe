@@ -7,8 +7,6 @@ import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
 import { useSubscribe } from './model/useSubscribe'
 import { BenefitCard } from './ui/BenefitCard'
-import { PlanCard } from './ui/PlanCard'
-import { ComparisonTable } from './ui/ComparisonTable'
 import ticketIcon from './assets/pro-ticket.svg'
 
 const BENEFITS = [
@@ -44,10 +42,13 @@ const AT_BOTTOM_EPSILON = 16
 
 /**
  * 구독 플랜 확인하기 (Figma: [4-9] 요금제 과정 1248:14758).
- * 마이페이지 "리포트 업그레이드 하기"·리포트/지도 잠금 카드 → 진입. 헤더 + 구독 혜택 4종 +
- * 일반 vs 구독 비교표 + 1년 구독 플랜(단일) + "구독 시작하기" CTA.
+ * 마이페이지 "리포트 업그레이드 하기"·리포트/지도 잠금 카드 → 진입.
+ * 헤더 + 결제 혜택 4종 + "구독 시작하기" CTA.
  * CTA 는 하단 플로팅(sticky) — 맨 밑이 아니면 탭 시 끝까지 스크롤, 맨 밑에서 탭하면
  * 구독 확정(POST, 선규격) 후 완료 화면으로 — 세션 갱신으로 잠금이 풀린다.
+ *
+ * 비교표(ComparisonTable)·플랜 카드(PlanCard)는 화면에서 내렸지만 다시 쓸 수 있어
+ * 컴포넌트는 `ui/` 에 그대로 남겨둔다.
  */
 export default function SubscriptionPage() {
   const navigate = useNavigate()
@@ -90,14 +91,14 @@ export default function SubscriptionPage() {
           <header className="flex flex-col items-center gap-4 text-center">
             <span className="flex items-center gap-2 rounded-max bg-white px-3 py-1">
               <img src={ticketIcon} alt="" aria-hidden className="size-6" />
-              <span className="text-body-m-semibold text-key">Pro 구독</span>
+              <span className="text-body-m-semibold text-key">데이터 구독</span>
             </span>
             <div className="flex flex-col gap-2">
               <h1 className="text-headline-bold whitespace-pre-line text-gray-900">
                 {'더 깊은 데이터로\n더 정확한 의사결정을'}
               </h1>
               <p className="text-body-l-medium whitespace-pre-line text-gray-600">
-                {'Pro에서 제공하는\n프리미엄 분석 기능을 만나보세요.'}
+                {'데이터를 연간 구독하고\n프리미엄 분석 기능을 만나보세요.'}
               </p>
             </div>
           </header>
@@ -105,7 +106,7 @@ export default function SubscriptionPage() {
           {/* 구독 혜택 */}
           <section className="flex flex-col items-center gap-7">
             <SectionHeading
-              title="구독 혜택"
+              title="결제 혜택"
               subtitle="한 단계 더 깊은 상권 분석을 경험해보세요."
             />
             <div className="flex w-full flex-col gap-2">
@@ -113,29 +114,6 @@ export default function SubscriptionPage() {
                 <BenefitCard key={benefit.label} {...benefit} />
               ))}
             </div>
-          </section>
-
-          {/* 실제 혜택 비교 */}
-          <section className="flex flex-col items-center gap-7">
-            <div className="flex flex-col items-center gap-3">
-              <span className="rounded-max bg-orange-50 px-3 py-1 text-body-m-semibold text-key">
-                실제 혜택 비교
-              </span>
-              <SectionHeading
-                title="일반 회원 vs 구독 회원"
-                subtitle={'구독 회원에게만 제공되는\n프리미엄 기능을 확인해보세요.'}
-              />
-            </div>
-            <ComparisonTable />
-          </section>
-
-          {/* 플랜 — 1년 단일 상품이라 선택 없이 한 장만 보여준다 */}
-          <section className="flex flex-col items-center gap-7">
-            <SectionHeading
-              title={'1년 동안\n제한 없이 이용하세요'}
-              subtitle="1년 구독 하나로 모든 프리미엄 기능을 열 수 있어요"
-            />
-            <PlanCard name="연간" price="790,000원" pricePrefix="연" />
           </section>
         </div>
 
@@ -147,7 +125,7 @@ export default function SubscriptionPage() {
             </p>
           )}
           <CTA transparent disabled={subscription.isPending} onClick={handleCtaClick}>
-            {subscription.isPending ? '구독 처리 중…' : '구독 시작하기'}
+            {subscription.isPending ? '구독 처리 중…' : '790,000원 결제하기'}
           </CTA>
         </div>
       </div>

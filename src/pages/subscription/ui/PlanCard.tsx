@@ -13,6 +13,8 @@ type PlanCardProps = {
 /**
  * 요금제 카드 (Figma: [4-9] 요금제 과정 1194:15691 · Card1/Card).
  * 이름 + 가격 한 줄. 1년 단일 상품이라 선택 UI 없이 key 테두리로 강조만 한다.
+ *
+ * 현재 구독 화면에서는 내려둔 상태 — 가격을 다시 노출할 때 쓴다.
  */
 export function PlanCard({ name, price, pricePrefix, className }: PlanCardProps) {
   return (

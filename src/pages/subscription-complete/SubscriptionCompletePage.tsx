@@ -148,7 +148,7 @@ export default function SubscriptionCompletePage() {
           </div>
         </div>
 
-        <CTA onClick={goHome}>혜택 이용하러 가기</CTA>
+        <CTA onClick={goHome}>분석 서비스 이용하러 가기</CTA>
       </div>
     </MobileLayout>
   )
