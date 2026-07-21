@@ -132,6 +132,15 @@ function RequireAuth() {
   return <Outlet />
 }
 
+// 구독(리포트 PRO) 전용 화면 차단 — 리포트 본문·지도는 PaywallLock 으로 덮지만,
+// 히스토리·상세·유사 사례처럼 화면 전체가 유료인 라우트는 URL 직접 진입을 막아야 한다.
+// (최종 방어는 서버 권한 검사 — 여기서는 UI 우회만 닫는다)
+function RequireSubscription() {
+  const isReportPro = useAuthStore((s) => s.user?.isReportPro)
+  if (!isReportPro) return <Navigate to="/my/subscription" replace />
+  return <Outlet />
+}
+
 // 세션 확인(idle/checking) 동안 스플래시 표시 → 로그인 UI 깜빡임·조기 리다이렉트 방지.
 // 콜백 페이지(/auth/kakao)는 자체 navigate 처리가 돌아야 하므로 게이트에서 제외.
 function SessionGate({ children }: { children: ReactNode }) {
@@ -161,9 +170,13 @@ function AppRoutes() {
             <Route path="/map" element={<MapPage />} />
             <Route path="/map/favorites" element={<FavoriteRegionsPage />} />
             <Route path="/report" element={<ReportPage />} />
-            <Route path="/report/history" element={<ReportHistoryPage />} />
-            <Route path="/report/:reportId" element={<ReportDetailPage />} />
-            <Route path="/report/:reportId/cases" element={<ReportCasesPage />} />
+            <Route element={<RequireSubscription />}>
+              <Route path="/report/history" element={<ReportHistoryPage />} />
+              <Route path="/report/:reportId" element={<ReportDetailPage />} />
+              <Route path="/report/:reportId/cases" element={<ReportCasesPage />} />
+              {/* 결제 없이 완료 화면(폭죽·결제 내역)만 보는 URL 직접 진입 차단 */}
+              <Route path="/my/subscription/complete" element={<SubscriptionCompletePage />} />
+            </Route>
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/my" element={<MyPage />} />
             <Route path="/my/store" element={<MyStorePage />} />
@@ -171,7 +184,6 @@ function AppRoutes() {
             <Route path="/my/store/:storeId/edit" element={<MyStoreEditPage />} />
             <Route path="/my/category" element={<MyCategoryPage />} />
             <Route path="/my/subscription" element={<SubscriptionPage />} />
-            <Route path="/my/subscription/complete" element={<SubscriptionCompletePage />} />
           </Route>
         </Routes>
       </Suspense>

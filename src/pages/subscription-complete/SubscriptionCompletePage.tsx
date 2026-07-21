@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { MobileLayout, GNB } from '@/widgets/mobile-layout'
 import { CTA } from '@/shared/ui'
 import { reportBenefitIcons } from '@/entities/report'
@@ -48,12 +48,9 @@ function fireConfetti(confetti: ConfettiFn, img: HTMLImageElement | null) {
   }, 180)
 }
 
-type Plan = 'annual' | 'monthly'
-
-const PLAN_INFO: Record<Plan, { label: string; price: string }> = {
-  annual: { label: '연간', price: '76,800원' },
-  monthly: { label: '월간', price: '8,000원' },
-}
+// 1년 단일 상품 — 플랜 분기가 없어 화면에 그대로 박아둔다
+const PLAN_LABEL = '연간'
+const PLAN_PRICE = '790,000원'
 
 // 이용 중 혜택 4종 — 요금제 과정/3 (설명은 완료 화면용 짧은 문구)
 const BENEFITS = [
@@ -79,25 +76,21 @@ const BENEFITS = [
   },
 ]
 
-/** 선택 플랜의 다음 결제일 — 월간 +1개월 / 연간 +1년 */
-function nextBillingDate(plan: Plan): string {
+/** 다음 결제일 — 1년 구독이라 오늘로부터 +1년 */
+function nextBillingDate(): string {
   const now = new Date()
   const next = new Date(now)
-  if (plan === 'annual') next.setFullYear(now.getFullYear() + 1)
-  else next.setMonth(now.getMonth() + 1)
+  next.setFullYear(now.getFullYear() + 1)
   return `${next.getFullYear()}년 ${next.getMonth() + 1}월 ${next.getDate()}일`
 }
 
 /**
  * 구독 완료 (Figma: [4-9] 요금제 과정/3 1256:14584).
- * 구독 시작하기 → 진입(선택 플랜을 state 로 받음, 기본 월간). 성공 일러스트 + 완료 문구 +
+ * 구독 시작하기 → 진입. 성공 일러스트 + 완료 문구 +
  * 리포트 PRO 이용중 요약 + 이용 중 혜택 목록. GNB X·CTA 는 홈으로 이동.
  */
 export default function SubscriptionCompletePage() {
   const navigate = useNavigate()
-  const routerLocation = useLocation()
-  const plan = (routerLocation.state as { plan?: Plan } | null)?.plan ?? 'monthly'
-  const { label, price } = PLAN_INFO[plan]
   const illustRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
@@ -132,7 +125,7 @@ export default function SubscriptionCompletePage() {
           {/* 완료 문구 */}
           <div className="flex flex-col items-center gap-2 text-center">
             <h1 className="text-title-m-bold whitespace-pre-line text-gray-900">
-              {`${label} 구독이\n완료되었어요`}
+              {`${PLAN_LABEL} 구독이\n완료되었어요`}
             </h1>
             <p className="text-body-l-medium whitespace-pre-line text-gray-500">
               {'이제 더 자세한 상권 분석과\n가게에 맞는 대응 전략을 확인할 수 있어요.'}
@@ -141,7 +134,7 @@ export default function SubscriptionCompletePage() {
 
           <div className="mt-12 flex flex-col gap-9">
             {/* 리포트 PRO 이용중 요약 */}
-            <ProStatusCard nextBilling={nextBillingDate(plan)} price={price} />
+            <ProStatusCard nextBilling={nextBillingDate()} price={PLAN_PRICE} />
 
             {/* 이용 중 혜택 */}
             <section className="flex flex-col gap-3">
@@ -155,7 +148,7 @@ export default function SubscriptionCompletePage() {
           </div>
         </div>
 
-        <CTA onClick={goHome}>혜택 이용하러 가기</CTA>
+        <CTA onClick={goHome}>분석 서비스 이용하러 가기</CTA>
       </div>
     </MobileLayout>
   )

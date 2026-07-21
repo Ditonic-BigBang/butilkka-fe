@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { MobileLayout } from '@/widgets/mobile-layout'
+import { PaywallLock } from '@/widgets/paywall-lock'
 import { cn } from '@/shared/lib/cn'
 import {
   KakaoMap,
@@ -21,6 +22,7 @@ import { useRegionSearch } from './model/useRegionSearch'
 import { useRegionDetail } from './model/useRegionDetail'
 import { useFavorites, MAX_FAVORITES } from '@/entities/favorite'
 import { useMyStores } from '@/entities/store'
+import { useAuthStore } from '@/entities/session'
 import { RankingSheet } from './ui/RankingSheet'
 import { QuarterSheet } from './ui/QuarterSheet'
 import { RegisterSelect } from './ui/RegisterSelect'
@@ -37,6 +39,8 @@ const NO_MARKERS: MapMarker[] = []
 
 export default function MapPage() {
   const navigate = useNavigate()
+  // 상권 지도는 PRO 혜택 — 구독 전엔 지도·검색·랭킹 시트를 통째로 덮는다 (하단 탭은 유지)
+  const locked = !useAuthStore((s) => s.user?.isReportPro)
   const location = useLocation()
   const mapRef = useRef<KakaoMapHandle>(null)
   const [query, setQuery] = useState('')
@@ -327,120 +331,137 @@ export default function MapPage() {
   return (
     <MobileLayout showBottomTab={!searching && !mapSelecting} scrollable={false}>
       <div className="relative h-full overflow-hidden">
-        <div className="absolute inset-0">
-          <KakaoMap
-            ref={mapRef}
-            markers={mapSelecting ? NO_MARKERS : markers}
-            onMarkerClick={handleMarkerClick}
-            outlines={outlines}
-            myLocation={mapSelecting ? null : myLocation}
-            pin={
-              mapSelecting && mapSelectDistrict ? (centroids?.get(mapSelectDistrict) ?? null) : null
-            }
-            onMapClick={mapSelecting ? handleRegisterMapClick : handleMapBackgroundClick}
-            onReady={handleMapReady}
-            className="size-full"
+        {/* 잠금 상태에선 지도·검색·시트를 통째로 inert 로 — 오버레이는 포인터만 막아서
+            Tab/Enter 로는 검색창·필터가 그대로 조작됐고, 기간 시트(z-50)가 잠금 위로 떴다.
+            inert 는 포커스·클릭·접근성 트리에서 한꺼번에 빼준다 */}
+        <div inert={locked} className="absolute inset-0">
+          <div className="absolute inset-0">
+            <KakaoMap
+              ref={mapRef}
+              markers={mapSelecting ? NO_MARKERS : markers}
+              onMarkerClick={handleMarkerClick}
+              outlines={outlines}
+              myLocation={mapSelecting ? null : myLocation}
+              pin={
+                mapSelecting && mapSelectDistrict
+                  ? (centroids?.get(mapSelectDistrict) ?? null)
+                  : null
+              }
+              onMapClick={mapSelecting ? handleRegisterMapClick : handleMapBackgroundClick}
+              onReady={handleMapReady}
+              className="size-full"
+            />
+          </div>
+
+          {!mapSelecting && (
+            <SearchOverlay
+              query={query}
+              onQueryChange={handleQueryChange}
+              filters={filters}
+              selectedFilter={categoryView.filterKey}
+              onFilterSelect={(key) => {
+                if (key === 'period') {
+                  setQuarterSheetOpen(true)
+                  return
+                }
+                // 디자인 확정된 카테고리 칩만 전환 (CATEGORY_BY_FILTER) — 나머지는 표시만
+                const next = CATEGORY_BY_FILTER[key]
+                if (next) setCategory(next)
+              }}
+              results={search.results}
+              onResultSelect={handleResultSelect}
+              savedPlaces={favorites.map((f) => f.district)}
+              onPlaceSelect={(district) => {
+                const representative = regionByDistrict?.get(district)
+                if (representative) selectDistrict(district, representative.regionCode)
+                else panToDistrict(district)
+              }}
+              onEditPlaces={() => navigate('/map/favorites', { viewTransition: true })}
+              onAddPlace={() => setRegisterMode(true)}
+              registerMode={registerMode}
+              onSelectFromMap={handleSelectFromMap}
+              inputRef={searchInputRef}
+              onFocusChange={(focused) => {
+                setSearching(focused)
+                // 검색을 닫으면 등록 모드도 해제 — 단 "지도에서 선택" 진입 blur 는 예외
+                if (!focused) {
+                  if (!enteringMapSelect.current) setRegisterMode(false)
+                  enteringMapSelect.current = false
+                }
+              }}
+              // 검색 모드는 시트·내 위치 버튼(z-10)까지 덮는 풀스크린
+              className={cn('absolute inset-x-0 top-0 z-10', searching && 'bottom-0 z-20')}
+            />
+          )}
+
+          {/* 즐겨찾기 지도에서 선택 모드 — 상단 선택 바 + 하단 확정 CTA */}
+          {mapSelecting && (
+            <RegisterSelect
+              district={mapSelectDistrict}
+              onBack={() => {
+                setMapSelecting(false)
+                setMapSelectDistrict(null)
+                setPendingSearchFocus(true)
+              }}
+              onConfirm={() => mapSelectDistrict && registerDistrict(mapSelectDistrict)}
+            />
+          )}
+
+          {/* 내 위치 버튼은 시트 바로 위에 붙어 시트 높이 변화를 따라간다 — 래퍼는 지도 조작을 막지 않게 클릭 통과 */}
+          {!mapSelecting && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col">
+              {!sheetExpanded && !quarterSheetOpen && (
+                <MyLocation
+                  onClick={handleMyLocation}
+                  className="pointer-events-auto mr-5 mb-3 self-end"
+                />
+              )}
+              <RankingSheet
+                title={categoryView.title}
+                tabs={categoryView.tabs}
+                order={order}
+                onOrderChange={setOrder}
+                rows={ranking.data?.rows ?? []}
+                averagePeriod={ranking.data?.averagePeriod}
+                onRowClick={(row) =>
+                  selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)
+                }
+                detail={detailRegionCode !== null ? detail.data : null}
+                expanded={sheetExpanded}
+                onExpandedChange={setSheetExpanded}
+                isPending={ranking.isPending}
+                isError={ranking.isError}
+                onRetry={() => void ranking.refetch()}
+                className="pointer-events-auto"
+              />
+            </div>
+          )}
+
+          {/* 등록 완료 토스트 (Figma 257:9468) — 검색 화면(z-20) 위 */}
+          {toast && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-8 z-30 flex justify-center px-5">
+              <Toast className={toastClosing ? 'animate-toast-out' : 'animate-toast-in'}>
+                {toast}
+              </Toast>
+            </div>
+          )}
+
+          <QuarterSheet
+            open={quarterSheetOpen}
+            onClose={() => setQuarterSheetOpen(false)}
+            latestQuarter={latestQuarter}
+            value={quarter}
+            onApply={setQuarter}
           />
         </div>
 
-        {!mapSelecting && (
-          <SearchOverlay
-            query={query}
-            onQueryChange={handleQueryChange}
-            filters={filters}
-            selectedFilter={categoryView.filterKey}
-            onFilterSelect={(key) => {
-              if (key === 'period') {
-                setQuarterSheetOpen(true)
-                return
-              }
-              // 디자인 확정된 카테고리 칩만 전환 (CATEGORY_BY_FILTER) — 나머지는 표시만
-              const next = CATEGORY_BY_FILTER[key]
-              if (next) setCategory(next)
-            }}
-            results={search.results}
-            onResultSelect={handleResultSelect}
-            savedPlaces={favorites.map((f) => f.district)}
-            onPlaceSelect={(district) => {
-              const representative = regionByDistrict?.get(district)
-              if (representative) selectDistrict(district, representative.regionCode)
-              else panToDistrict(district)
-            }}
-            onEditPlaces={() => navigate('/map/favorites', { viewTransition: true })}
-            onAddPlace={() => setRegisterMode(true)}
-            registerMode={registerMode}
-            onSelectFromMap={handleSelectFromMap}
-            inputRef={searchInputRef}
-            onFocusChange={(focused) => {
-              setSearching(focused)
-              // 검색을 닫으면 등록 모드도 해제 — 단 "지도에서 선택" 진입 blur 는 예외
-              if (!focused) {
-                if (!enteringMapSelect.current) setRegisterMode(false)
-                enteringMapSelect.current = false
-              }
-            }}
-            // 검색 모드는 시트·내 위치 버튼(z-10)까지 덮는 풀스크린
-            className={cn('absolute inset-x-0 top-0 z-10', searching && 'bottom-0 z-20')}
+        {/* 구독 전 잠금 — 지도·검색(z-20)·토스트(z-30)까지 전부 덮는다 (inert 래퍼 밖) */}
+        {locked && (
+          <PaywallLock
+            className="absolute inset-0 z-40"
+            onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
           />
         )}
-
-        {/* 즐겨찾기 지도에서 선택 모드 — 상단 선택 바 + 하단 확정 CTA */}
-        {mapSelecting && (
-          <RegisterSelect
-            district={mapSelectDistrict}
-            onBack={() => {
-              setMapSelecting(false)
-              setMapSelectDistrict(null)
-              setPendingSearchFocus(true)
-            }}
-            onConfirm={() => mapSelectDistrict && registerDistrict(mapSelectDistrict)}
-          />
-        )}
-
-        {/* 내 위치 버튼은 시트 바로 위에 붙어 시트 높이 변화를 따라간다 — 래퍼는 지도 조작을 막지 않게 클릭 통과 */}
-        {!mapSelecting && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col">
-            {!sheetExpanded && !quarterSheetOpen && (
-              <MyLocation
-                onClick={handleMyLocation}
-                className="pointer-events-auto mr-5 mb-3 self-end"
-              />
-            )}
-            <RankingSheet
-              title={categoryView.title}
-              tabs={categoryView.tabs}
-              order={order}
-              onOrderChange={setOrder}
-              rows={ranking.data?.rows ?? []}
-              averagePeriod={ranking.data?.averagePeriod}
-              onRowClick={(row) => selectDistrict(row.name.replace(/^서울\s*/, ''), row.regionCode)}
-              detail={detailRegionCode !== null ? detail.data : null}
-              expanded={sheetExpanded}
-              onExpandedChange={setSheetExpanded}
-              isPending={ranking.isPending}
-              isError={ranking.isError}
-              onRetry={() => void ranking.refetch()}
-              className="pointer-events-auto"
-            />
-          </div>
-        )}
-
-        {/* 등록 완료 토스트 (Figma 257:9468) — 검색 화면(z-20) 위 */}
-        {toast && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-8 z-30 flex justify-center px-5">
-            <Toast className={toastClosing ? 'animate-toast-out' : 'animate-toast-in'}>
-              {toast}
-            </Toast>
-          </div>
-        )}
-
-        <QuarterSheet
-          open={quarterSheetOpen}
-          onClose={() => setQuarterSheetOpen(false)}
-          latestQuarter={latestQuarter}
-          value={quarter}
-          onApply={setQuarter}
-        />
       </div>
     </MobileLayout>
   )

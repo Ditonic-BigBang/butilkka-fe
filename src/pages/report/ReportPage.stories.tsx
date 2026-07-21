@@ -42,7 +42,7 @@ function decorator(recommendation: ReportRecommendation, isReportPro = true) {
  * AI 리포트 전체 화면. Figma: `[3] AI 리포트/[3-1] 기본 267:4266·4528` ·
  * API: `GET /api/v1/reports/latest`. AI 추천(버티기/이동)에 따라
  * 추천 타이틀과 대체 상권 섹션(HOT상권 / 추천 대체 상권)이 갈리고,
- * 리포트 PRO 구독 전이면 유사 사례부터 잠긴다(결제 유도 카드).
+ * 리포트 PRO 구독 전이면 헤더만 남기고 본문 전체가 블러로 잠긴다(결제 유도 카드).
  */
 const meta = {
   title: 'Report/ReportPage',
@@ -65,8 +65,32 @@ export const Stay: Story = {
   decorators: [decorator('버티기')],
 }
 
-/** 구독 전 — 유사 사례부터 그라데이션+블러 잠금 + 결제 유도 카드 (Figma 1219:19236) */
+/** 구독 전 — 헤더 아래 본문 전체가 블러로 덮이고 결제 유도 카드만 뜬다 */
 export const Locked: Story = {
   name: '구독 전 (잠금)',
   decorators: [decorator('이동', false)],
+}
+
+/**
+ * 구독 전 · 리포트 도착 전 — 잠금 카드는 그대로 뜨고 배경만 스켈레톤 블러.
+ * 실제로는 리포트가 도착하면 배경만 본문 블러로 조용히 바뀐다.
+ */
+export const LockedLoading: Story = {
+  name: '구독 전 (배경 로딩)',
+  decorators: [
+    (Story) => {
+      seedAuthedUser(false)
+      // 시드 없는 클라이언트 — 네트워크가 없어 latest 가 영원히 pending 이다
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+      })
+      return (
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <Story />
+          </MemoryRouter>
+        </QueryClientProvider>
+      )
+    },
+  ],
 }
