@@ -50,9 +50,13 @@ export function PaywallLock({ children, onUpgrade, className }: PaywallLockProps
           className="absolute inset-0 [background:linear-gradient(to_bottom,#f7f7f7_0%,rgb(247_247_247/0)_15%,rgb(247_247_247/0)_88%,#f7f7f7_100%)]"
         />
       ) : null}
-      {/* 카드 — 잠금 영역이 카드보다 짧아도 잘리지 않게 자체 스크롤 */}
-      <div className="absolute inset-0 scrollbar-hide flex items-center justify-center overflow-y-auto px-5 py-8">
-        <ReportPaywallCard onConfirm={onUpgrade} />
+      {/* 카드 — 잠금 영역이 카드보다 짧아도(작은 폰·가로 모드) 잘리지 않게 자체 스크롤.
+          가운데 정렬은 안쪽 min-h-full 래퍼가 맡는다 — 스크롤러에 items-center 를 주면
+          카드가 넘칠 때 위쪽이 음수 영역으로 밀려 스크롤로도 닿지 않는다 */}
+      <div className="absolute inset-0 scrollbar-hide overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center px-5 py-8">
+          <ReportPaywallCard onConfirm={onUpgrade} />
+        </div>
       </div>
     </div>
   )
