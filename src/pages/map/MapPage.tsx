@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { MobileLayout } from '@/widgets/mobile-layout'
+import { PaywallLock } from '@/widgets/paywall-lock'
 import { cn } from '@/shared/lib/cn'
 import {
   KakaoMap,
@@ -21,6 +22,7 @@ import { useRegionSearch } from './model/useRegionSearch'
 import { useRegionDetail } from './model/useRegionDetail'
 import { useFavorites, MAX_FAVORITES } from '@/entities/favorite'
 import { useMyStores } from '@/entities/store'
+import { useAuthStore } from '@/entities/session'
 import { RankingSheet } from './ui/RankingSheet'
 import { QuarterSheet } from './ui/QuarterSheet'
 import { RegisterSelect } from './ui/RegisterSelect'
@@ -37,6 +39,8 @@ const NO_MARKERS: MapMarker[] = []
 
 export default function MapPage() {
   const navigate = useNavigate()
+  // 상권 지도는 PRO 혜택 — 구독 전엔 지도·검색·랭킹 시트를 통째로 덮는다 (하단 탭은 유지)
+  const locked = !useAuthStore((s) => s.user?.isReportPro)
   const location = useLocation()
   const mapRef = useRef<KakaoMapHandle>(null)
   const [query, setQuery] = useState('')
@@ -432,6 +436,16 @@ export default function MapPage() {
               {toast}
             </Toast>
           </div>
+        )}
+
+        {/* 구독 전 잠금 — 지도·검색(z-20)·토스트(z-30)까지 전부 덮는다 */}
+        {locked && (
+          <PaywallLock
+            className="absolute inset-0 z-40"
+            title={'서울 상권 지도를\n확인해보세요'}
+            description={'PRO에서 상권별 쇠퇴 지표와\n랭킹을 모두 볼 수 있어요.'}
+            onUpgrade={() => navigate('/my/subscription', { viewTransition: true })}
+          />
         )}
 
         <QuarterSheet

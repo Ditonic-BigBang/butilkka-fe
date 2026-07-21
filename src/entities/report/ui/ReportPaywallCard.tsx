@@ -10,6 +10,10 @@ const PRO_BENEFITS = [
 ]
 
 type ReportPaywallCardProps = {
+  /** 타이틀 (\n 줄바꿈 반영). 기본은 리포트용 카피 */
+  title?: string
+  /** 타이틀 아래 안내문 (\n 줄바꿈 반영). 기본은 리포트용 카피 */
+  description?: string
   /** "확인하러 가기" — 구독 요금제 화면 이동은 페이지가 처리 */
   onConfirm?: () => void
   className?: string
@@ -17,10 +21,16 @@ type ReportPaywallCardProps = {
 
 /**
  * 리포트 PRO 결제 유도 카드 (Figma: Card_요금제 현질유도 1194:14859).
- * 구독 전 잠긴 리포트 섹션 위에 띄운다 — 🎫 티켓 + 타이틀 + PRO 안내 +
+ * 구독 전 잠긴 화면 위에 띄운다 — 🎫 티켓 + 타이틀 + PRO 안내 +
  * [확인하러 가기] + 구분선 + Pro 혜택 목록. 흰 카드, key 색 테두리, rounded-16.
+ * 리포트·지도가 같은 카드를 쓰므로 타이틀·안내문은 화면별로 갈아끼운다.
  */
-export function ReportPaywallCard({ onConfirm, className }: ReportPaywallCardProps) {
+export function ReportPaywallCard({
+  title = '내 가게에 맞는 대응 전략을\n확인해보세요',
+  description = 'PRO에서 상권 분석 리포트 전체를\n확인할 수 있어요.',
+  onConfirm,
+  className,
+}: ReportPaywallCardProps) {
   return (
     <div
       className={cn(
@@ -31,13 +41,9 @@ export function ReportPaywallCard({ onConfirm, className }: ReportPaywallCardPro
       <div className="flex flex-col items-center gap-2">
         <div className="flex flex-col items-center gap-2">
           <img src={ticket} alt="" className="size-[42px]" />
-          <p className="text-title-m-bold whitespace-pre-line text-gray-900">
-            {'내 가게에 맞는 대응 전략을\n확인해보세요'}
-          </p>
+          <p className="text-title-m-bold whitespace-pre-line text-gray-900">{title}</p>
         </div>
-        <p className="text-body-l-medium whitespace-pre-line text-gray-600">
-          {'PRO에서 실제 회복/쇠퇴 사례를\n모두 확인할 수 있어요.'}
-        </p>
+        <p className="text-body-l-medium whitespace-pre-line text-gray-600">{description}</p>
       </div>
 
       <button
